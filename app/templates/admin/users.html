@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">User Accounts Manager</h1>
+            <p class="text-sm text-slate-500">Add, configure, and manage system user credentials</p>
+        </div>
+        
+        <button onclick="openAddUserModal()" class="inline-flex items-center justify-center gap-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/20 active:translate-y-[1px] transition">
+            <i class="fa-solid fa-user-plus text-sm"></i>
+            Add New Employee
+        </button>
+    </div>
+
+    <!-- Users Table -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Employee ID</th>
+                        <th class="px-6 py-3.5">Name</th>
+                        <th class="px-6 py-3.5">Username</th>
+                        <th class="px-6 py-3.5">Role</th>
+                        <th class="px-6 py-3.5">Location / Dept</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for u in users %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono text-xs font-semibold text-brand-600">{{ u.employee_id }}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-700">{{ u.name }}</div>
+                            <div class="text-2xs text-slate-400 font-semibold tracking-wider">{{ u.email or 'No email' }} {% if u.phone %}| {{ u.phone }}{% endif %}</div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 font-medium">{{ u.username }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-brand-50 border border-brand-200 text-brand-600">
+                                {{ u.role.replace('_', ' ') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600">
+                            {% if u.branch %}
+                            <i class="fa-solid fa-code-branch mr-1 text-slate-400 text-xs"></i> {{ u.branch.name }}
+                            {% elif u.department %}
+                            <i class="fa-solid fa-building mr-1 text-slate-400 text-xs"></i> {{ u.department.name }}
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                                {% if u.status %}bg-emerald-50 border border-emerald-250 text-emerald-600
+                                {% else %}bg-rose-50 border border-rose-250 text-rose-600{% endif %}">
+                                {{ 'Active' if u.status else 'Inactive' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right flex gap-x-2 justify-end items-center">
+                            <button onclick="openEditUserModal('{{ u.id }}', '{{ u.name }}', '{{ u.username }}', '{{ u.role }}', '{{ u.phone or '' }}', '{{ u.email or '' }}', '{{ u.branch_id or '' }}', '{{ u.department_id or '' }}')" 
+                                    class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                                Edit
+                            </button>
+                            <form action="{{ url_for('admin.toggle_user', user_id=u.id) }}" method="POST">
+                                <button type="submit" class="h-9 px-3 rounded-lg text-xs font-semibold transition 
+                                    {% if u.status %}bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100/50
+                                    {% else %}bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100/50{% endif %}">
+                                    {{ 'Deactivate' if u.status else 'Activate' }}
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================== MODALS ============================================== -->
+
+<!-- Add User Modal -->
+<div id="modal-add-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
+        <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-user-plus text-brand-600"></i> Add New Employee Profile</h3>
+        
+        <form action="{{ url_for('admin.create_user') }}" method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
+                    <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Employee ID (Unique)</label>
+                    <input type="text" name="employee_id" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. EMP-1001">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Username</label>
+                    <input type="text" name="username" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. ali.khan">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Initial Password</label>
+                    <input type="password" name="password" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500" placeholder="••••••••">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Phone / Mobile No.</label>
+                    <input type="text" name="phone" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Email Address</label>
+                    <input type="email" name="email" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Assigned Role</label>
+                    <select name="role" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="BRANCH_STAFF">Branch Staff</option>
+                        <option value="RIDER">Rider / Courier</option>
+                        <option value="LAB_STAFF">Lab Staff / Technologist</option>
+                        <option value="VERIFIER">Verifier</option>
+                        <option value="SUPERVISOR">Supervisor</option>
+                        <option value="MANAGER">Lab Manager</option>
+                        <option value="ADMIN">Super Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Branch Associated</label>
+                    <select name="branch_id" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="">None (HQ / Admin / Rider)</option>
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Department (Main Lab)</label>
+                    <select name="department_id" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="">None</option>
+                        {% for d in departments %}
+                        <option value="{{ d.id }}">{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-x-2 pt-4">
+                <button type="button" onclick="closeModal('modal-add-user')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold">Create User</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="modal-edit-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
+        <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-user-pen text-brand-600"></i> Edit Employee Credentials</h3>
+        
+        <form id="edit-user-form" method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
+                    <input type="text" name="name" id="edit-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Username</label>
+                    <input type="text" name="username" id="edit-username" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Phone / Mobile No.</label>
+                    <input type="text" name="phone" id="edit-phone" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Email Address</label>
+                    <input type="email" name="email" id="edit-email" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Assigned Role</label>
+                    <select name="role" id="edit-role" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="BRANCH_STAFF">Branch Staff</option>
+                        <option value="RIDER">Rider / Courier</option>
+                        <option value="LAB_STAFF">Lab Staff / Technologist</option>
+                        <option value="VERIFIER">Verifier</option>
+                        <option value="SUPERVISOR">Supervisor</option>
+                        <option value="MANAGER">Lab Manager</option>
+                        <option value="ADMIN">Super Admin</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Branch Associated</label>
+                    <select name="branch_id" id="edit-branch-id" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="">None (HQ / Admin / Rider)</option>
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Department (Main Lab)</label>
+                    <select name="department_id" id="edit-department-id" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
+                        <option value="">None</option>
+                        {% for d in departments %}
+                        <option value="{{ d.id }}">{{ d.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Reset Password</label>
+                    <input type="password" name="password" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500" placeholder="Enter password to override">
+                </div>
+            </div>
+            
+            <div class="flex justify-end gap-x-2 pt-4">
+                <button type="button" onclick="closeModal('modal-edit-user')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.replace('flex', 'hidden');
+    }
+    
+    function openAddUserModal() {
+        document.getElementById('modal-add-user').classList.replace('hidden', 'flex');
+    }
+    
+    function openEditUserModal(id, name, username, role, phone, email, branchId, deptId) {
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-username').value = username;
+        document.getElementById('edit-role').value = role;
+        document.getElementById('edit-phone').value = phone;
+        document.getElementById('edit-email').value = email;
+        document.getElementById('edit-branch-id').value = branchId;
+        document.getElementById('edit-department-id').value = deptId;
+        document.getElementById('edit-user-form').action = `/admin/users/edit/${id}`;
+        
+        document.getElementById('modal-edit-user').classList.replace('hidden', 'flex');
+    }
+
+    // Close modal when clicking backdrop
+    document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal(modal.id);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Branch Dashboard - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4 border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">{% if branch %}{{ branch.name }} Hub{% else %}All Branches Requests{% endif %}</h1>
+            <p class="text-sm text-slate-500">Track and dispatch sample requests</p>
+        </div>
+        
+        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN'] %}
+        <a href="{{ url_for('branch.create_request') }}" class="inline-flex items-center justify-center gap-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/20 active:translate-y-[1px] transition">
+            <i class="fa-solid fa-plus text-sm"></i>
+            Create Pickup Request
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Stats Summary Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="glass-panel rounded-2xl p-5 flex items-center justify-between border border-slate-200 shadow-sm">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Requests</p>
+                <h3 class="text-2xl font-bold text-slate-800 mt-1">{{ requests|length }}</h3>
+            </div>
+            <div class="h-10 w-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+                <i class="fa-solid fa-folder-open text-blue-600"></i>
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 flex items-center justify-between border border-slate-200 shadow-sm">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Pending Pickup</p>
+                <h3 class="text-2xl font-bold text-slate-800 mt-1">
+                    {{ requests | selectattr('status', 'in', ['Pickup Requested', 'Rider Assigned']) | list | length }}
+                </h3>
+            </div>
+            <div class="h-10 w-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center">
+                <i class="fa-solid fa-hourglass-half text-amber-600"></i>
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 flex items-center justify-between border border-slate-200 shadow-sm">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">In Transit</p>
+                <h3 class="text-2xl font-bold text-slate-800 mt-1">
+                    {{ requests | selectattr('status', 'in', ['Sample Collected', 'Arrived at G-8']) | list | length }}
+                </h3>
+            </div>
+            <div class="h-10 w-10 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center">
+                <i class="fa-solid fa-truck-ramp-box text-brand-600"></i>
+            </div>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 flex items-center justify-between border border-slate-200 shadow-sm">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500">Completed Reports</p>
+                <h3 class="text-2xl font-bold text-slate-800 mt-1">
+                    {{ requests | selectattr('status', 'equalto', 'Completed') | list | length }}
+                </h3>
+            </div>
+            <div class="h-10 w-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requests Table -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <h3 class="font-semibold text-slate-700">Dispatch Log</h3>
+            <span class="text-xs text-slate-400 font-medium">Recent dispatches</span>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Request ID</th>
+                        <th class="px-6 py-3.5">Patient Details</th>
+                        <th class="px-6 py-3.5">Priority</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5">Samples</th>
+                        <th class="px-6 py-3.5">Created At</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for req in requests %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono text-xs font-semibold text-brand-600">
+                            <a href="{{ url_for('workflow.detail', request_id=req.id) }}" class="hover:underline">
+                                {{ req.id }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
+                            <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.gender }} {% if req.patient_id %}| ID: {{ req.patient_id }}{% endif %}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                                {% if req.priority == 'Emergency' %}bg-rose-50 border border-rose-200 text-rose-600
+                                {% elif req.priority == 'Urgent' %}bg-amber-50 border border-amber-200 text-amber-600
+                                {% else %}bg-indigo-50 border border-indigo-200 text-indigo-600{% endif %}">
+                                {{ req.priority }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                                {% if req.status == 'Pickup Requested' %}bg-blue-50 border border-blue-200 text-blue-600
+                                {% elif req.status == 'Rider Assigned' %}bg-amber-50 border border-amber-200 text-amber-600
+                                {% elif req.status == 'Sample Collected' %}bg-brand-50 border border-brand-200 text-brand-600
+                                {% elif req.status == 'Received at G-8' %}bg-violet-50 border border-violet-200 text-violet-600
+                                {% elif req.status == 'Processing' %}bg-teal-50 border border-teal-200 text-teal-600
+                                {% elif req.status == 'Completed' %}bg-emerald-50 border border-emerald-200 text-emerald-600
+                                {% else %}bg-slate-100 border border-slate-200 text-slate-600{% endif %}">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-xs font-semibold text-slate-600">
+                            {% if req.samples %}
+                                {% for s in req.samples %}
+                                    <span class="inline-block bg-slate-100 px-2 py-0.5 rounded border border-slate-200 text-2xs mr-1">{{ s.quantity }}x {{ s.sample_type }}</span>
+                                {% endfor %}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-xs text-slate-500">
+                            {{ req.created_at.strftime('%Y-%m-%d %H:%M') }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ url_for('workflow.detail', request_id=req.id) }}" class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                                <i class="fa-solid fa-eye mr-1"></i> View Timeline
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-400 font-medium">
+                            No requests found for this branch.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

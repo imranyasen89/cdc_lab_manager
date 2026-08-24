@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 text-slate-800">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CDC Lab Manager{% endblock %}</title>
+    <!-- Outfit Google Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            200: '#bde0fe',
+                            300: '#90caf9',
+                            400: '#42a5f5',
+                            500: '#1e88e5',
+                            600: '#0066cc', // Main Medical Blue
+                            700: '#1565c0',
+                            800: '#0d47a1',
+                            900: '#0a2540',
+                            950: '#051b30',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <!-- Chart.js for Dashboards -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Global Design System -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="h-full flex flex-col font-sans overflow-hidden bg-slate-50 text-slate-800">
+
+    <!-- Top Glass Header -->
+    <header
+        class="glass-panel sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+        <div class="flex items-center gap-x-3">
+            <div
+                class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-rose-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                <i class="fa-solid fa-flask-vial text-white text-lg"></i>
+            </div>
+            <span
+                class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-brand-700 bg-clip-text text-transparent">CDC
+                Lab Manager</span>
+        </div>
+
+        <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-end items-center">
+            <!-- Global Search Form -->
+            {% if current_user.is_authenticated %}
+            <form action="{{ url_for('workflow.search') }}" method="GET" class="relative hidden sm:flex w-64 md:w-80">
+                <label for="search-field" class="sr-only">Search requests</label>
+                <i
+                    class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                <input id="search-field"
+                    class="block h-10 w-full rounded-full bg-slate-100 border border-slate-200 pl-10 pr-4 text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all"
+                    placeholder="Search Request ID, Patient Name..." type="search" name="query"
+                    value="{{ request.args.get('query', '') }}">
+            </form>
+            {% endif %}
+
+            <div class="flex items-center gap-x-4 lg:gap-x-6">
+                {% if current_user.is_authenticated %}
+                <!-- Notifications Bell -->
+                <a href="{{ url_for('notifications.list_notifications') }}"
+                    class="relative rounded-full p-2 text-slate-500 hover:text-brand-600 focus:outline-none transition"
+                    id="notification-bell">
+                    <span class="sr-only">View notifications</span>
+                    <i class="fa-regular fa-bell text-xl"></i>
+                    <!-- AJAX Unread Counter -->
+                    <span id="notif-count-badge"
+                        class="absolute top-1.5 right-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-2xs font-bold leading-none text-white bg-rose-600 rounded-full scale-90 {% if unread_notifications_count == 0 %}hidden{% endif %}">
+                        {{ unread_notifications_count }}
+                    </span>
+                </a>
+
+                <!-- User profile dropdown trigger -->
+                <div class="relative flex items-center gap-x-3 pl-4 border-l border-slate-200">
+                    <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-x-3">
+                        <div
+                            class="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-brand-500/20">
+                            <i class="fa-regular fa-user text-slate-600"></i>
+                        </div>
+                        <div class="hidden md:block text-left">
+                            <span class="block text-sm font-semibold text-slate-800">{{ current_user.name }}</span>
+                            <span class="block text-xs text-brand-600 font-medium uppercase tracking-wider">{{
+                                current_user.role.replace('_', ' ') }}</span>
+                        </div>
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}"
+                        class="ml-2 text-slate-500 hover:text-rose-500 p-2 rounded-full hover:bg-slate-200/50 transition"
+                        title="Log Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                </div>
+                {% else %}
+                <a href="{{ url_for('auth.login') }}"
+                    class="text-sm font-semibold text-brand-600 hover:text-brand-500 transition">Log In</a>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Menu -->
+        {% if current_user.is_authenticated %}
+        <nav class="hidden md:flex md:w-64 md:flex-col glass-panel border-r border-slate-200">
+            <div class="flex flex-col flex-1 gap-y-4 px-4 py-6 overflow-y-auto">
+                <ul role="list" class="flex flex-1 flex-col gap-y-7">
+                    <li>
+                        <ul role="list" class="-mx-2 space-y-1">
+                            <!-- Dashboards based on role -->
+                            {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER'] %}
+                            <li>
+                                <a href="{{ url_for('branch.dashboard') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'branch' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-code-branch text-lg"></i>
+                                    Branch Panel
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR'] %}
+                            <li>
+                                <a href="{{ url_for('rider.dashboard') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'rider' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-motorcycle text-lg"></i>
+                                    Rider Panel
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+                            <li>
+                                <a href="{{ url_for('lab.dashboard') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'lab' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-flask text-lg"></i>
+                                    Lab Workspace
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'BRANCH_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+                            <li>
+                                <a href="{{ url_for('reports.staff_dashboard') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.endpoint == 'reports.staff_dashboard' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-user-gear text-lg"></i>
+                                    Staff Workspace
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </li>
+
+                    {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPERVISOR'] %}
+                    <li>
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-widest">Management
+                        </div>
+                        <ul role="list" class="-mx-2 mt-2 space-y-1">
+                            <li>
+                                <a href="{{ url_for('reports.daily_report') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'reports.daily_report' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-chart-line text-lg"></i>
+                                    Daily Analytics
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('reports.performance') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'reports.performance' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-gauge-high text-lg"></i>
+                                    TAT Performance
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('reports.staff_admin') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'reports.staff_admin' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-chart-bar text-lg"></i>
+                                    Staff Analytics
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    {% if current_user.role in ['ADMIN', 'MANAGER'] %}
+                    <li>
+                        <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-widest">System
+                            Admin</div>
+                        <ul role="list" class="-mx-2 mt-2 space-y-1">
+                            {% if current_user.role == 'ADMIN' %}
+                            <li>
+                                <a href="{{ url_for('admin.users') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.users' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-users text-lg"></i>
+                                    Users Manager
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li>
+                                <a href="{{ url_for('admin.config') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.config' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-sliders text-lg"></i>
+                                    Master Data
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin.audit_logs') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.audit_logs' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                                    Audit Logs
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Content Area -->
+        <main class="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+            <!-- Flash Message Banner -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for category, message in messages %}
+                <div
+                    class="p-4 rounded-xl border flex items-center justify-between {% if category == 'success' %}bg-emerald-50 border-emerald-250 text-emerald-800{% elif category == 'danger' %}bg-rose-50 border-rose-250 text-rose-800{% else %}bg-blue-50 border-blue-200 text-blue-800{% endif %}">
+                    <span class="text-sm font-medium">{{ message }}</span>
+                    <button onclick="this.parentElement.remove()"
+                        class="text-slate-500 hover:text-slate-800 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="flex-1">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- Footer -->
+            <footer class="mt-8 border-t border-slate-200/80 pt-4 pb-2 text-center text-xs text-slate-500">
+                <p>Developed by <span class="font-semibold text-slate-700">Imran Yaseen</span> &bull; <a href="tel:03027563119" class="hover:text-brand-600 font-medium transition-colors"><i class="fa-solid fa-phone text-2xs mr-1"></i>03027563119</a></p>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation Bar (Mobile only) -->
+    {% if current_user.is_authenticated %}
+    <div class="md:hidden glass-panel border-t border-slate-200 flex justify-around py-3 shrink-0">
+        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER'] %}
+        <a href="{{ url_for('branch.dashboard') }}"
+            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
+            <i class="fa-solid fa-code-branch text-lg"></i>
+            <span class="text-2xs font-semibold uppercase tracking-wider">Branch</span>
+        </a>
+        {% endif %}
+        {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR'] %}
+        <a href="{{ url_for('rider.dashboard') }}"
+            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
+            <i class="fa-solid fa-motorcycle text-lg"></i>
+            <span class="text-2xs font-semibold uppercase tracking-wider">Rider</span>
+        </a>
+        {% endif %}
+        {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+        <a href="{{ url_for('lab.dashboard') }}"
+            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
+            <i class="fa-solid fa-flask text-lg"></i>
+            <span class="text-2xs font-semibold uppercase tracking-wider">Lab</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('notifications.list_notifications') }}"
+            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
+            <i class="fa-solid fa-bell text-lg"></i>
+            <span class="text-2xs font-semibold uppercase tracking-wider">Alerts</span>
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Real-time notification poller script -->
+    {% if current_user.is_authenticated %}
+    <script>
+        function checkNotifications() {
+            fetch('/notifications/unread-count')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('notif-count-badge');
+                    if (badge) {
+                        if (data.count > 0) {
+                            badge.innerText = data.count;
+                            badge.classList.remove('hidden');
+                        } else {
+                            badge.classList.add('hidden');
+                        }
+                    }
+                })
+                .catch(err => console.log('Error polling notifications:', err));
+        }
+
+        // Poll every 10 seconds
+        setInterval(checkNotifications, 10000);
+    </script>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

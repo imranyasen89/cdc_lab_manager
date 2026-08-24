@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Create Pickup Request - CDC Lab Manager{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Sample type checkbox cards */
+    .sample-card {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        padding: 0.625rem 0.875rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.75rem;
+        background: #ffffff;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        user-select: none;
+    }
+    .sample-card:hover {
+        border-color: #90caf9;
+        background: #f0f7ff;
+    }
+    .sample-card input[type="checkbox"] {
+        width: 1rem;
+        height: 1rem;
+        accent-color: #0066cc;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .sample-card.checked {
+        border-color: #0066cc;
+        background: rgba(0,102,204,0.05);
+    }
+    .sample-card .sample-icon {
+        font-size: 1rem;
+        width: 1.5rem;
+        text-align: center;
+    }
+    .sample-card .sample-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #334155;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="flex items-center gap-x-3 mb-6">
+        <div class="h-10 w-10 rounded-xl bg-brand-600/5 flex items-center justify-center border border-brand-500/10">
+            <i class="fa-solid fa-file-invoice text-brand-600 text-lg"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">New Pickup Request</h1>
+            <p class="text-sm text-slate-500">Generate a tracking ID and request sample pickup</p>
+        </div>
+    </div>
+
+    <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl">
+        <form class="space-y-6" action="{{ url_for('branch.create_request') }}" method="POST" id="create-request-form">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <!-- Patient Name -->
+                <div class="sm:col-span-4">
+                    <label for="patient_name" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Patient / Sample Name</label>
+                    <input type="text" name="patient_name" id="patient_name" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. Muhammad Ali">
+                </div>
+
+                <!-- Gender -->
+                <div class="sm:col-span-2">
+                    <label for="gender" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Gender</label>
+                    <select name="gender" id="gender" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <!-- Patient MRN / ID -->
+                <div class="sm:col-span-3">
+                    <label for="patient_id" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Patient Reg ID / MRN (Optional)</label>
+                    <input type="text" name="patient_id" id="patient_id" class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. MRN-10029">
+                </div>
+
+                <!-- Priority -->
+                <div class="sm:col-span-3">
+                    <label for="priority" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Priority Level</label>
+                    <select name="priority" id="priority" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
+                        {% for prio in priorities %}
+                        <option value="{{ prio.priority }}">{{ prio.priority }} (Limit: {{ prio.max_tat_minutes }} mins)</option>
+                        {% else %}
+                        <option value="Routine">Routine</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="Emergency">Emergency</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Service / Test Name -->
+                <div class="sm:col-span-6 border-t border-slate-200 pt-6">
+                    <label for="test_requested" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Test / Service Requested</label>
+                    <input type="text" name="test_requested" id="test_requested" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. CBC, Liver Function Test, Lipid Profile">
+                </div>
+
+                <!-- Sample Type Checkboxes -->
+                <div class="sm:col-span-6">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                        Sample Types to Book
+                        <span class="ml-1 text-rose-500">*</span>
+                        <span class="ml-2 text-slate-400 normal-case font-normal">(Select one or more)</span>
+                    </label>
+                    <div id="sample-cards-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <!-- Blood (EDTA) -->
+                        <label class="sample-card" id="card-edta">
+                            <input type="checkbox" name="sample_types" value="Blood (EDTA)" onchange="toggleCard(this, 'card-edta')">
+                            <span class="sample-icon">🩸</span>
+                            <span class="sample-label">Blood (EDTA)</span>
+                        </label>
+                        <!-- Blood (Serum) -->
+                        <label class="sample-card" id="card-serum">
+                            <input type="checkbox" name="sample_types" value="Blood (Serum)" onchange="toggleCard(this, 'card-serum')">
+                            <span class="sample-icon">💉</span>
+                            <span class="sample-label">Blood (Serum)</span>
+                        </label>
+                        <!-- Urine -->
+                        <label class="sample-card" id="card-urine">
+                            <input type="checkbox" name="sample_types" value="Urine" onchange="toggleCard(this, 'card-urine')">
+                            <span class="sample-icon">🧪</span>
+                            <span class="sample-label">Urine</span>
+                        </label>
+                        <!-- Swab -->
+                        <label class="sample-card" id="card-swab">
+                            <input type="checkbox" name="sample_types" value="Swab" onchange="toggleCard(this, 'card-swab')">
+                            <span class="sample-icon">🔬</span>
+                            <span class="sample-label">Swab</span>
+                        </label>
+                        <!-- Sputum -->
+                        <label class="sample-card" id="card-sputum">
+                            <input type="checkbox" name="sample_types" value="Sputum" onchange="toggleCard(this, 'card-sputum')">
+                            <span class="sample-icon">🫁</span>
+                            <span class="sample-label">Sputum</span>
+                        </label>
+                        <!-- Biopsy -->
+                        <label class="sample-card" id="card-biopsy">
+                            <input type="checkbox" name="sample_types" value="Biopsy" onchange="toggleCard(this, 'card-biopsy')">
+                            <span class="sample-icon">🔭</span>
+                            <span class="sample-label">Biopsy</span>
+                        </label>
+                        <!-- CSF -->
+                        <label class="sample-card" id="card-csf">
+                            <input type="checkbox" name="sample_types" value="CSF" onchange="toggleCard(this, 'card-csf')">
+                            <span class="sample-icon">🧠</span>
+                            <span class="sample-label">CSF</span>
+                        </label>
+                        <!-- Stool -->
+                        <label class="sample-card" id="card-stool">
+                            <input type="checkbox" name="sample_types" value="Stool" onchange="toggleCard(this, 'card-stool')">
+                            <span class="sample-icon">🧫</span>
+                            <span class="sample-label">Stool</span>
+                        </label>
+                        <!-- Other -->
+                        <label class="sample-card" id="card-other">
+                            <input type="checkbox" name="sample_types" value="Other" onchange="toggleCard(this, 'card-other'); toggleOtherInput(this)">
+                            <span class="sample-icon">📋</span>
+                            <span class="sample-label">Other</span>
+                        </label>
+                    </div>
+
+                    <!-- "Other" custom type input (hidden by default) -->
+                    <div id="other-type-container" class="hidden mt-3">
+                        <input type="text" name="other_sample_type" id="other-sample-type" class="block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="Specify sample type...">
+                    </div>
+
+                    <!-- Validation message -->
+                    <p id="sample-error" class="hidden mt-2 text-xs text-rose-500 font-semibold">
+                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Please select at least one sample type.
+                    </p>
+                </div>
+
+                <!-- Number of Samples per type -->
+                <div class="sm:col-span-3">
+                    <label for="quantity" class="block text-xs font-bold uppercase tracking-wider text-slate-500">No. of Samples (per type)</label>
+                    <input type="number" name="quantity" id="quantity" min="1" max="20" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" value="1">
+                </div>
+
+                <!-- Special Instructions -->
+                <div class="sm:col-span-6">
+                    <label for="special_instructions" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Special Instructions / Remarks</label>
+                    <textarea name="special_instructions" id="special_instructions" rows="3" class="mt-2 block w-full rounded-xl bg-white border border-slate-200 p-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. Keep refrigerated, urgent delivery required..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-x-3 pt-6 border-t border-slate-200">
+                <a href="{{ url_for('branch.dashboard') }}" class="glass-btn inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold">Cancel</a>
+                <button type="submit" onclick="return validateSamples()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white hover:from-brand-500 hover:to-rose-400 shadow-lg shadow-brand-600/10 active:translate-y-[1px] transition">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Dispatch Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function toggleCard(checkbox, cardId) {
+        const card = document.getElementById(cardId);
+        if (checkbox.checked) {
+            card.classList.add('checked');
+        } else {
+            card.classList.remove('checked');
+        }
+    }
+
+    function toggleOtherInput(checkbox) {
+        const container = document.getElementById('other-type-container');
+        const input = document.getElementById('other-sample-type');
+        if (checkbox.checked) {
+            container.classList.remove('hidden');
+            input.required = true;
+        } else {
+            container.classList.add('hidden');
+            input.required = false;
+            input.value = '';
+        }
+    }
+
+    function validateSamples() {
+        const checkboxes = document.querySelectorAll('input[name="sample_types"]:checked');
+        const errorEl = document.getElementById('sample-error');
+        if (checkboxes.length === 0) {
+            errorEl.classList.remove('hidden');
+            document.getElementById('sample-cards-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
+        errorEl.classList.add('hidden');
+        return true;
+    }
+</script>
+{% endblock %}

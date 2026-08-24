@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Analytics Dashboard - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Staff Performance & Skills Analytics</h1>
+            <p class="text-sm text-slate-500">Monitor workload distributions, track staff satisfaction trends, and manage qualification profiles</p>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards Grid -->
+    <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Total Tests Processed</span>
+            <span class="block text-3xl font-extrabold text-brand-600 mt-1.5">{{ total_tests }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Aggregated across all daily submissions</span>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Daily Reports Logged</span>
+            <span class="block text-3xl font-extrabold text-slate-800 mt-1.5">{{ total_submissions }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Active staff daily logs count</span>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Registered Profiles</span>
+            <span class="block text-3xl font-extrabold text-slate-800 mt-1.5">{{ profiles | length }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Imported from CDC_lab.xlsx profiling</span>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Satisfaction Rating</span>
+            <div class="flex items-center justify-center gap-x-2 mt-2">
+                <span class="text-emerald-600 font-bold text-sm"><i class="fa-solid fa-smile mr-0.5"></i> {{ satisfaction.Satisfied }}</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-amber-600 font-bold text-sm"><i class="fa-solid fa-meh mr-0.5"></i> {{ satisfaction.Neutral }}</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-rose-600 font-bold text-sm"><i class="fa-solid fa-frown mr-0.5"></i> {{ satisfaction.Dissatisfied }}</span>
+            </div>
+            <span class="text-3xs text-slate-400 mt-1.5 block">Staff feedback ratio</span>
+        </div>
+    </div>
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Tests Processed by Branch -->
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+            <h4 class="font-semibold text-slate-800 flex items-center gap-x-2 border-b border-slate-100 pb-2.5">
+                <i class="fa-solid fa-building text-brand-600"></i> Testing Load by Branch Hub
+            </h4>
+            <div class="h-56 relative">
+                <canvas id="branchChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Tests Processed by Lab Section -->
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-slate-200 space-y-4">
+            <h4 class="font-semibold text-slate-800 flex items-center gap-x-2 border-b border-slate-100 pb-2.5">
+                <i class="fa-solid fa-layer-group text-brand-600"></i> Workload by Laboratory Section
+            </h4>
+            <div class="h-56 relative">
+                <canvas id="sectionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab Section: Staff Profiles vs Daily Submissions -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        
+        <!-- Tab Headers -->
+        <div class="bg-slate-50 border-b border-slate-200 px-6 flex items-center justify-between">
+            <div class="flex gap-x-6">
+                <button onclick="switchTab('profiles-tab', 'submissions-tab')" id="btn-profiles-tab" class="py-4 font-semibold text-sm border-b-2 border-brand-600 text-brand-600 focus:outline-none transition">
+                    <i class="fa-solid fa-user-gear mr-1.5"></i> Staff Profile Inventory (Excel Data)
+                </button>
+                <button onclick="switchTab('submissions-tab', 'profiles-tab')" id="btn-submissions-tab" class="py-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 focus:outline-none transition">
+                    <i class="fa-solid fa-file-invoice mr-1.5"></i> Daily Submissions Logs
+                </button>
+            </div>
+            
+            <!-- Local Search Box -->
+            <div class="py-2.5">
+                <input type="text" id="search-input" onkeyup="filterTable()" placeholder="Search staff profiles..." class="h-8 rounded-full bg-white border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 w-48 transition-all">
+            </div>
+        </div>
+
+        <!-- Tab 1: Staff Profiles -->
+        <div id="profiles-tab" class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap" id="profiles-table">
+                <thead class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Employee</th>
+                        <th class="px-6 py-3.5">Designation / Shift</th>
+                        <th class="px-6 py-3.5">Qualification</th>
+                        <th class="px-6 py-3.5">Experience (Overall/CDC)</th>
+                        <th class="px-6 py-3.5">Independent Sections</th>
+                        <th class="px-6 py-3.5">Study/Research</th>
+                        <th class="px-6 py-3.5">Training Requested</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                    {% for p in profiles %}
+                    <tr class="hover:bg-slate-50/80 transition profile-row">
+                        <td class="px-6 py-4">
+                            <span class="block font-bold text-slate-800 search-name">{{ p.user.name }}</span>
+                            <span class="block text-3xs font-mono text-brand-600">{{ p.user.employee_id }}</span>
+                            <span class="block text-3xs text-slate-400">{{ p.user.email }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="block font-semibold search-desig">{{ p.designation or 'Not Set' }}</span>
+                            <span class="block text-3xs text-slate-400">Hub: {{ p.user.branch.name }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="block font-semibold">{{ p.qualification or 'Not Set' }}</span>
+                            {% if p.other_certificates %}
+                            <span class="block text-3xs text-slate-400 max-w-xs truncate" title="{{ p.other_certificates }}">{{ p.other_certificates }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-mono font-medium">
+                            <span class="block text-slate-700">Total: {{ p.overall_experience or 0.0 }} yrs</span>
+                            <span class="block text-brand-600">CDC: {{ p.cdc_experience or 0.0 }} yrs</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-wrap gap-1 max-w-xs">
+                                {% if p.sections_independent and p.sections_independent != 'None' %}
+                                    {% for sec in p.sections_independent.split(',') %}
+                                    <span class="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 text-3xs font-extrabold uppercase">{{ sec.strip() }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-slate-400 italic">None</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="space-y-1">
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold uppercase
+                                    {% if p.study_further == 'Yes' %}bg-emerald-50 text-emerald-600 border border-emerald-100{% else %}bg-slate-50 text-slate-400 border border-slate-100{% endif %}">
+                                    Study: {{ p.study_further or 'No' }}
+                                </span>
+                                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-3xs font-bold uppercase block
+                                    {% if p.research_interest == 'Yes' %}bg-indigo-50 text-indigo-600 border border-indigo-100{% else %}bg-slate-50 text-slate-400 border border-slate-100{% endif %}">
+                                    Research: {{ p.research_interest or 'No' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <p class="max-w-xs break-words text-slate-600 italic font-semibold">{{ p.training_requested or 'None requested.' }}</p>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500 font-medium">No staff profiles found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 2: Daily Submissions -->
+        <div id="submissions-tab" class="hidden overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Date</th>
+                        <th class="px-6 py-3.5">Staff Employee</th>
+                        <th class="px-6 py-3.5">Shift / Branch</th>
+                        <th class="px-6 py-3.5">Sections Worked</th>
+                        <th class="px-6 py-3.5">Tests Processed</th>
+                        <th class="px-6 py-3.5">Satisfaction</th>
+                        <th class="px-6 py-3.5">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                    {% for r in reports %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono font-bold text-slate-800">{{ r.date }}</td>
+                        <td class="px-6 py-4">
+                            <span class="block font-bold text-slate-800">{{ r.user.name }}</span>
+                            <span class="block text-3xs text-slate-450">{{ r.user.employee_id }}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="block font-semibold text-slate-700">{{ r.shift }}</span>
+                            <span class="block text-3xs text-slate-400">Hub: {{ r.branch.name }}</span>
+                        </td>
+                        <td class="px-6 py-4">{{ r.section }}</td>
+                        <td class="px-6 py-4 font-mono font-semibold text-brand-600">{{ r.tests_processed }}</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                {% if r.satisfaction == 'Satisfied' %}bg-emerald-50 border border-emerald-200 text-emerald-600
+                                {% elif r.satisfaction == 'Neutral' %}bg-amber-50 border border-amber-200 text-amber-600
+                                {% else %}bg-rose-50 border border-rose-200 text-rose-600{% endif %}">
+                                {{ r.satisfaction or 'Satisfied' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button onclick="toggleDetails('admin-details-{{ r.id }}')" class="text-brand-650 hover:underline font-semibold flex items-center">
+                                View <i class="fa-solid fa-chevron-down ml-1 text-2xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <tr id="admin-details-{{ r.id }}" class="hidden bg-slate-50/50">
+                        <td colspan="7" class="px-6 py-4 border-l-2 border-brand-500">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                <div>
+                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Daily Tasks Done</span>
+                                    <p class="text-slate-650 mt-1 italic">{{ r.tasks_completed or 'No description provided.' }}</p>
+                                </div>
+                                <div>
+                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Challenges Reported</span>
+                                    <p class="text-rose-600 mt-1 italic font-medium">{{ r.challenges or 'None reported.' }}</p>
+                                </div>
+                                {% if r.training_needs %}
+                                <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Training Request</span>
+                                    <p class="text-indigo-600 mt-1 font-semibold">{{ r.training_needs }}</p>
+                                </div>
+                                {% endif %}
+                                {% if r.suggestions %}
+                                <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Improvement Suggestion</span>
+                                    <p class="text-slate-800 mt-1 font-medium">{{ r.suggestions }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500 font-medium">No daily performance reports logged.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDetails(id) {
+        const tr = document.getElementById(id);
+        if (tr) {
+            tr.classList.toggle('hidden');
+        }
+    }
+
+    function switchTab(activeId, inactiveId) {
+        document.getElementById(activeId).classList.remove('hidden');
+        document.getElementById(inactiveId).classList.add('hidden');
+        
+        document.getElementById('btn-' + activeId).className = "py-4 font-semibold text-sm border-b-2 border-brand-600 text-brand-600 focus:outline-none transition";
+        document.getElementById('btn-' + inactiveId).className = "py-4 font-semibold text-sm border-b-2 border-transparent text-slate-500 hover:text-slate-800 focus:outline-none transition";
+        
+        const searchInput = document.getElementById('search-input');
+        if (activeId === 'profiles-tab') {
+            searchInput.placeholder = 'Search staff profiles...';
+        } else {
+            searchInput.placeholder = 'Search submissions...';
+        }
+    }
+
+    function filterTable() {
+        const query = document.getElementById('search-input').value.toLowerCase().strip();
+        const activeTab = document.getElementById('profiles-tab').classList.contains('hidden') ? 'submissions' : 'profiles';
+        
+        if (activeTab === 'profiles') {
+            const rows = document.querySelectorAll('.profile-row');
+            rows.forEach(row => {
+                const name = row.querySelector('.search-name').textContent.toLowerCase();
+                const desig = row.querySelector('.search-desig').textContent.toLowerCase();
+                if (name.includes(query) || desig.includes(query)) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart 1: Branch Breakdown
+        const branchCtx = document.getElementById('branchChart').getContext('2d');
+        const branchLabels = {{ branch_labels | tojson }};
+        const branchValues = {{ branch_values | tojson }};
+        
+        new Chart(branchCtx, {
+            type: 'bar',
+            data: {
+                labels: branchLabels,
+                datasets: [{
+                    label: 'Tests Processed',
+                    data: branchValues,
+                    backgroundColor: 'rgba(0, 102, 204, 0.75)',
+                    borderColor: '#0066cc',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9, family: 'Outfit' } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 9, family: 'Outfit' } } }
+                }
+            }
+        });
+
+        // Chart 2: Section Breakdown
+        const sectionCtx = document.getElementById('sectionChart').getContext('2d');
+        const sectionLabels = {{ section_labels | tojson }};
+        const sectionValues = {{ section_values | tojson }};
+        
+        new Chart(sectionCtx, {
+            type: 'doughnut',
+            data: {
+                labels: sectionLabels,
+                datasets: [{
+                    data: sectionValues,
+                    backgroundColor: [
+                        '#0066cc', '#42a5f5', '#66bb6a', 
+                        '#ef5350', '#ab47bc', '#ffa726'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: { font: { size: 9, family: 'Outfit' } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Request Details - CDC Lab Manager{% endblock %}
+
+{% block extra_head %}
+<!-- QRCode.js CDN for client-side QR Code rendering -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    
+    <!-- Top Action Nav -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <a href="javascript:history.back()" class="glass-btn px-4 py-2 rounded-xl text-xs font-semibold text-brand-600 flex items-center justify-center gap-x-1.5">
+            <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+        </a>
+        
+        <span class="text-xs text-slate-500 font-mono">Current Status: <strong class="text-slate-800">{{ sample_request.status }}</strong></span>
+    </div>
+
+    <!-- Request Overview Card -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Details & QR Code -->
+        <div class="md:col-span-2 glass-panel rounded-2xl p-6 shadow-xl space-y-4 bg-white">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider 
+                        {% if sample_request.priority == 'Emergency' %}bg-rose-500/10 border border-rose-500/20 text-rose-600
+                        {% elif sample_request.priority == 'Urgent' %}bg-amber-500/10 border border-amber-500/20 text-amber-600
+                        {% else %}bg-indigo-500/10 border border-indigo-500/20 text-indigo-600{% endif %}">
+                        {{ sample_request.priority }}
+                    </span>
+                    <h2 class="text-xl font-bold text-slate-900 mt-2">{{ sample_request.patient_name }}</h2>
+                    <p class="text-xs text-slate-500 font-mono">Request Tracking ID: <strong class="text-brand-600">{{ sample_request.id }}</strong></p>
+                </div>
+                
+                <!-- QR Code Holder -->
+                <div class="flex flex-col items-center">
+                    <div id="qrcode" class="p-2 bg-white rounded-xl shadow-md border border-slate-100"></div>
+                    <span class="text-3xs font-semibold text-slate-400 uppercase tracking-widest mt-1.5">Scan to Track</span>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-200 pt-4 grid grid-cols-2 gap-y-4 gap-x-6 text-sm">
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Gender</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.gender }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Patient Reg / MRN</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.patient_id or 'N/A' }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Branch origin</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.branch.name }}</span>
+                </div>
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Samples Dispatched</span>
+                    <span class="text-slate-800 font-medium">
+                        {% if sample_request.samples %}
+                        {{ sample_request.samples[0].quantity }}x {{ sample_request.samples[0].sample_type }}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="col-span-2">
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Remarks / Special Instructions</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.special_instructions or 'No special instructions recorded.' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAT Statistics Panel -->
+        <div class="glass-panel rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+            <h3 class="font-semibold text-slate-800 border-b border-slate-200 pb-2">TAT Metrics Breakdown</h3>
+            
+            <div class="space-y-3.5 my-4">
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-550">Response (Assign):</span>
+                    <span class="font-mono font-bold text-slate-800">
+                        {{ durations.pickup_response ~ ' min' if durations.pickup_response is not none else 'Pending' }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-550">Transit (Branch &rarr; G8):</span>
+                    <span class="font-mono font-bold text-slate-800">
+                        {{ durations.transport ~ ' min' if durations.transport is not none else 'Pending' }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-550">Receiving Acknowledge Delay:</span>
+                    <span class="font-mono font-bold text-slate-800">
+                        {{ durations.receiving_delay ~ ' min' if durations.receiving_delay is not none else 'Pending' }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-550">Lab Processing Time:</span>
+                    <span class="font-mono font-bold text-slate-800">
+                        {{ durations.processing ~ ' min' if durations.processing is not none else 'Pending' }}
+                    </span>
+                </div>
+                
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-550">Verification Time:</span>
+                    <span class="font-mono font-bold text-slate-800">
+                        {{ durations.verification ~ ' min' if durations.verification is not none else 'Pending' }}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Overall TAT Gauge -->
+            <div class="border-t border-slate-200 pt-4">
+                <div class="flex justify-between items-center text-xs mb-1.5">
+                    <span class="text-slate-500 font-bold uppercase tracking-wider text-2xs">Total TAT Elapsed</span>
+                    <span class="font-mono font-extrabold {% if is_delayed %}text-rose-600{% else %}text-emerald-600{% endif %}">
+                        {{ durations.total_tat }} / {{ limit }} min
+                    </span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200">
+                    {% set pct = (durations.total_tat / limit * 100) if limit > 0 else 0 %}
+                    {% if pct > 100 %}{% set pct = 100 %}{% endif %}
+                    <div class="h-full rounded-full {% if is_delayed %}bg-rose-500{% else %}bg-emerald-500{% endif %}" style="width: {{ pct }}%"></div>
+                </div>
+                
+                {% if is_delayed %}
+                <span class="block text-3xs font-extrabold uppercase tracking-widest text-rose-600 mt-2">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Warning: TAT limit exceeded
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Map & Timeline -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <!-- Interactive Map (If GPS log available) -->
+        <div class="md:col-span-3 glass-panel rounded-2xl p-5 flex flex-col h-[400px] bg-white">
+            <h3 class="font-semibold text-slate-900 mb-3 flex items-center gap-x-2">
+                <i class="fa-solid fa-map-location-dot text-brand-600"></i>
+                Sample Event Map Trajectory
+            </h3>
+            
+            <div id="request-detail-map" class="flex-1 w-full rounded-xl bg-slate-100 border border-slate-200 overflow-hidden shadow-inner relative z-10"></div>
+        </div>
+
+        <!-- Vertical Workflow Timeline -->
+        <div class="md:col-span-2 glass-panel rounded-2xl p-5 flex flex-col h-[400px] bg-white">
+            <h3 class="font-semibold text-slate-900 mb-3 flex items-center gap-x-2">
+                <i class="fa-solid fa-clock-rotate-left text-brand-600"></i>
+                Sample Workflow Logs
+            </h3>
+            
+            <div class="flex-1 overflow-y-auto pr-1">
+                <div class="flow-root pl-2">
+                    <ul role="list" class="-mb-8">
+                        {% for event in sample_request.history %}
+                        <li>
+                            <div class="relative pb-8">
+                                {% if not loop.last %}
+                                <span class="absolute left-4 top-4 -ml-px h-full w-0.5 bg-slate-200" aria-hidden="true"></span>
+                                {% endif %}
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full flex items-center justify-center ring-4 ring-white bg-white
+                                            {% if event.status == 'Pickup Requested' %}bg-blue-500/10 border border-blue-500/30 text-blue-600
+                                            {% elif event.status == 'Rider Assigned' %}bg-amber-500/10 border border-amber-500/30 text-amber-600
+                                            {% elif event.status == 'Sample Collected' %}bg-brand-500/10 border border-brand-500/30 text-brand-600
+                                            {% elif event.status == 'Received at G-8' %}bg-violet-500/10 border border-violet-500/30 text-violet-600
+                                            {% elif event.status == 'Processing' %}bg-teal-500/10 border border-teal-500/30 text-teal-600
+                                            {% elif event.status == 'Completed' %}bg-emerald-500/10 border border-emerald-500/30 text-emerald-600
+                                            {% else %}bg-slate-500/10 border border-slate-500/30 text-slate-500{% endif %}">
+                                            <i class="fa-solid fa-circle-check text-xs"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-1 min-w-0 pt-1.5">
+                                        <div class="flex justify-between items-center gap-x-2">
+                                            <p class="text-xs font-bold text-slate-900 uppercase tracking-wider">{{ event.status }}</p>
+                                            <time class="text-3xs text-slate-400 font-bold uppercase tracking-wider">{{ event.timestamp.strftime('%H:%M:%S') }}</time>
+                                        </div>
+                                        <p class="text-xs text-slate-600 mt-0.5">{{ event.remarks or '' }}</p>
+                                        <div class="mt-2 flex items-center gap-x-3 text-3xs text-slate-400 font-semibold uppercase tracking-wider">
+                                            <span><i class="fa-regular fa-user mr-1 text-slate-400"></i> {{ event.changed_by.name }}</span>
+                                            {% if event.location %}
+                                            <span><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> {{ event.location }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side QR Code rendering
+    window.addEventListener('DOMContentLoaded', () => {
+        const qrContainer = document.getElementById('qrcode');
+        if (qrContainer) {
+            new QRCode(qrContainer, {
+                text: window.location.href, // Link to current page
+                width: 72,
+                height: 72,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+        
+        initDetailMap();
+    });
+    
+    // Leaflet map initialization for coordinates trajectory
+    let map;
+    function initDetailMap() {
+        // center Islamabad
+        map = L.map('request-detail-map').setView([33.6811, 73.0361], 13);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CartoDB',
+            maxZoom: 20
+        }).addTo(map);
+        
+        // Fetch locations data logged for this request
+        const locations = [
+            {% for loc in locations %}
+            {
+                lat: {{ loc.latitude }},
+                lng: {{ loc.longitude }},
+                event: "{{ loc.event_name }}",
+                time: "{{ loc.timestamp.strftime('%H:%M:%S') }}"
+            },
+            {% endfor %}
+        ];
+        
+        if (locations.length > 0) {
+            const points = [];
+            locations.forEach((loc, index) => {
+                points.push([loc.lat, loc.lng]);
+                
+                // Add marker
+                L.circleMarker([loc.lat, loc.lng], {
+                    radius: 7,
+                    fillColor: index === locations.length - 1 ? '#10b981' : '#a392fa', // Green for latest, purple for path
+                    color: '#ffffff',
+                    weight: 2,
+                    fillOpacity: 0.9
+                }).addTo(map).bindPopup(`<strong class="text-slate-900 font-bold">${loc.event}</strong><br><span class="text-2xs text-slate-650">Logged: ${loc.time}</span>`);
+            });
+            
+            // Draw route polyline
+            if (points.length > 1) {
+                L.polyline(points, {
+                    color: '#876ef6',
+                    weight: 3,
+                    opacity: 0.8,
+                    dashArray: '5, 10'
+                }).addTo(map);
+            }
+            
+            // Zoom to fit bounds
+            map.fitBounds(L.latLngBounds(points));
+        } else {
+            // Plot G-8 default if no events yet
+            L.circleMarker([33.6811, 73.0361], {
+                radius: 10,
+                fillColor: '#876ef6',
+                color: '#ffffff',
+                weight: 2,
+                fillOpacity: 0.9
+            }).addTo(map).bindPopup(`<strong class="text-slate-900 font-bold">G-8 Main Laboratory</strong>`);
+        }
+    }
+</script>
+{% endblock %}

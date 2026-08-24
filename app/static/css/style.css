@@ -1,0 +1,122 @@
+/* CDC Lab Manager Global Design System */
+
+html {
+    font-size: 17px;
+}
+
+@media (min-width: 1024px) {
+    html {
+        font-size: 18px;
+    }
+}
+
+:root {
+    /* Brand Colors (Medical Blue & Indigo) */
+    --color-brand-50: #f0f7ff;
+    --color-brand-100: #e0effe;
+    --color-brand-200: #bde0fe;
+    --color-brand-300: #90caf9;
+    --color-brand-400: #42a5f5;
+    --color-brand-500: #1e88e5;
+    --color-brand-600: #0066cc; /* Main Medical Blue */
+    --color-brand-700: #1565c0;
+    --color-brand-800: #0d47a1;
+    --color-brand-900: #0a2540;
+    --color-brand-950: #051b30;
+
+    /* Theme Neutral Palette (High Contrast Slate) */
+    --color-bg: #f8fafc; /* slate-50 */
+    --color-surface: rgba(255, 255, 255, 0.90);
+    --color-surface-hover: rgba(255, 255, 255, 0.98);
+    --color-border: rgba(0, 102, 204, 0.12); /* Subtle Medical Blue Border */
+    --color-border-hover: rgba(0, 102, 204, 0.24);
+
+    /* Text Hierarchy */
+    --color-text-primary: #0f172a; /* slate-900 - Dark charcoal for titles/numbers */
+    --color-text-secondary: #334155; /* slate-700 - Highly readable body */
+    --color-text-muted: #64748b; /* slate-500 - Clear subtexts and labels */
+
+    /* Semantic Status Colors */
+    --color-success: #059669; /* emerald-600 */
+    --color-success-bg: #ecfdf5; /* emerald-50 */
+    --color-success-border: #a7f3d0; /* emerald-200 */
+
+    --color-warning: #d97706; /* amber-600 */
+    --color-warning-bg: #fffbeb; /* amber-50 */
+    --color-warning-border: #fde68a; /* amber-200 */
+
+    --color-danger: #dc2626; /* rose-600 */
+    --color-danger-bg: #fff1f2; /* rose-50 */
+    --color-danger-border: #fecdd3; /* rose-200 */
+
+    --color-info: #2563eb; /* blue-600 */
+    --color-info-bg: #eff6ff; /* blue-50 */
+    --color-info-border: #bfdbfe; /* blue-200 */
+
+    --color-pending: #4f46e5; /* indigo-600 */
+    --color-pending-bg: #eef2ff; /* indigo-50 */
+    --color-pending-border: #c7d2fe; /* indigo-200 */
+}
+
+/* Base Body Styling */
+body {
+    background-color: var(--color-bg) !important;
+    color: var(--color-text-secondary) !important;
+}
+
+/* Glassmorphism Panel standard overrides */
+.glass-panel {
+    background: var(--color-surface) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-border) !important;
+    box-shadow: 0 4px 20px rgba(0, 102, 204, 0.03) !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.glass-panel:hover {
+    box-shadow: 0 8px 30px rgba(0, 102, 204, 0.06) !important;
+}
+
+/* Button UI Components */
+.glass-btn {
+    background: rgba(0, 102, 204, 0.05) !important;
+    border: 1px solid rgba(0, 102, 204, 0.2) !important;
+    backdrop-filter: blur(4px);
+    color: var(--color-brand-600) !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease-in-out;
+}
+
+.glass-btn:hover {
+    background: rgba(0, 102, 204, 0.12) !important;
+    border-color: rgba(0, 102, 204, 0.4) !important;
+    color: var(--color-brand-800) !important;
+    transform: translateY(-1px);
+}
+
+/* Custom High Contrast Scrollbars */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Focus and input visual outlines */
+input:focus, select:focus, textarea:focus {
+    outline: none !important;
+    border-color: var(--color-brand-500) !important;
+    box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.15) !important;
+}

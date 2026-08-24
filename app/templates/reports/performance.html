@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Turnaround Time Performance - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Turnaround Time Performance</h1>
+            <p class="text-sm text-slate-500">Evaluate courier efficiency, branch ingestion counts, and processing/verification bottleneck points</p>
+        </div>
+        
+        <!-- Preset Range Info Badge -->
+        <div class="flex items-center gap-x-2">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
+                <i class="fa-regular fa-calendar mr-1.5"></i>
+                Active Period: {{ start_date }} to {{ end_date }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Filters Form -->
+    <div class="glass-panel rounded-2xl p-4 shadow-sm border border-slate-200">
+        <form action="{{ url_for('reports.performance') }}" method="GET" class="flex flex-wrap items-end gap-4">
+            <div class="flex flex-col gap-y-1">
+                <label for="preset-select" class="text-3xs font-bold uppercase tracking-wider text-slate-500">Time Range</label>
+                <select name="preset" id="preset-select" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                    <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
+                    <option value="weekly" {% if preset == 'weekly' %}selected{% endif %}>Last 7 Days</option>
+                    <option value="monthly" {% if preset == 'monthly' %}selected{% endif %}>Last 30 Days</option>
+                    <option value="custom" {% if preset == 'custom' %}selected{% endif %}>Custom Range</option>
+                </select>
+            </div>
+            
+            <div class="flex flex-col gap-y-1" id="start-date-container">
+                <label for="start-date-input" class="text-3xs font-bold uppercase tracking-wider text-slate-500">Start Date</label>
+                <input type="date" name="start_date" id="start-date-input" value="{{ start_date }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+            </div>
+            
+            <div class="flex flex-col gap-y-1" id="end-date-container">
+                <label for="end-date-input" class="text-3xs font-bold uppercase tracking-wider text-slate-500">End Date</label>
+                <input type="date" name="end_date" id="end-date-input" value="{{ end_date }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+            </div>
+            
+            <div>
+                <button type="submit" class="h-10 px-5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center gap-x-1.5">
+                    <i class="fa-solid fa-filter"></i> Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Laboratory Performance Metrics -->
+    <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
+        <h3 class="font-semibold text-slate-800 flex items-center gap-x-2 border-b border-slate-250 pb-2.5">
+            <i class="fa-solid fa-flask text-brand-600"></i> Laboratory processing performance averages
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 py-2">
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider block text-3xs">Receiving Delay</span>
+                <span class="text-xl font-extrabold text-slate-800 mt-1 block">{{ lab.avg_receiving }} minutes</span>
+                <span class="text-2xs text-slate-500 mt-0.5 block">Time from gate arrival to receiving lock</span>
+            </div>
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider block text-3xs">Laboratory processing TAT</span>
+                <span class="text-xl font-extrabold text-slate-800 mt-1 block">{{ lab.avg_processing }} minutes</span>
+                <span class="text-2xs text-slate-500 mt-0.5 block">Time from receiving to result entry</span>
+            </div>
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider block text-3xs">Verification TAT</span>
+                <span class="text-xl font-extrabold text-slate-800 mt-1 block">{{ lab.avg_verification }} minutes</span>
+                <span class="text-2xs text-slate-500 mt-0.5 block">Time from entry to verifier approval</span>
+            </div>
+            <div>
+                <span class="text-slate-500 font-bold uppercase tracking-wider block text-3xs">Overall Total TAT</span>
+                <span class="text-xl font-extrabold text-brand-600 mt-1 block">{{ lab.avg_overall }} minutes</span>
+                <span class="text-2xs text-slate-500 mt-0.5 block">Total pipeline duration (creation to delivery)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rider Daily Performance Log -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
+                <i class="fa-solid fa-calendar-day text-brand-600"></i> Rider daily performance log
+            </h3>
+            
+            <a href="{{ url_for('reports.export_report', report_type='rider', preset=preset, start_date=start_date, end_date=end_date) }}" class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                <i class="fa-solid fa-file-csv mr-1 text-brand-600"></i> Export Daily Log CSV
+            </a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Date</th>
+                        <th class="px-6 py-3.5">Employee ID</th>
+                        <th class="px-6 py-3.5">Rider Name</th>
+                        <th class="px-6 py-3.5">Tasks Completed</th>
+                        <th class="px-6 py-3.5">Distance Covered</th>
+                        <th class="px-6 py-3.5">Avg Pickup Response</th>
+                        <th class="px-6 py-3.5">Avg Transport Time</th>
+                        <th class="px-6 py-3.5">TAT Violations</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                    {% for row in daily_performance %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono font-semibold text-slate-700">{{ row.date }}</td>
+                        <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ row.emp_id }}</td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">{{ row.name }}</td>
+                        <td class="px-6 py-4 font-mono">{{ row.handled }} requests</td>
+                        <td class="px-6 py-4 font-mono text-indigo-600 font-semibold">{{ row.distance }} km</td>
+                        <td class="px-6 py-4 font-mono">{{ row.avg_pickup }} mins</td>
+                        <td class="px-6 py-4 font-mono">{{ row.avg_transport }} mins</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                {% if row.delays > 0 %}bg-rose-50 border border-rose-200 text-rose-600
+                                {% else %}bg-emerald-50 border border-emerald-200 text-emerald-600{% endif %}">
+                                {{ row.delays }} delays
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-slate-500 font-medium">No rider activity recorded in this period.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Rider Period Summary Performance -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
+                <i class="fa-solid fa-motorcycle text-brand-600"></i> Rider aggregate performance (period summary)
+            </h3>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Employee ID</th>
+                        <th class="px-6 py-3.5">Rider Name</th>
+                        <th class="px-6 py-3.5">Total Tasks Handled</th>
+                        <th class="px-6 py-3.5">Total Distance Covered</th>
+                        <th class="px-6 py-3.5">Overall Avg Pickup</th>
+                        <th class="px-6 py-3.5">Overall Avg Transport</th>
+                        <th class="px-6 py-3.5">Total TAT Violations</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                    {% for rider in riders %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ rider.emp_id }}</td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">{{ rider.name }}</td>
+                        <td class="px-6 py-4 font-mono">{{ rider.handled }} requests</td>
+                        <td class="px-6 py-4 font-mono text-indigo-600 font-semibold">{{ rider.total_distance }} km</td>
+                        <td class="px-6 py-4 font-mono">{{ rider.avg_pickup }} mins</td>
+                        <td class="px-6 py-4 font-mono">{{ rider.avg_transport }} mins</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                {% if rider.delays > 0 %}bg-rose-50 border border-rose-200 text-rose-600
+                                {% else %}bg-emerald-50 border border-emerald-200 text-emerald-600{% endif %}">
+                                {{ rider.delays }} delays
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500 font-medium">No riders found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Branch Performance Log -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
+                <i class="fa-solid fa-building mr-1 text-brand-600"></i> Branch collection turnaround times
+            </h3>
+            
+            <a href="{{ url_for('reports.export_report', report_type='branch', preset=preset, start_date=start_date, end_date=end_date) }}" class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                <i class="fa-solid fa-file-csv mr-1 text-brand-600"></i> Export Branch CSV
+            </a>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Code</th>
+                        <th class="px-6 py-3.5">Branch Name</th>
+                        <th class="px-6 py-3.5">Requests Ingested</th>
+                        <th class="px-6 py-3.5">Total Samples/Tests</th>
+                        <th class="px-6 py-3.5">Avg Pickup Time</th>
+                        <th class="px-6 py-3.5">Avg Transport Time</th>
+                        <th class="px-6 py-3.5">TAT Violations</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                    {% for branch in branches %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ branch.code }}</td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">{{ branch.name }}</td>
+                        <td class="px-6 py-4 font-mono">{{ branch.generated }} requests</td>
+                        <td class="px-6 py-4 font-mono text-brand-600 font-semibold">{{ branch.total_samples }} samples</td>
+                        <td class="px-6 py-4 font-mono">{{ branch.avg_pickup }} mins</td>
+                        <td class="px-6 py-4 font-mono">{{ branch.avg_transport }} mins</td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                {% if branch.delays > 0 %}bg-rose-50 border border-rose-200 text-rose-600
+                                {% else %}bg-emerald-50 border border-emerald-200 text-emerald-600{% endif %}">
+                                {{ branch.delays }} delays
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-slate-500 font-medium">No branch hubs found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const presetSelect = document.getElementById('preset-select');
+        const startDateInput = document.getElementById('start-date-input');
+        const endDateInput = document.getElementById('end-date-input');
+        const startDateContainer = document.getElementById('start-date-container');
+        const endDateContainer = document.getElementById('end-date-container');
+
+        function toggleCustomDates() {
+            if (presetSelect.value === 'custom') {
+                startDateInput.disabled = false;
+                endDateInput.disabled = false;
+                startDateContainer.style.opacity = '1';
+                endDateContainer.style.opacity = '1';
+            } else {
+                startDateInput.disabled = true;
+                endDateInput.disabled = true;
+                startDateContainer.style.opacity = '0.5';
+                endDateContainer.style.opacity = '0.5';
+                
+                const today = new Date();
+                let start = new Date();
+                if (presetSelect.value === 'today') {
+                    start = today;
+                } else if (presetSelect.value === 'weekly') {
+                    start.setDate(today.getDate() - 6);
+                } else if (presetSelect.value === 'monthly') {
+                    start.setDate(today.getDate() - 29);
+                }
+                
+                // Format date as YYYY-MM-DD local time
+                const formatLocalDate = (d) => {
+                    const offset = d.getTimezoneOffset();
+                    const localDate = new Date(d.getTime() - (offset*60*1000));
+                    return localDate.toISOString().split('T')[0];
+                };
+                
+                startDateInput.value = formatLocalDate(start);
+                endDateInput.value = formatLocalDate(today);
+            }
+        }
+
+        presetSelect.addEventListener('change', toggleCustomDates);
+        toggleCustomDates(); // run on load
+    });
+</script>
+{% endblock %}

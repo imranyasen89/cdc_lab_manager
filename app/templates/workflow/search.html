@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800">Global Search</h1>
+        <p class="text-sm text-slate-500">Search results for: <span class="font-bold text-brand-600">"{{ query }}"</span></p>
+    </div>
+
+    <!-- Mobile Search Field -->
+    <div class="block sm:hidden glass-panel rounded-xl p-4">
+        <form action="{{ url_for('workflow.search') }}" method="GET" class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+            <input class="block h-10 w-full rounded-xl bg-white border border-slate-200 pl-10 pr-4 text-slate-800 placeholder:text-slate-400 text-sm focus:outline-none focus:border-brand-500" placeholder="Search Request ID, Patient Name..." type="search" name="query" value="{{ query }}">
+        </form>
+    </div>
+
+    <!-- Results Table -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-6 py-4 border-b border-slate-200 font-semibold text-slate-700 bg-slate-50">Matched Requests ({{ results|length }})</div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-3.5">Request ID</th>
+                        <th class="px-6 py-3.5">Branch</th>
+                        <th class="px-6 py-3.5">Patient Details</th>
+                        <th class="px-6 py-3.5">Priority</th>
+                        <th class="px-6 py-3.5">Status</th>
+                        <th class="px-6 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                    {% for req in results %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-6 py-4 font-mono font-bold text-brand-600">
+                            <a href="{{ url_for('workflow.detail', request_id=req.id) }}" class="hover:underline">{{ req.id }}</a>
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">{{ req.branch.name }}</td>
+                        <td class="px-6 py-4">
+                            <div class="font-semibold text-slate-800">{{ req.patient_name }}</div>
+                            <div class="text-2xs text-slate-500 font-semibold uppercase tracking-wider">{{ req.gender }} {% if req.patient_id %}| ID: {{ req.patient_id }}{% endif %}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                                {% if req.priority == 'Emergency' %}bg-rose-50 border border-rose-200 text-rose-600
+                                {% elif req.priority == 'Urgent' %}bg-amber-50 border border-amber-200 text-amber-600
+                                {% else %}bg-indigo-50 border border-indigo-200 text-indigo-600{% endif %}">
+                                {{ req.priority }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                                {% if req.status == 'Completed' %}bg-emerald-50 border border-emerald-250 text-emerald-600
+                                {% elif req.status == 'Received at G-8' %}bg-violet-50 border border-violet-250 text-violet-600
+                                {% else %}bg-slate-50 border border-slate-200 text-slate-600{% endif %}">
+                                {{ req.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <a href="{{ url_for('workflow.detail', request_id=req.id) }}" class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                                <i class="fa-solid fa-clock-rotate-left mr-1"></i> Track Workflow
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-500 font-medium">
+                            No requests found matching your query.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

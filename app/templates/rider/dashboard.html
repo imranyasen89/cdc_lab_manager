@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Rider Dashboard - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    
+    <!-- Rider Header -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">Courier Dashboard</h1>
+            <p class="text-sm text-slate-500">Manage your active courier deliveries</p>
+        </div>
+        
+        <!-- Live GPS Info Panel -->
+        <div class="glass-panel px-3 py-2 rounded-xl text-right flex items-center gap-x-2.5">
+            <span class="relative flex h-2.5 w-2.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <div class="text-2xs font-semibold uppercase tracking-wider text-slate-500">
+                GPS Status: <span id="gps-status-text" class="text-emerald-500 font-bold">Simulated</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- GPS Coordinate Simulator (For Desktop & Testing) -->
+    <div class="glass-panel rounded-2xl p-4 border border-brand-500/20 bg-brand-50/50">
+        <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-x-2">
+            <i class="fa-solid fa-circle-nodes text-brand-600"></i>
+            GPS Location Mockup (Testing Simulator)
+        </h3>
+        <p class="text-xs text-slate-500 mt-0.5">Mock rider's physical location to test distance mapping</p>
+        
+        <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+                <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Current Position Mock</label>
+                <select id="gps-mock-select" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none" onchange="updateMockGPS()">
+                    <option value="33.6811,73.0361">G-8 Main Lab (HQ) - [33.6811, 73.0361]</option>
+                    <option value="33.6822,73.0076" selected>G-11 Collection Branch - [33.6822, 73.0076]</option>
+                    <option value="33.6896,73.0245">G-10 Branch Office - [33.6896, 73.0245]</option>
+                    <option value="33.6521,73.0674">G-13 Collection Branch - [33.6521, 73.0674]</option>
+                    <option value="33.6835,73.0210">Mid-Route Transit Point - [33.6835, 73.0210]</option>
+                </select>
+            </div>
+            
+            <div class="flex gap-x-2.5 items-end">
+                <div class="flex-1">
+                    <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Captured Lat / Lng</label>
+                    <input type="text" id="gps-coordinates-display" class="mt-1 block w-full h-10 rounded-xl bg-slate-100 border border-slate-205 text-slate-500 text-xs px-3 outline-none cursor-not-allowed" readonly value="33.6822, 73.0076">
+                </div>
+                <button onclick="requestLiveGPS()" class="h-10 px-3.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-slate-900 text-xs font-semibold flex items-center justify-center gap-x-1.5 transition">
+                    <i class="fa-solid fa-location-crosshairs"></i> Use Live GPS
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: Active Courier Tasks -->
+    <div class="space-y-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-x-2">
+            <i class="fa-solid fa-clipboard-list text-brand-600"></i>
+            My Active Task Queue
+        </h2>
+        
+        {% for task in my_tasks %}
+        <div class="glass-panel rounded-2xl p-5 border-l-4 border-brand-500 shadow-lg relative overflow-hidden bg-white">
+            <div class="flex items-start justify-between">
+                <div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider bg-brand-500/10 border border-brand-500/20 text-brand-600 mb-2">
+                        Active Stage: {{ task.request.status }}
+                    </span>
+                    <h3 class="text-base font-bold text-slate-900">
+                        {{ task.request.branch.name }} &rarr; G-8 Main Lab
+                    </h3>
+                    <p class="text-xs font-mono text-slate-500 mt-1">ID: {{ task.request.id }}</p>
+                    
+                    <div class="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                        <div>
+                            <span class="text-slate-400 font-semibold uppercase tracking-wider block text-2xs">Patient Name</span>
+                            <span class="text-slate-800 font-medium">{{ task.request.patient_name }}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-semibold uppercase tracking-wider block text-2xs">Samples Detail</span>
+                            <span class="text-slate-800 font-medium">
+                                {% if task.request.samples %}
+                                {{ task.request.samples[0].quantity }}x {{ task.request.samples[0].sample_type }}
+                                {% else %}
+                                N/A
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="col-span-2 mt-2">
+                            <span class="text-slate-400 font-semibold uppercase tracking-wider block text-2xs">Instructions</span>
+                            <span class="text-slate-800 font-medium">{{ task.request.special_instructions or 'None' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                    {% if task.request.priority == 'Emergency' %}bg-rose-500/10 border border-rose-500/20 text-rose-600
+                    {% elif task.request.priority == 'Urgent' %}bg-amber-500/10 border border-amber-500/20 text-amber-600
+                    {% else %}bg-indigo-500/10 border border-indigo-500/20 text-indigo-600{% endif %}">
+                    {{ task.request.priority }}
+                </span>
+            </div>
+
+            <!-- Action buttons depending on state -->
+            <div class="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+                {% if task.request.status == 'Rider Assigned' %}
+                <form action="{{ url_for('rider.collect_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1 min-w-[120px]">
+                    <input type="hidden" name="latitude" class="form-lat" value="33.6822">
+                    <input type="hidden" name="longitude" class="form-lng" value="73.0076">
+                    <button type="submit" class="w-full h-11 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 font-semibold text-white hover:from-amber-500 hover:to-amber-400 text-sm flex items-center justify-center gap-x-2 transition">
+                        <i class="fa-solid fa-box-archive"></i> Confirm Pickup
+                    </button>
+                </form>
+                
+                {% elif task.request.status == 'Sample Collected' %}
+                <form action="{{ url_for('rider.deliver_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1 min-w-[120px]">
+                    <input type="hidden" name="latitude" class="form-lat" value="33.6811">
+                    <input type="hidden" name="longitude" class="form-lng" value="73.0361">
+                    <button type="submit" class="w-full h-11 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white hover:from-brand-500 hover:to-rose-400 text-sm flex items-center justify-center gap-x-2 transition">
+                        <i class="fa-solid fa-truck"></i> Deliver to G-8 entrance
+                    </button>
+                </form>
+                {% endif %}
+                
+                <a href="{{ url_for('workflow.detail', request_id=task.request.id) }}" class="glass-btn px-4 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-x-2">
+                    <i class="fa-solid fa-circle-info"></i> Details
+                </a>
+            </div>
+        </div>
+        {% else %}
+        <div class="glass-panel rounded-2xl p-6 text-center text-slate-400 font-medium">
+            You do not have any active transport tasks. Accept one below!
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Section 2: Available Pickup Requests (Self Assignment) -->
+    <div class="space-y-4 pt-4">
+        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-x-2">
+            <i class="fa-solid fa-bell text-rose-550"></i>
+            Available Pickups (Self-Assign)
+        </h2>
+        
+        {% for req in available_pickups %}
+        <div class="glass-panel rounded-2xl p-5 border border-slate-200 bg-white flex flex-col justify-between gap-y-4 hover:border-brand-500/20 transition">
+            <div class="flex items-start justify-between">
+                <div>
+                    <h3 class="text-base font-bold text-slate-900">{{ req.branch.name }}</h3>
+                    <p class="text-xs text-slate-500 font-mono mt-0.5">ID: {{ req.id }}</p>
+                    <div class="mt-2.5 flex items-center gap-x-4 text-xs text-slate-500 font-medium">
+                        <span><i class="fa-solid fa-file-invoice mr-1 text-slate-500"></i> {{ req.samples[0].sample_type if req.samples else 'N/A' }}</span>
+                        <span><i class="fa-solid fa-clock mr-1 text-slate-500"></i> {{ req.created_at.strftime('%H:%M') }}</span>
+                    </div>
+                </div>
+                
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
+                    {% if req.priority == 'Emergency' %}bg-rose-500/10 border border-rose-500/20 text-rose-600
+                    {% elif req.priority == 'Urgent' %}bg-amber-500/10 border border-amber-500/20 text-amber-600
+                    {% else %}bg-indigo-500/10 border border-indigo-500/20 text-indigo-600{% endif %}">
+                    {{ req.priority }}
+                </span>
+            </div>
+            
+            <form action="{{ url_for('rider.accept_task', request_id=req.id) }}" method="POST" class="rider-action-form pt-3 border-t border-slate-200">
+                <input type="hidden" name="latitude" class="form-lat" value="33.6822">
+                <input type="hidden" name="longitude" class="form-lng" value="73.0076">
+                <button type="submit" class="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 font-semibold text-white hover:from-emerald-500 hover:to-teal-500 text-sm flex items-center justify-center gap-x-2 transition">
+                    <i class="fa-solid fa-check"></i> Accept Pickup Task
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="glass-panel rounded-2xl p-6 text-center text-slate-400 font-medium">
+            No unassigned pickup requests currently available.
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simulator GPS logic
+    let mockLat = 33.6822;
+    let mockLng = 73.0076;
+
+    function updateMockGPS() {
+        const select = document.getElementById('gps-mock-select');
+        const coords = select.value.split(',');
+        mockLat = parseFloat(coords[0]);
+        mockLng = parseFloat(coords[1]);
+        
+        document.getElementById('gps-coordinates-display').value = `${mockLat.toFixed(5)}, ${mockLng.toFixed(5)}`;
+        document.getElementById('gps-status-text').innerText = 'Simulated';
+        
+        // Sync values into forms
+        const formLats = document.querySelectorAll('.form-lat');
+        const formLngs = document.querySelectorAll('.form-lng');
+        formLats.forEach(input => input.value = mockLat);
+        formLngs.forEach(input => input.value = mockLng);
+    }
+    
+    function requestLiveGPS() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    mockLat = position.coords.latitude;
+                    mockLng = position.coords.longitude;
+                    
+                    document.getElementById('gps-coordinates-display').value = `${mockLat.toFixed(5)}, ${mockLng.toFixed(5)}`;
+                    document.getElementById('gps-status-text').innerText = 'Live GPS';
+                    
+                    // Sync values
+                    const formLats = document.querySelectorAll('.form-lat');
+                    const formLngs = document.querySelectorAll('.form-lng');
+                    formLats.forEach(input => input.value = mockLat);
+                    formLngs.forEach(input => input.value = mockLng);
+                },
+                (error) => {
+                    alert(`Failed to retrieve live GPS: ${error.message}. Staying with simulated coordinates.`);
+                }
+            );
+        } else {
+            alert("HTML5 Geolocation is not supported by this browser.");
+        }
+    }
+    
+    // Initial sync
+    window.addEventListener('DOMContentLoaded', () => {
+        updateMockGPS();
+    });
+</script>
+{% endblock %}

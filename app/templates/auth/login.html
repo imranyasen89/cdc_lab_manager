@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50 text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CDC Lab Manager</title>
+    <!-- Outfit Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0077ee',
+                            600: '#0066cc',
+                            700: '#004c99'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            font-size: 17px;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 102, 204, 0.08);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="h-full flex items-center justify-center relative overflow-hidden bg-slate-50 font-sans text-slate-800">
+    
+    <!-- Background Blur Blobs -->
+    <div class="absolute top-1/4 left-1/4 h-[30rem] w-[30rem] rounded-full bg-sky-500/5 blur-[120px] -z-10"></div>
+    <div class="absolute bottom-1/4 right-1/4 h-[30rem] w-[30rem] rounded-full bg-rose-500/5 blur-[120px] -z-10"></div>
+ 
+    <div class="w-full max-w-md px-6">
+        <div class="glass-panel rounded-3xl p-8 shadow-2xl text-center flex flex-col items-center">
+            
+            <!-- Logo Icon -->
+            <div class="h-14 w-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-rose-500 flex items-center justify-center shadow-xl shadow-brand-500/25 mb-4">
+                <i class="fa-solid fa-flask-vial text-white text-2xl"></i>
+            </div>
+            
+            <h2 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-brand-700 to-rose-600 bg-clip-text text-transparent">CDC Lab Manager</h2>
+            <p class="mt-2 text-sm text-slate-500">Sign in to access your tracking workflow</p>
+            
+            <!-- Flash messages inside login -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="mt-4 w-full space-y-2">
+                        {% for category, message in messages %}
+                            <div class="p-3 text-xs font-semibold rounded-xl bg-rose-50 border border-rose-200 text-rose-800">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form class="mt-6 w-full space-y-4" action="{{ url_for('auth.login', next=request.args.get('next', '')) }}" method="POST">
+                <div class="text-left">
+                    <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Username</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-slate-400 text-sm"></i>
+                        </div>
+                        <input type="text" name="username" id="username" autocomplete="username" required 
+                               class="block h-11 w-full rounded-xl bg-white border border-slate-200 pl-10 pr-4 text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" 
+                               placeholder="ali.khan">
+                    </div>
+                </div>
+
+                <div class="text-left">
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-slate-400 text-sm"></i>
+                        </div>
+                        <input type="password" name="password" id="password" autocomplete="current-password" required 
+                               class="block h-11 w-full rounded-xl bg-white border border-slate-200 pl-10 pr-4 text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" 
+                               placeholder="••••••••">
+                    </div>
+                </div>
+
+                <button type="submit" 
+                        class="mt-4 flex w-full h-11 items-center justify-center rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white hover:from-brand-500 hover:to-rose-400 shadow-lg shadow-brand-600/20 active:translate-y-[1px] transition duration-150">
+                    Sign In
+                </button>
+            </form>
+            
+            <div class="mt-6 text-2xs text-slate-400 font-semibold uppercase tracking-widest">
+                Centralized Pathology Network
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+</body>
+</html>

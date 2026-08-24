@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="flex items-center gap-x-3 mb-6">
+        <div class="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center border border-brand-200">
+            <i class="fa-solid fa-id-card text-brand-600 text-lg"></i>
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Edit Profile</h1>
+            <p class="text-sm text-slate-500">Update your details and security password</p>
+        </div>
+    </div>
+
+    <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-200 bg-white">
+        <form class="space-y-6" action="{{ url_for('auth.profile') }}" method="POST">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <!-- Username (ReadOnly) -->
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Username</label>
+                    <input type="text" class="mt-2 block w-full h-11 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 pl-4 pr-4 text-sm outline-none cursor-not-allowed" value="{{ current_user.username }}" readonly>
+                </div>
+                
+                <!-- Employee ID (ReadOnly) -->
+                <div class="sm:col-span-3">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Employee ID</label>
+                    <input type="text" class="mt-2 block w-full h-11 rounded-xl bg-slate-100 border border-slate-200 text-slate-500 pl-4 pr-4 text-sm outline-none cursor-not-allowed" value="{{ current_user.employee_id }}" readonly>
+                </div>
+ 
+                <!-- Name -->
+                <div class="sm:col-span-6">
+                    <label for="name" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
+                    <input type="text" name="name" id="name" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" value="{{ current_user.name }}">
+                </div>
+ 
+                <!-- Phone -->
+                <div class="sm:col-span-3">
+                    <label for="phone" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Phone</label>
+                    <input type="text" name="phone" id="phone" class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" value="{{ current_user.phone or '' }}">
+                </div>
+ 
+                <!-- Email -->
+                <div class="sm:col-span-3">
+                    <label for="email" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Email Address</label>
+                    <input type="email" name="email" id="email" class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" value="{{ current_user.email or '' }}">
+                </div>
+ 
+                <!-- Password Reset -->
+                <div class="sm:col-span-6 border-t border-slate-200 pt-6">
+                    <h3 class="text-sm font-semibold text-slate-800">Security Credentials</h3>
+                    <p class="text-xs text-slate-500 mb-4">Leave password blank if you do not want to change it</p>
+                    
+                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-500">New Password</label>
+                    <input type="password" name="password" id="password" class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="••••••••">
+                </div>
+            </div>
+ 
+            <div class="flex justify-end gap-x-3 pt-6 border-t border-slate-200">
+                <a href="{{ url_for('auth.index') }}" class="glass-btn inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-700">Cancel</a>
+                <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

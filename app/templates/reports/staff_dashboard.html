@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Performance Dashboard - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-2xl font-bold text-slate-800">Staff Performance Workspace</h1>
+        <p class="text-sm text-slate-500">Log your daily workload activities, update your skills inventory profile, and track your performance trends</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Left: Submission Form & Skills Profile -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Submit Daily Report Form -->
+            <div class="glass-panel rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+                <h3 class="font-semibold text-slate-800 flex items-center gap-x-2 border-b border-slate-100 pb-3">
+                    <i class="fa-solid fa-pen-to-square text-brand-600"></i> Daily Performance Report Submission
+                </h3>
+                
+                <form action="{{ url_for('reports.staff_submit_report') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-y-1">
+                        <label for="date" class="text-xs font-bold text-slate-650">Work Date</label>
+                        <input type="date" name="date" id="date" required value="{{ today }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                    </div>
+                    
+                    <div class="flex flex-col gap-y-1">
+                        <label for="shift" class="text-xs font-bold text-slate-650">Shift</label>
+                        <select name="shift" id="shift" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                            <option value="Morning">Morning</option>
+                            <option value="Evening">Evening</option>
+                            <option value="Night">Night</option>
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col gap-y-1">
+                        <label for="branch_id" class="text-xs font-bold text-slate-650">Place of Duty (Branch)</label>
+                        <select name="branch_id" id="branch_id" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                            {% for b in branches %}
+                            <option value="{{ b.id }}" {% if current_user.branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="flex flex-col gap-y-1">
+                        <label for="tests_processed" class="text-xs font-bold text-slate-650">Tests / Samples Processed</label>
+                        <input type="number" name="tests_processed" id="tests_processed" required min="0" value="0" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                    </div>
+
+                    <!-- Sections Checklist -->
+                    <div class="md:col-span-2 flex flex-col gap-y-2">
+                        <span class="text-xs font-bold text-slate-650">Sections Worked In Today</span>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">
+                            {% for sec in ['Chemistry', 'Hematology', 'Microbiology', 'Molecular Biology', 'Histopathology', 'Phlebotomy'] %}
+                            <label class="inline-flex items-center gap-x-2 text-xs text-slate-600 cursor-pointer">
+                                <input type="checkbox" name="sections" value="{{ sec }}" class="rounded text-brand-650 focus:ring-brand-500">
+                                {{ sec }}
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 flex flex-col gap-y-1">
+                        <label for="tasks_completed" class="text-xs font-bold text-slate-650">Specific Tasks Completed</label>
+                        <textarea name="tasks_completed" id="tasks_completed" rows="2" placeholder="Describe key accomplishments, runs completed, QC tests, etc." class="rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs p-3 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    </div>
+
+                    <div class="md:col-span-2 flex flex-col gap-y-1">
+                        <label for="challenges" class="text-xs font-bold text-slate-650">Challenges or Issues Faced</label>
+                        <textarea name="challenges" id="challenges" rows="2" placeholder="e.g. Instrument downtime, reagent delay, staff shortage. Leave blank if none." class="rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs p-3 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                    </div>
+
+                    <div class="md:col-span-2 flex flex-col gap-y-2">
+                        <span class="text-xs font-bold text-slate-650">Daily Job Satisfaction</span>
+                        <div class="flex gap-x-4 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 justify-around">
+                            <label class="inline-flex items-center gap-x-2 text-xs text-emerald-700 font-semibold cursor-pointer">
+                                <input type="radio" name="satisfaction" value="Satisfied" checked class="text-emerald-600 focus:ring-emerald-500">
+                                <i class="fa-solid fa-smile mr-0.5"></i> Satisfied
+                            </label>
+                            <label class="inline-flex items-center gap-x-2 text-xs text-amber-700 font-semibold cursor-pointer">
+                                <input type="radio" name="satisfaction" value="Neutral" class="text-amber-600 focus:ring-amber-500">
+                                <i class="fa-solid fa-meh mr-0.5"></i> Neutral
+                            </label>
+                            <label class="inline-flex items-center gap-x-2 text-xs text-rose-700 font-semibold cursor-pointer">
+                                <input type="radio" name="satisfaction" value="Dissatisfied" class="text-rose-600 focus:ring-rose-500">
+                                <i class="fa-solid fa-frown mr-0.5"></i> Dissatisfied
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-y-1">
+                        <label for="training_needs" class="text-xs font-bold text-slate-650">Skill Training or Learning Needs</label>
+                        <input type="text" name="training_needs" id="training_needs" placeholder="e.g. Molecular extraction course" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                    </div>
+
+                    <div class="flex flex-col gap-y-1">
+                        <label for="suggestions" class="text-xs font-bold text-slate-650">Suggestions for Lab Improvement</label>
+                        <input type="text" name="suggestions" id="suggestions" placeholder="e.g. Procure a secondary centrifuge" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                    </div>
+
+                    <div class="md:col-span-2 pt-2 flex justify-end">
+                        <button type="submit" class="h-10 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center gap-x-1.5">
+                            <i class="fa-solid fa-paper-plane"></i> Submit Daily Report
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Submission History Log -->
+            <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                <div class="px-6 py-4 border-b border-slate-200">
+                    <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
+                        <i class="fa-solid fa-history text-brand-600"></i> Past Submission History
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">Date</th>
+                                <th class="px-6 py-3.5">Shift / Branch</th>
+                                <th class="px-6 py-3.5">Sections Worked</th>
+                                <th class="px-6 py-3.5">Tests Processed</th>
+                                <th class="px-6 py-3.5">Satisfaction</th>
+                                <th class="px-6 py-3.5">Details</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-600">
+                            {% for r in my_reports %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-6 py-4 font-mono font-bold text-slate-800">{{ r.date }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="block font-semibold text-slate-700">{{ r.shift }}</span>
+                                    <span class="block text-3xs text-slate-400">{{ r.branch.name }}</span>
+                                </td>
+                                <td class="px-6 py-4">{{ r.section }}</td>
+                                <td class="px-6 py-4 font-mono font-semibold text-brand-600">{{ r.tests_processed }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                        {% if r.satisfaction == 'Satisfied' %}bg-emerald-50 border border-emerald-200 text-emerald-600
+                                        {% elif r.satisfaction == 'Neutral' %}bg-amber-50 border border-amber-200 text-amber-600
+                                        {% else %}bg-rose-50 border border-rose-200 text-rose-600{% endif %}">
+                                        {{ r.satisfaction or 'Satisfied' }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <button onclick="toggleDetails('details-{{ r.id }}')" class="text-brand-650 hover:underline font-semibold flex items-center">
+                                        View <i class="fa-solid fa-chevron-down ml-1 text-2xs"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr id="details-{{ r.id }}" class="hidden bg-slate-50/50">
+                                <td colspan="6" class="px-6 py-4 border-l-2 border-brand-500">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                                        <div>
+                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Tasks Completed</span>
+                                            <p class="text-slate-600 mt-1 italic">{{ r.tasks_completed or 'No description provided.' }}</p>
+                                        </div>
+                                        <div>
+                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Challenges Faced</span>
+                                            <p class="text-rose-600 mt-1 italic">{{ r.challenges or 'None reported.' }}</p>
+                                        </div>
+                                        {% if r.training_needs %}
+                                        <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Training Request</span>
+                                            <p class="text-indigo-600 mt-1 font-semibold">{{ r.training_needs }}</p>
+                                        </div>
+                                        {% endif %}
+                                        {% if r.suggestions %}
+                                        <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Improvement Suggestion</span>
+                                            <p class="text-slate-700 mt-1 font-medium">{{ r.suggestions }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center text-slate-500 font-medium">No performance reports submitted yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Chart & Skills Profile Edit -->
+        <div class="space-y-6">
+            
+            <!-- Performance Trend Chart -->
+            <div class="glass-panel rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+                <h3 class="font-semibold text-slate-800 flex items-center gap-x-2 border-b border-slate-100 pb-3">
+                    <i class="fa-solid fa-chart-bar text-brand-600"></i> Testing Load Trend
+                </h3>
+                <div class="h-48 relative">
+                    <canvas id="staffChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Profile Summary / Skills Inventory -->
+            <div class="glass-panel rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
+                        <i class="fa-solid fa-graduation-cap text-brand-600"></i> Skills & Qualification Profile
+                    </h3>
+                    <button onclick="toggleModal('profile-modal')" class="text-brand-600 hover:text-brand-500 text-xs font-semibold flex items-center gap-x-1">
+                        <i class="fa-solid fa-edit"></i> Edit
+                    </button>
+                </div>
+
+                <div class="space-y-4 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Role / Designation</span>
+                        <span class="text-sm font-semibold text-slate-800 mt-0.5 block">{{ profile.designation or 'Not Set' }}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Overall Experience</span>
+                            <span class="text-sm font-semibold text-slate-800 mt-0.5 block">{{ profile.overall_experience or 0.0 }} years</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Experience at CDC</span>
+                            <span class="text-sm font-semibold text-slate-800 mt-0.5 block">{{ profile.cdc_experience or 0.0 }} years</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Qualification</span>
+                        <span class="text-sm font-semibold text-slate-800 mt-0.5 block">{{ profile.qualification or 'Not Set' }}</span>
+                    </div>
+                    {% if profile.other_certificates %}
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Certificates / Diplomas</span>
+                        <span class="text-xs text-slate-700 mt-0.5 block">{{ profile.other_certificates }}</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Independent Laboratory Sections</span>
+                        <div class="flex flex-wrap gap-1 mt-1.5">
+                            {% if profile.sections_independent and profile.sections_independent != 'None' %}
+                                {% for sec in profile.sections_independent.split(',') %}
+                                <span class="px-2 py-0.5 rounded-md text-3xs font-extrabold uppercase bg-brand-50 border border-brand-200 text-brand-700">
+                                    {{ sec.strip() }}
+                                </span>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-slate-500 italic block">None registered.</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Wants to Study Further?</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase mt-1
+                                {% if profile.study_further == 'Yes' %}bg-emerald-50 text-emerald-600 border border-emerald-200
+                                {% else %}bg-slate-50 text-slate-500 border border-slate-200{% endif %}">
+                                {{ profile.study_further or 'No' }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Research Interest?</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase mt-1
+                                {% if profile.research_interest == 'Yes' %}bg-indigo-50 text-indigo-600 border border-indigo-200
+                                {% else %}bg-slate-50 text-slate-500 border border-slate-200{% endif %}">
+                                {{ profile.research_interest or 'No' }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if profile.training_requested %}
+                    <div class="border-t border-slate-100 pt-3">
+                        <span class="text-slate-400 font-bold uppercase tracking-wider block text-3xs">Training Goals</span>
+                        <p class="text-xs text-indigo-600 mt-1 font-semibold"><i class="fa-solid fa-graduation-cap mr-1"></i>{{ profile.training_requested }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Profile Edit Modal -->
+<div id="profile-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-250 animate-in fade-in zoom-in-95 duration-200">
+        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+            <h3 class="font-bold text-slate-800 flex items-center gap-x-2 text-sm">
+                <i class="fa-solid fa-edit text-brand-600"></i> Update Skills Profile
+            </h3>
+            <button onclick="toggleModal('profile-modal')" class="text-slate-400 hover:text-slate-650 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <form action="{{ url_for('reports.staff_profile_update') }}" method="POST" class="p-6 space-y-4 text-xs">
+            <div class="flex flex-col gap-y-1">
+                <label for="designation" class="font-bold text-slate-650">Designation / Role Title</label>
+                <input type="text" name="designation" id="designation" value="{{ profile.designation or '' }}" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-y-1">
+                    <label for="overall_experience" class="font-bold text-slate-650">Total Pathology Exp (Years)</label>
+                    <input type="number" step="0.1" name="overall_experience" id="overall_experience" value="{{ profile.overall_experience or 0.0 }}" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+                </div>
+                <div class="flex flex-col gap-y-1">
+                    <label for="cdc_experience" class="font-bold text-slate-650">Experience at CDC (Years)</label>
+                    <input type="number" step="0.1" name="cdc_experience" id="cdc_experience" value="{{ profile.cdc_experience or 0.0 }}" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-y-1">
+                <label for="qualification" class="font-bold text-slate-650">Highest Qualification</label>
+                <select name="qualification" id="qualification" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+                    <option value="BS MLT" {% if profile.qualification == 'BS MLT' %}selected{% endif %}>BS MLT</option>
+                    <option value="MS/M.phil" {% if profile.qualification == 'MS/M.phil' %}selected{% endif %}>MS / M.Phil</option>
+                    <option value="HSSC MLT" {% if profile.qualification == 'HSSC MLT' %}selected{% endif %}>HSSC MLT</option>
+                    <option value="SSC" {% if profile.qualification == 'SSC' %}selected{% endif %}>SSC</option>
+                    <option value="PhD" {% if profile.qualification == 'PhD' %}selected{% endif %}>PhD</option>
+                    <option value="Other" {% if profile.qualification not in ['BS MLT', 'MS/M.phil', 'HSSC MLT', 'SSC', 'PhD'] %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col gap-y-1">
+                <label for="other_certificates" class="font-bold text-slate-650">Other Certifications / Diplomas</label>
+                <input type="text" name="other_certificates" id="other_certificates" value="{{ profile.other_certificates or '' }}" placeholder="e.g. FSc MLT, ASM Member" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+            </div>
+
+            <!-- Independent sections checklist -->
+            <div class="flex flex-col gap-y-2">
+                <span class="font-bold text-slate-650">Sections You Can Work Independently</span>
+                <div class="grid grid-cols-2 gap-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                    {% for sec in ['Chemistry', 'Hematology', 'Microbiology', 'Molecular Biology', 'Histopathology', 'Phlebotomy'] %}
+                    <label class="inline-flex items-center gap-x-2 text-slate-600 cursor-pointer">
+                        <input type="checkbox" name="sections" value="{{ sec }}" 
+                            {% if profile.sections_independent and sec in profile.sections_independent %}checked{% endif %}
+                            class="rounded text-brand-650 focus:ring-brand-500">
+                        {{ sec }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col gap-y-1">
+                    <label for="study_further" class="font-bold text-slate-650">Wants to Study Further?</label>
+                    <select name="study_further" id="study_further" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+                        <option value="Yes" {% if profile.study_further == 'Yes' %}selected{% endif %}>Yes</option>
+                        <option value="No" {% if profile.study_further != 'Yes' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-y-1">
+                    <label for="research_interest" class="font-bold text-slate-650">Interested in Research?</label>
+                    <select name="research_interest" id="research_interest" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+                        <option value="Yes" {% if profile.research_interest == 'Yes' %}selected{% endif %}>Yes</option>
+                        <option value="No" {% if profile.research_interest != 'Yes' %}selected{% endif %}>No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-y-1">
+                <label for="training_requested" class="font-bold text-slate-650">Training Desired to Enhance Skills</label>
+                <input type="text" name="training_requested" id="training_requested" value="{{ profile.training_requested or '' }}" placeholder="e.g. Molecular diagnostics, HPLC analysis" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
+            </div>
+
+            <div class="pt-4 flex justify-end gap-x-2.5">
+                <button type="button" onclick="toggleModal('profile-modal')" class="h-10 px-5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-800 font-semibold transition">Cancel</button>
+                <button type="submit" class="h-10 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 transition">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleDetails(id) {
+        const tr = document.getElementById(id);
+        if (tr) {
+            tr.classList.toggle('hidden');
+        }
+    }
+
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.classList.toggle('hidden');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Chart.js init
+        const ctx = document.getElementById('staffChart').getContext('2d');
+        const labels = {{ chart_dates | tojson }};
+        const dataValues = {{ chart_tests | tojson }};
+        
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tests Processed',
+                    data: dataValues,
+                    borderColor: '#0066cc',
+                    backgroundColor: 'rgba(0, 102, 204, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#0066cc'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { font: { size: 9, family: 'Outfit' } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 9, family: 'Outfit' } }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

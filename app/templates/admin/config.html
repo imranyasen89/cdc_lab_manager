@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+
+{% block title %}Master Data Configurations - CDC Lab Manager{% endblock %}
+
+{% block extra_head %}
+<style>
+    .tab-btn.active {
+        background: rgba(0, 102, 204, 0.08) !important;
+        color: #0066cc !important;
+        border-color: #0066cc !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-4">
+        <h1 class="text-2xl font-bold text-slate-800">Master Data Console</h1>
+        <p class="text-sm text-slate-500">Configure associated branches, departments, TAT rule limits, and outsourced laboratory networks</p>
+    </div>
+
+    <!-- Configuration Tabs -->
+    <div class="border-b border-slate-200 flex gap-x-2 pb-1 overflow-x-auto">
+        <button onclick="switchConfigTab('tab-branches')" id="btn-config-branches" class="tab-btn active px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
+            <i class="fa-solid fa-code-branch mr-1.5"></i> Branches ({{ branches|length }})
+        </button>
+        <button onclick="switchConfigTab('tab-depts')" id="btn-config-depts" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
+            <i class="fa-solid fa-building mr-1.5"></i> Departments ({{ departments|length }})
+        </button>
+        <button onclick="switchConfigTab('tab-tat')" id="btn-config-tat" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
+            <i class="fa-solid fa-clock mr-1.5"></i> TAT Rules ({{ tat_rules|length }})
+        </button>
+        <button onclick="switchConfigTab('tab-outsource-partners')" id="btn-config-outsource-partners" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
+            <i class="fa-solid fa-share-nodes mr-1.5"></i> Outsourced Labs ({{ outsourced_labs|length }})
+        </button>
+    </div>
+
+    <!-- TAB: BRANCHES -->
+    <div id="tab-branches" class="config-tab space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role == 'ADMIN' %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
+                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure New Branch</h3>
+                <form action="{{ url_for('admin.create_branch') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Name</label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G-11 Branch">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Code</label>
+                        <input type="text" name="code" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G11">
+                    </div>
+                    <div class="grid grid-cols-2 gap-x-2">
+                        <div>
+                            <label class="block font-bold uppercase text-slate-500 tracking-wider">Latitude</label>
+                            <input type="number" step="any" name="latitude" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="33.6822">
+                        </div>
+                        <div>
+                            <label class="block font-bold uppercase text-slate-500 tracking-wider">Longitude</label>
+                            <input type="number" step="any" name="longitude" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="73.0076">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Address Details</label>
+                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="G-11 Markaz, Islamabad">
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
+                        Register Branch Hub
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">Code</th>
+                                <th class="px-6 py-3.5">Branch Name</th>
+                                <th class="px-6 py-3.5">Coordinates</th>
+                                <th class="px-6 py-3.5">Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for b in branches %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ b.code }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">{{ b.name }}</td>
+                                <td class="px-6 py-4 font-mono text-slate-600">{{ b.latitude or '0.0' }}, {{ b.longitude or '0.0' }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ b.address or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: DEPARTMENTS -->
+    <div id="tab-depts" class="config-tab hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role == 'ADMIN' %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
+                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure Department</h3>
+                <form action="{{ url_for('admin.create_department') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Department Name</label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Hematology">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
+                        <textarea name="description" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500" placeholder="Cell counts, blood tests..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
+                        Register Department
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">ID</th>
+                                <th class="px-6 py-3.5">Department Name</th>
+                                <th class="px-6 py-3.5">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for d in departments %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ d.id }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">{{ d.name }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ d.description or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: TAT RULES -->
+    <div id="tab-tat" class="config-tab hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role == 'ADMIN' %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
+                <h3 class="font-semibold text-slate-855"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure TAT Limits</h3>
+                <form action="{{ url_for('admin.create_tat_rule') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification</label>
+                        <input type="text" name="priority" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Routine / Emergency">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes)</label>
+                        <input type="number" name="max_tat_minutes" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. 180">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
+                        <input type="text" name="description" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="Target completion timeline">
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
+                        Register / Update Rule
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">Priority</th>
+                                <th class="px-6 py-3.5">Max TAT Limit</th>
+                                <th class="px-6 py-3.5">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for t in tat_rules %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-6 py-4 font-semibold text-slate-800">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                        {% if t.priority == 'Emergency' %}bg-rose-50 border border-rose-200 text-rose-600
+                                        {% elif t.priority == 'Urgent' %}bg-amber-50 border border-amber-200 text-amber-600
+                                        {% else %}bg-indigo-50 border border-indigo-200 text-indigo-600{% endif %}">
+                                        {{ t.priority }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ t.max_tat_minutes }} minutes ({{ (t.max_tat_minutes / 60)|round(1) }} hrs)</td>
+                                <td class="px-6 py-4 text-slate-600">{{ t.description or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: OUTSOURCED PARTNERS -->
+    <div id="tab-outsource-partners" class="config-tab hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role == 'ADMIN' %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
+                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure Outsource Lab</h3>
+                <form action="{{ url_for('admin.create_outsourced_lab') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Laboratory Name</label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Excel Labs">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Contact details</label>
+                        <input type="text" name="contact_info" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. +92 51 111-222-333">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Address details</label>
+                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none" placeholder="F-8 Markaz, Islamabad">
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
+                        Register Partner Lab
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-555 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-3.5">ID</th>
+                                <th class="px-6 py-3.5">Laboratory Name</th>
+                                <th class="px-6 py-3.5">Contact details</th>
+                                <th class="px-6 py-3.5">Address</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for partner in outsourced_labs %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ partner.id }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-800">{{ partner.name }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ partner.contact_info or 'N/A' }}</td>
+                                <td class="px-6 py-4 text-slate-600">{{ partner.address or 'N/A' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function switchConfigTab(tabId) {
+        // Hide all
+        const tabs = document.querySelectorAll('.config-tab');
+        tabs.forEach(tab => tab.classList.add('hidden'));
+        
+        // Show selected
+        document.getElementById(tabId).classList.remove('hidden');
+        
+        // Deactivate all btns
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => btn.classList.remove('active'));
+        
+        // Activate selected btn
+        document.getElementById(`btn-config-${tabId.replace('tab-', '')}`).classList.add('active');
+    }
+</script>
+{% endblock %}
