@@ -63,3 +63,4 @@ Use the following seeded accounts to test the dashboard view transitions:
 | **Courier (Rider 1)** | `rider1` | `rider123` | Ahmed Courier (G-11 route) |
 | **Courier (Rider 2)** | `rider2` | `rider123` | Bilal Courier (G-10 route) |
 | **Courier (Rider 3)** | `rider3` | `rider123` | Hamza Courier (G-13 route) |
+"# cdc_lab_manager" 
