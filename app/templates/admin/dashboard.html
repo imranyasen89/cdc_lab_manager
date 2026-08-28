@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - CDC Lab Manager{% endblock %}
+
+{% block extra_head %}
+<style>
+    .kpi-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+        backdrop-filter: blur(20px);
+    }
+    .kpi-card .kpi-number {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+    .kpi-gradient-1 { border-left: 4px solid #0066cc; }
+    .kpi-gradient-2 { border-left: 4px solid #10b981; }
+    .kpi-gradient-3 { border-left: 4px solid #f59e0b; }
+    .kpi-gradient-4 { border-left: 4px solid #ef4444; }
+    .kpi-gradient-5 { border-left: 4px solid #8b5cf6; }
+    .kpi-gradient-6 { border-left: 4px solid #06b6d4; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                <i class="fa-solid fa-gauge-high text-brand-600 mr-2"></i>Admin Dashboard
+            </h1>
+            <p class="text-sm text-slate-500">System-wide overview • {{ today }}</p>
+        </div>
+        <div class="flex gap-x-2">
+            <a href="{{ url_for('admin.timeline') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-x-1.5">
+                <i class="fa-solid fa-clock-rotate-left"></i> System Timeline
+            </a>
+            <a href="{{ url_for('admin.users') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-x-1.5">
+                <i class="fa-solid fa-users"></i> Manage Users
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <div class="kpi-card kpi-gradient-1 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Total Today</span>
+            <span class="kpi-number text-brand-700 mt-1 block">{{ total_today }}</span>
+            <span class="text-2xs text-slate-400 mt-1 block">Requests created</span>
+        </div>
+        <div class="kpi-card kpi-gradient-2 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Completed</span>
+            <span class="kpi-number text-emerald-600 mt-1 block">{{ completed_today }}</span>
+            <span class="text-2xs text-slate-400 mt-1 block">Fully delivered</span>
+        </div>
+        <div class="kpi-card kpi-gradient-3 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Pending</span>
+            <span class="kpi-number text-amber-600 mt-1 block">{{ pending_today }}</span>
+            <span class="text-2xs text-slate-400 mt-1 block">In pipeline</span>
+        </div>
+        <div class="kpi-card kpi-gradient-4 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Delayed</span>
+            <span class="kpi-number text-rose-600 mt-1 block">{{ delayed_today }}</span>
+            <span class="text-2xs text-slate-400 mt-1 block">TAT exceeded</span>
+        </div>
+        <div class="kpi-card kpi-gradient-5 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">TAT Compliance</span>
+            <span class="kpi-number text-violet-600 mt-1 block">{{ tat_compliance }}%</span>
+            <span class="text-2xs text-slate-400 mt-1 block">On-time rate</span>
+        </div>
+        <div class="kpi-card kpi-gradient-6 rounded-xl p-4 border border-slate-200 shadow-sm">
+            <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Active Total</span>
+            <span class="kpi-number text-cyan-600 mt-1 block">{{ all_active_count }}</span>
+            <span class="text-2xs text-slate-400 mt-1 block">All pending requests</span>
+        </div>
+    </div>
+
+    <!-- Center Workload & Rider Performance -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Center Workload Table -->
+        <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <h3 class="font-semibold text-slate-700 flex items-center gap-x-2">
+                    <i class="fa-solid fa-building text-brand-600"></i> Center Workload
+                </h3>
+                <a href="{{ url_for('admin.center_distances') }}" class="text-2xs font-bold text-brand-600 hover:text-brand-700 transition">
+                    <i class="fa-solid fa-route mr-1"></i>View Distances
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3">Center</th>
+                            <th class="px-4 py-3 text-center">Pending</th>
+                            <th class="px-4 py-3 text-center">In Transit</th>
+                            <th class="px-4 py-3 text-center">Processing</th>
+                            <th class="px-4 py-3 text-center">Completed</th>
+                            <th class="px-4 py-3 text-center">Samples</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for cw in center_workload %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="px-4 py-3">
+                                <div class="font-semibold text-slate-700">{{ cw.branch.name }}</div>
+                                <div class="text-2xs text-slate-400 font-mono">{{ cw.branch.code }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-50 text-amber-600 font-bold text-sm border border-amber-200">{{ cw.pending }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 font-bold text-sm border border-blue-200">{{ cw.in_transit }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-violet-50 text-violet-600 font-bold text-sm border border-violet-200">{{ cw.processing }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 font-bold text-sm border border-emerald-200">{{ cw.completed }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center font-semibold text-slate-600">{{ cw.total_samples }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Rider Performance Table -->
+        <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="px-5 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+                <h3 class="font-semibold text-slate-700 flex items-center gap-x-2">
+                    <i class="fa-solid fa-motorcycle text-brand-600"></i> Rider Performance (Today)
+                </h3>
+                <a href="{{ url_for('reports.performance') }}" class="text-2xs font-bold text-brand-600 hover:text-brand-700 transition">
+                    <i class="fa-solid fa-chart-line mr-1"></i>Full Report
+                </a>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50/50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                        <tr>
+                            <th class="px-4 py-3">Rider</th>
+                            <th class="px-4 py-3 text-center">Distance (km)</th>
+                            <th class="px-4 py-3 text-center">Samples</th>
+                            <th class="px-4 py-3 text-center">Trips</th>
+                            <th class="px-4 py-3 text-center">Active</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for rs in rider_summaries %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="px-4 py-3">
+                                <div class="font-semibold text-slate-700">{{ rs.rider.name }}</div>
+                                <div class="text-2xs text-slate-400 font-mono">{{ rs.rider.employee_id }}</div>
+                            </td>
+                            <td class="px-4 py-3 text-center font-bold text-brand-600">{{ rs.distance }} km</td>
+                            <td class="px-4 py-3 text-center">
+                                <span class="inline-flex items-center justify-center px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-600 font-bold text-xs border border-indigo-200">{{ rs.samples_carried }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-center font-semibold text-slate-600">{{ rs.trips }}</td>
+                            <td class="px-4 py-3 text-center">
+                                {% if rs.active_tasks > 0 %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">{{ rs.active_tasks }} Active</span>
+                                {% else %}
+                                <span class="text-slate-400 text-xs">Idle</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-400 font-medium">No active riders.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Center Distance Matrix -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="font-semibold text-slate-700 flex items-center gap-x-2">
+                <i class="fa-solid fa-route text-brand-600"></i> Center Distances (km)
+            </h3>
+        </div>
+        <div class="overflow-x-auto p-4">
+            <table class="w-full text-center text-sm">
+                <thead>
+                    <tr>
+                        <th class="px-3 py-2 text-xs font-bold text-slate-500 uppercase">From \ To</th>
+                        {% for b in branches %}
+                        <th class="px-3 py-2 text-xs font-bold text-slate-500 uppercase">{{ b.code }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b1 in branches %}
+                    <tr>
+                        <td class="px-3 py-2 font-bold text-slate-700 text-xs text-left">{{ b1.name }}</td>
+                        {% for b2 in branches %}
+                        <td class="px-3 py-2 text-xs">
+                            {% if b1.id == b2.id %}
+                            <span class="text-slate-300">—</span>
+                            {% elif distance_map.get((b1.id, b2.id)) %}
+                            <span class="font-bold text-brand-600">{{ distance_map[(b1.id, b2.id)] }}</span>
+                            {% else %}
+                            <span class="text-slate-300">—</span>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <a href="{{ url_for('reports.daily_report') }}" class="glass-panel rounded-xl p-5 border border-slate-200 hover:border-brand-300 transition flex items-center gap-x-3 group">
+            <div class="h-10 w-10 rounded-xl bg-brand-50 flex items-center justify-center group-hover:bg-brand-100 transition">
+                <i class="fa-solid fa-chart-line text-brand-600"></i>
+            </div>
+            <div>
+                <div class="font-semibold text-slate-700 text-sm">Daily Analytics</div>
+                <div class="text-2xs text-slate-400">View daily stats</div>
+            </div>
+        </a>
+        <a href="{{ url_for('admin.config') }}" class="glass-panel rounded-xl p-5 border border-slate-200 hover:border-brand-300 transition flex items-center gap-x-3 group">
+            <div class="h-10 w-10 rounded-xl bg-violet-50 flex items-center justify-center group-hover:bg-violet-100 transition">
+                <i class="fa-solid fa-sliders text-violet-600"></i>
+            </div>
+            <div>
+                <div class="font-semibold text-slate-700 text-sm">Master Data</div>
+                <div class="text-2xs text-slate-400">Branches, TAT Rules</div>
+            </div>
+        </a>
+        <a href="{{ url_for('admin.audit_logs') }}" class="glass-panel rounded-xl p-5 border border-slate-200 hover:border-brand-300 transition flex items-center gap-x-3 group">
+            <div class="h-10 w-10 rounded-xl bg-amber-50 flex items-center justify-center group-hover:bg-amber-100 transition">
+                <i class="fa-solid fa-shield-halved text-amber-600"></i>
+            </div>
+            <div>
+                <div class="font-semibold text-slate-700 text-sm">Audit Logs</div>
+                <div class="text-2xs text-slate-400">Security trail</div>
+            </div>
+        </a>
+        <a href="{{ url_for('lab.local_receive') }}" class="glass-panel rounded-xl p-5 border border-slate-200 hover:border-brand-300 transition flex items-center gap-x-3 group">
+            <div class="h-10 w-10 rounded-xl bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition">
+                <i class="fa-solid fa-hand-holding-droplet text-emerald-600"></i>
+            </div>
+            <div>
+                <div class="font-semibold text-slate-700 text-sm">Local Sample Entry</div>
+                <div class="text-2xs text-slate-400">Walk-in samples</div>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

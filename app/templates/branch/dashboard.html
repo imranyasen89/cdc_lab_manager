@@ -11,7 +11,7 @@
             <p class="text-sm text-slate-500">Track and dispatch sample requests</p>
         </div>
         
-        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN'] %}
+        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
         <a href="{{ url_for('branch.create_request') }}" class="inline-flex items-center justify-center gap-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/20 active:translate-y-[1px] transition">
             <i class="fa-solid fa-plus text-sm"></i>
             Create Pickup Request

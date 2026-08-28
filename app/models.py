@@ -13,7 +13,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     phone = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(100), nullable=True)
-    role = db.Column(db.String(50), nullable=False)  # ADMIN, MANAGER, SUPERVISOR, BRANCH_STAFF, RIDER, LAB_STAFF, VERIFIER
+    role = db.Column(db.String(50), nullable=False)  # SUPER_ADMIN, ADMIN, MANAGER, SUPERVISOR, BRANCH_STAFF, RIDER, LAB_STAFF, VERIFIER
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
     status = db.Column(db.Boolean, default=True)  # True = Active, False = Inactive
@@ -25,6 +25,10 @@ class User(UserMixin, db.Model):
         
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def has_task_permission(self, permission):
+        """Check if user has a specific task permission."""
+        return any(tp.permission == permission for tp in self.task_permissions)
 
 class Branch(db.Model):
     __tablename__ = 'branches'
@@ -67,7 +71,7 @@ class TATRule(db.Model):
 class SampleRequest(db.Model):
     __tablename__ = 'sample_requests'
     
-    id = db.Column(db.String(50), primary_key=True)  # e.g., RIC-G11-20260820-000123
+    id = db.Column(db.String(50), primary_key=True)  # e.g., CDC-G11-20260820-000123
     patient_name = db.Column(db.String(100), nullable=False)
     gender = db.Column(db.String(20), nullable=False)
     patient_id = db.Column(db.String(50), nullable=True)  # External MRN/Registration No
@@ -192,16 +196,64 @@ class StaffPerformanceReport(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     date = db.Column(db.Date, nullable=False, default=lambda: now_pkt().date())
-    shift = db.Column(db.String(50), nullable=False) # Morning, Evening, Night
-    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=False)
-    section = db.Column(db.String(100), nullable=False) # Section worked in
-    tests_processed = db.Column(db.Integer, default=0)
-    tasks_completed = db.Column(db.Text, nullable=True)
-    challenges = db.Column(db.Text, nullable=True)
-    satisfaction = db.Column(db.String(50), nullable=True) # Satisfied, Neutral, Dissatisfied
-    training_needs = db.Column(db.Text, nullable=True)
-    suggestions = db.Column(db.Text, nullable=True)
+    duty_status = db.Column(db.String(50), nullable=False, default='Present') # Present, On Leave, Off Duty
+    shift = db.Column(db.String(50), nullable=True) # Morning, Evening, Night
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=True)
+    section = db.Column(db.String(100), nullable=True) # Section worked in
+    
+    # Workload Counts
+    patients_booked = db.Column(db.Integer, default=0)
+    samples_collected = db.Column(db.Integer, default=0)
+    tests_processed = db.Column(db.Integer, default=0) # Samples Processed
+    results_entered = db.Column(db.Integer, default=0)
+    samples_referred = db.Column(db.Integer, default=0)
+    pending_work = db.Column(db.Integer, default=0)
+    
+    # Issues & Details
+    qc_issue = db.Column(db.Boolean, default=False)
+    qc_details = db.Column(db.Text, nullable=True)
+    
+    equipment_issue = db.Column(db.Boolean, default=False)
+    equipment_details = db.Column(db.Text, nullable=True)
+    
+    additional_task = db.Column(db.Boolean, default=False)
+    task_details = db.Column(db.Text, nullable=True)
+    
+    incident = db.Column(db.Boolean, default=False)
+    incident_details = db.Column(db.Text, nullable=True)
+    
+    remarks = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=now_pkt)
     
     user = db.relationship('User', backref=db.backref('staff_reports', lazy=True))
     branch = db.relationship('Branch', backref=db.backref('staff_reports', lazy=True))
+
+class UserTaskPermission(db.Model):
+    """Granular task-based permissions for specific lab workflows."""
+    __tablename__ = 'user_task_permissions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    permission = db.Column(db.String(50), nullable=False)
+    # Permissions: SAMPLE_RECEIVING, PROCESSING, RESULT_ENTRY, VERIFICATION
+    
+    user = db.relationship('User', backref='task_permissions')
+    
+    # Unique constraint: each user can have each permission only once
+    __table_args__ = (db.UniqueConstraint('user_id', 'permission', name='uq_user_permission'),)
+
+class CenterDistance(db.Model):
+    """Stores known distances (km) between branch centers."""
+    __tablename__ = 'center_distances'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    from_branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=False)
+    to_branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=False)
+    distance_km = db.Column(db.Float, nullable=False)
+    is_manual = db.Column(db.Boolean, default=True)  # True = manual input, False = auto-calculated
+    
+    from_branch = db.relationship('Branch', foreign_keys=[from_branch_id], backref='distances_from')
+    to_branch = db.relationship('Branch', foreign_keys=[to_branch_id], backref='distances_to')
+    
+    __table_args__ = (db.UniqueConstraint('from_branch_id', 'to_branch_id', name='uq_center_distance'),)
+

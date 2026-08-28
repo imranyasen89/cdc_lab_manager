@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Center Distances - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                <i class="fa-solid fa-route text-brand-600 mr-2"></i>Center Distances
+            </h1>
+            <p class="text-sm text-slate-500">Distance matrix between all collection centers (in kilometers)</p>
+        </div>
+    </div>
+
+    <!-- Distance Matrix Table -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-slate-200 bg-slate-50">
+            <h3 class="font-semibold text-slate-700">Distance Matrix (km)</h3>
+            <p class="text-2xs text-slate-400 mt-0.5">
+                <span class="inline-flex items-center gap-x-1"><span class="w-2 h-2 rounded-full bg-brand-600"></span> Manual input</span>
+                <span class="ml-3 inline-flex items-center gap-x-1"><span class="w-2 h-2 rounded-full bg-slate-300"></span> Auto-calculated from GPS</span>
+            </p>
+        </div>
+        <div class="overflow-x-auto p-5">
+            <table class="w-full text-center text-sm">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">From \ To</th>
+                        {% for b in branches %}
+                        <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <div>{{ b.code }}</div>
+                            <div class="text-2xs font-normal text-slate-400 normal-case">{{ b.name }}</div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b1 in branches %}
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td class="px-4 py-3 text-left">
+                            <div class="font-bold text-slate-700 text-xs">{{ b1.code }}</div>
+                            <div class="text-2xs text-slate-400">{{ b1.name }}</div>
+                        </td>
+                        {% for b2 in branches %}
+                        <td class="px-4 py-3">
+                            {% if b1.id == b2.id %}
+                            <span class="text-slate-200 font-bold">—</span>
+                            {% else %}
+                                {% set entry = distance_map.get((b1.id, b2.id)) %}
+                                {% if entry %}
+                                <span class="font-bold {% if entry.manual %}text-brand-600{% else %}text-slate-500{% endif %}">
+                                    {{ entry.km }} km
+                                </span>
+                                {% if entry.manual %}
+                                <div class="text-3xs text-brand-400 mt-0.5">manual</div>
+                                {% else %}
+                                <div class="text-3xs text-slate-300 mt-0.5">GPS est.</div>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-slate-300">—</span>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Manual Distance Entry Form -->
+    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+    <div class="glass-panel rounded-2xl border border-slate-200 p-5 shadow-sm">
+        <h3 class="font-semibold text-slate-700 flex items-center gap-x-2 mb-4">
+            <i class="fa-solid fa-pen-ruler text-brand-600"></i> Set / Override Distance
+        </h3>
+        
+        <form action="{{ url_for('admin.save_distance') }}" method="POST" class="flex flex-wrap items-end gap-4">
+            <div>
+                <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">From Center</label>
+                <select name="from_branch_id" required class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-48">
+                    {% for b in branches %}
+                    <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-center h-10">
+                <i class="fa-solid fa-arrow-right-arrow-left text-slate-400"></i>
+            </div>
+            <div>
+                <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">To Center</label>
+                <select name="to_branch_id" required class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-48">
+                    {% for b in branches %}
+                    <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">Distance (km)</label>
+                <input type="number" name="distance_km" step="0.01" min="0.01" required 
+                       class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-32"
+                       placeholder="e.g. 5.20">
+            </div>
+            <button type="submit" class="h-10 px-5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition">
+                <i class="fa-solid fa-floppy-disk mr-1"></i> Save Distance
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

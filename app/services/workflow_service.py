@@ -30,20 +30,20 @@ class WorkflowService:
     
     # Authorized roles for each target status
     ROLE_PERMISSIONS = {
-        'Pickup Requested': ['BRANCH_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Rider Assigned': ['RIDER', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Sample Collected': ['RIDER', 'ADMIN'],
-        'Arrived at G-8': ['RIDER', 'ADMIN'],
-        'Received at G-8': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Processing': ['LAB_STAFF', 'ADMIN'],
-        'Processing Completed': ['LAB_STAFF', 'ADMIN'],
-        'Outsource Requested': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Sent to Outsourced Lab': ['RIDER', 'LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Outsourced Result Received': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Pending Verification': ['LAB_STAFF', 'ADMIN'],
-        'Verified': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Correction Required': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'],
-        'Completed': ['BRANCH_STAFF', 'LAB_STAFF', 'RECEPTION_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN']
+        'Pickup Requested': ['BRANCH_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Rider Assigned': ['RIDER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Sample Collected': ['RIDER', 'ADMIN', 'SUPER_ADMIN'],
+        'Arrived at G-8': ['RIDER', 'ADMIN', 'SUPER_ADMIN'],
+        'Received at G-8': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Processing': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
+        'Processing Completed': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
+        'Outsource Requested': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Sent to Outsourced Lab': ['RIDER', 'LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Outsourced Result Received': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Pending Verification': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
+        'Verified': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Correction Required': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
+        'Completed': ['BRANCH_STAFF', 'LAB_STAFF', 'RECEPTION_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN']
     }
 
     @staticmethod
@@ -65,10 +65,11 @@ class WorkflowService:
         if new_status not in WorkflowService.TRANSITIONS.get(old_status, []):
             return False, f"Workflow transition from '{old_status}' to '{new_status}' is invalid."
             
-        # Guard: check authorization
-        allowed_roles = WorkflowService.ROLE_PERMISSIONS.get(new_status, [])
-        if user.role not in allowed_roles:
-            return False, f"Your role ({user.role}) is not authorized to transition requests to '{new_status}'."
+        # Guard: check authorization (SUPER_ADMIN bypasses)
+        if user.role != 'SUPER_ADMIN':
+            allowed_roles = WorkflowService.ROLE_PERMISSIONS.get(new_status, [])
+            if user.role not in allowed_roles:
+                return False, f"Your role ({user.role}) is not authorized to transition requests to '{new_status}'."
             
         # Concurrency / state validation guards
         if new_status == 'Rider Assigned':

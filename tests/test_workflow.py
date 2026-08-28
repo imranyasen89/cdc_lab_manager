@@ -55,7 +55,7 @@ class WorkflowTestCase(unittest.TestCase):
     def test_request_creation(self):
         # Create request
         req = SampleRequest(
-            id="RIC-T11-20260820-000001",
+            id="CDC-T11-20260820-000001",
             patient_name="Alice Smith",
             gender="Female",
             priority="Routine",
@@ -70,7 +70,7 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_invalid_transitions(self):
         req = SampleRequest(
-            id="RIC-T11-20260820-000002",
+            id="CDC-T11-20260820-000002",
             patient_name="Bob Brown",
             gender="Male",
             priority="Routine",
@@ -101,7 +101,7 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_role_guards(self):
         req = SampleRequest(
-            id="RIC-T11-20260820-000003",
+            id="CDC-T11-20260820-000003",
             patient_name="Charlie Cox",
             gender="Male",
             priority="Routine",
@@ -125,7 +125,7 @@ class WorkflowTestCase(unittest.TestCase):
 
     def test_valid_workflow_path(self):
         req = SampleRequest(
-            id="RIC-T11-20260820-000004",
+            id="CDC-T11-20260820-000004",
             patient_name="Diana Prince",
             gender="Female",
             priority="Routine",
@@ -194,6 +194,70 @@ class WorkflowTestCase(unittest.TestCase):
             }, follow_redirects=True)
             
             self.assertEqual(response.status_code, 200)
+
+    def test_update_location_route(self):
+        # Log in as rider
+        with self.app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess['_user_id'] = str(self.rider.id)
+                sess['_fresh'] = True
+                
+            # Create a couple of mock requests
+            req1 = SampleRequest(
+                id="CDC-T11-20260820-000010",
+                patient_name="John Doe",
+                gender="Male",
+                priority="Routine",
+                branch_id=self.branch.id,
+                created_by_id=self.branch_staff.id,
+                status="Pickup Requested"
+            )
+            req2 = SampleRequest(
+                id="CDC-T11-20260820-000011",
+                patient_name="Jane Doe",
+                gender="Female",
+                priority="Urgent",
+                branch_id=self.branch.id,
+                created_by_id=self.branch_staff.id,
+                status="Pickup Requested"
+            )
+            db.session.add_all([req1, req2])
+            db.session.commit()
+
+            # Test 1: update location with a list of request_ids
+            resp = client.post('/rider/update-location', json={
+                'latitude': 33.6822,
+                'longitude': 73.0076,
+                'request_ids': [req1.id, req2.id],
+                'event_name': 'AUTO_LOG'
+            })
+            self.assertEqual(resp.status_code, 200)
+            data = resp.get_json()
+            self.assertEqual(data['status'], 'success')
+            self.assertIn('logged for 2 tasks', data['message'])
+            
+            # Verify records exist in database
+            from app.models import LocationRecord
+            records = LocationRecord.query.filter_by(rider_id=self.rider.id, event_name='AUTO_LOG').all()
+            self.assertEqual(len(records), 2)
+            self.assertEqual(records[0].latitude, 33.6822)
+            self.assertEqual(records[1].longitude, 73.0076)
+
+            # Test 2: update location with single request_id
+            resp = client.post('/rider/update-location', json={
+                'latitude': 33.6521,
+                'longitude': 73.0674,
+                'request_id': req1.id,
+                'event_name': 'PERIODIC_UPDATE'
+            })
+            self.assertEqual(resp.status_code, 200)
+            data = resp.get_json()
+            self.assertEqual(data['status'], 'success')
+            
+            records = LocationRecord.query.filter_by(rider_id=self.rider.id, event_name='PERIODIC_UPDATE').all()
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0].request_id, req1.id)
+            self.assertEqual(records[0].latitude, 33.6521)
 
 if __name__ == '__main__':
     unittest.main()

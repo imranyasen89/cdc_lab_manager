@@ -298,3 +298,125 @@ def deliver_report(request_id):
         flash(f"Error: {msg}", 'danger')
         
     return redirect(url_for('lab.dashboard'))
+
+# ──────────────────── Local Point Sample Input ────────────────────
+
+def generate_local_request_id():
+    """Generates a unique tracking ID for local samples: CDC-LOCAL-YYYYMMDD-SeqNum"""
+    today_str = now_pkt().strftime('%Y%m%d')
+    prefix = f"CDC-LOCAL-{today_str}-"
+    
+    requests = SampleRequest.query.filter(
+        SampleRequest.id.like(f"{prefix}%")
+    ).all()
+    
+    max_seq = 0
+    for r in requests:
+        try:
+            suffix = int(r.id.split('-')[-1])
+            if suffix > max_seq:
+                max_seq = suffix
+        except (ValueError, IndexError):
+            pass
+            
+    seq_num = str(max_seq + 1).zfill(6)
+    return f"{prefix}{seq_num}"
+
+@lab_bp.route('/lab/local-receive', methods=['GET', 'POST'])
+@login_required
+@role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+def local_receive():
+    """Accept samples directly at local center (walk-in), bypassing rider pickup flow."""
+    priorities = TATRule.query.all()
+    branches = Branch.query.all()
+    
+    if request.method == 'POST':
+        patient_name = request.form.get('patient_name')
+        gender = request.form.get('gender')
+        patient_id = request.form.get('patient_id')
+        priority = request.form.get('priority', 'Routine')
+        special_instructions = request.form.get('special_instructions')
+        receiving_branch_id = request.form.get('receiving_branch_id')
+        quantity = int(request.form.get('quantity', 1))
+        
+        # Collect sample types
+        selected_sample_types = request.form.getlist('sample_types')
+        other_type = request.form.get('other_sample_type', '').strip()
+        if 'Other' in selected_sample_types and other_type:
+            selected_sample_types = [t if t != 'Other' else other_type for t in selected_sample_types]
+        elif 'Other' in selected_sample_types:
+            selected_sample_types = [t for t in selected_sample_types if t != 'Other']
+        
+        if not selected_sample_types:
+            flash('Please select at least one sample type.', 'danger')
+            return render_template('laboratory/local_receive.html', priorities=priorities, branches=branches)
+        
+        request_id = generate_local_request_id()
+        sample_types_str = ', '.join(selected_sample_types)
+        
+        # Determine branch — default to first branch (G-8 HQ) if not specified
+        branch_id = int(receiving_branch_id) if receiving_branch_id else (branches[0].id if branches else None)
+        
+        # Create SampleRequest — starts directly at 'Received at G-8' status
+        req = SampleRequest(
+            id=request_id,
+            patient_name=patient_name,
+            gender=gender,
+            patient_id=patient_id,
+            priority=priority,
+            branch_id=branch_id,
+            created_by_id=current_user.id,
+            special_instructions=special_instructions,
+            status='Received at G-8'
+        )
+        db.session.add(req)
+        
+        # Create sample records
+        for st in selected_sample_types:
+            sample = Sample(
+                request_id=request_id,
+                sample_type=st,
+                quantity=quantity
+            )
+            db.session.add(sample)
+        
+        # Log status history - creation directly at Received
+        history = StatusHistory(
+            request_id=request_id,
+            status='Received at G-8',
+            changed_by_id=current_user.id,
+            remarks=f"LOCAL POINT ENTRY: Walk-in sample received directly. Samples: {sample_types_str}",
+            location="Local Center / Walk-in"
+        )
+        db.session.add(history)
+        
+        # Audit log
+        audit = AuditLog(
+            user_id=current_user.id,
+            action="LOCAL_RECEIVE_CREATE",
+            request_id=request_id,
+            old_status=None,
+            new_status="Received at G-8",
+            location="Local Center / Walk-in",
+            ip_address=request.remote_addr
+        )
+        db.session.add(audit)
+        
+        # Create process task immediately
+        task = Task(
+            task_type='PROCESS',
+            request_id=request_id,
+            assigned_role='LAB_STAFF',
+            created_time=now_pkt(),
+            status='PENDING',
+            location="G-8 Main Lab",
+            remarks=f"Local walk-in sample: {sample_types_str}"
+        )
+        db.session.add(task)
+        
+        db.session.commit()
+        flash(f'Local sample {request_id} registered and ready for processing.', 'success')
+        return redirect(url_for('lab.dashboard'))
+    
+    return render_template('laboratory/local_receive.html', priorities=priorities, branches=branches)
+

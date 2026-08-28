@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}System Timeline - CDC Lab Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-y-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">
+                <i class="fa-solid fa-clock-rotate-left text-brand-600 mr-2"></i>System Timeline
+            </h1>
+            <p class="text-sm text-slate-500">Detailed chronological status changes across all requests</p>
+        </div>
+        
+        <!-- Date filter -->
+        <form method="GET" class="flex items-center gap-x-2">
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider">Date:</label>
+            <input type="date" name="date" value="{{ date }}" 
+                   class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500"
+                   onchange="this.form.submit()">
+        </form>
+    </div>
+
+    <!-- Timeline -->
+    <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                    <tr>
+                        <th class="px-5 py-3.5">Time (PKT)</th>
+                        <th class="px-5 py-3.5">Request ID</th>
+                        <th class="px-5 py-3.5">Status</th>
+                        <th class="px-5 py-3.5">Changed By</th>
+                        <th class="px-5 py-3.5">Location</th>
+                        <th class="px-5 py-3.5">Remarks</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for entry in history %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="px-5 py-3.5 text-xs font-mono text-slate-600">
+                            {{ entry.timestamp.strftime('%H:%M:%S') }}
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <a href="{{ url_for('workflow.detail', request_id=entry.request_id) }}" class="font-mono text-xs font-bold text-brand-600 hover:underline">
+                                {{ entry.request_id }}
+                            </a>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            {% set status_colors = {
+                                'Pickup Requested': 'bg-amber-50 text-amber-600 border-amber-200',
+                                'Rider Assigned': 'bg-blue-50 text-blue-600 border-blue-200',
+                                'Sample Collected': 'bg-indigo-50 text-indigo-600 border-indigo-200',
+                                'Arrived at G-8': 'bg-teal-50 text-teal-600 border-teal-200',
+                                'Received at G-8': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+                                'Processing': 'bg-violet-50 text-violet-600 border-violet-200',
+                                'Processing Completed': 'bg-green-50 text-green-600 border-green-200',
+                                'Pending Verification': 'bg-orange-50 text-orange-600 border-orange-200',
+                                'Verified': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+                                'Completed': 'bg-slate-100 text-slate-600 border-slate-300',
+                                'Correction Required': 'bg-rose-50 text-rose-600 border-rose-200'
+                            } %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider border {{ status_colors.get(entry.status, 'bg-slate-50 text-slate-500 border-slate-200') }}">
+                                {{ entry.status }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 font-medium text-slate-700 text-xs">
+                            {% if entry.changed_by %}
+                            {{ entry.changed_by.name }}
+                            <span class="text-slate-400 font-normal">({{ entry.changed_by.role.replace('_', ' ') }})</span>
+                            {% else %}
+                            <span class="text-slate-400">System</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">{{ entry.location or '—' }}</td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500 max-w-xs truncate" title="{{ entry.remarks or '' }}">
+                            {{ entry.remarks or '—' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-5 py-12 text-center text-slate-400 font-medium">
+                            <i class="fa-solid fa-calendar-xmark text-2xl mb-2 block text-slate-300"></i>
+                            No status changes recorded for this date.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    {% if history %}
+    <div class="text-center text-xs text-slate-400 font-semibold">
+        Showing {{ history|length }} status change{{ 's' if history|length != 1 else '' }} for {{ date }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

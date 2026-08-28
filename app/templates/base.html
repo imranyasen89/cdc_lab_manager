@@ -135,7 +135,7 @@
                     <li>
                         <ul role="list" class="-mx-2 space-y-1">
                             <!-- Dashboards based on role -->
-                            {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER'] %}
+                            {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
                             <li>
                                 <a href="{{ url_for('branch.dashboard') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'branch' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
@@ -145,7 +145,7 @@
                             </li>
                             {% endif %}
 
-                            {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR'] %}
+                            {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR', 'SUPER_ADMIN'] %}
                             <li>
                                 <a href="{{ url_for('rider.dashboard') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'rider' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
@@ -155,7 +155,7 @@
                             </li>
                             {% endif %}
 
-                            {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+                            {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
                             <li>
                                 <a href="{{ url_for('lab.dashboard') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.blueprint == 'lab' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
@@ -165,7 +165,7 @@
                             </li>
                             {% endif %}
 
-                            {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'BRANCH_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+                            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] or current_user.has_task_permission('STAFF_WORKSPACE') %}
                             <li>
                                 <a href="{{ url_for('reports.staff_dashboard') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm leading-6 font-semibold {% if request.endpoint == 'reports.staff_dashboard' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
@@ -177,7 +177,7 @@
                         </ul>
                     </li>
 
-                    {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPERVISOR'] %}
+                    {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPERVISOR', 'SUPER_ADMIN'] %}
                     <li>
                         <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-widest">Management
                         </div>
@@ -207,12 +207,19 @@
                     </li>
                     {% endif %}
 
-                    {% if current_user.role in ['ADMIN', 'MANAGER'] %}
+                    {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
                     <li>
                         <div class="text-xs font-semibold leading-6 text-slate-400 uppercase tracking-widest">System
                             Admin</div>
                         <ul role="list" class="-mx-2 mt-2 space-y-1">
-                            {% if current_user.role == 'ADMIN' %}
+                            <li>
+                                <a href="{{ url_for('admin.dashboard') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.dashboard' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-gauge-high text-lg"></i>
+                                    Admin Dashboard
+                                </a>
+                            </li>
+                            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
                             <li>
                                 <a href="{{ url_for('admin.users') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.users' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
@@ -221,6 +228,27 @@
                                 </a>
                             </li>
                             {% endif %}
+                            <li>
+                                <a href="{{ url_for('admin.center_distances') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.center_distances' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-route text-lg"></i>
+                                    Center Distances
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('admin.timeline') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.timeline' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                    System Timeline
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ url_for('lab.local_receive') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'lab.local_receive' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-hand-holding-droplet text-lg"></i>
+                                    Local Sample Entry
+                                </a>
+                            </li>
                             <li>
                                 <a href="{{ url_for('admin.config') }}"
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.config' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">

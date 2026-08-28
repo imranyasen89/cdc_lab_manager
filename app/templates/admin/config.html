@@ -186,6 +186,7 @@
                                 <th class="px-6 py-3.5">Priority</th>
                                 <th class="px-6 py-3.5">Max TAT Limit</th>
                                 <th class="px-6 py-3.5">Description</th>
+                                <th class="px-6 py-3.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
@@ -201,6 +202,18 @@
                                 </td>
                                 <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ t.max_tat_minutes }} minutes ({{ (t.max_tat_minutes / 60)|round(1) }} hrs)</td>
                                 <td class="px-6 py-4 text-slate-600">{{ t.description or 'N/A' }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <div class="flex gap-x-2 justify-end items-center">
+                                        <button onclick="openEditTATModal('{{ t.id }}', '{{ t.priority }}', '{{ t.max_tat_minutes }}', '{{ t.description or '' }}')" 
+                                                class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
+                                            Edit
+                                        </button>
+                                        <button onclick="openDeleteTATModal('{{ t.id }}', '{{ t.priority }}')" 
+                                                class="h-9 px-3 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 transition">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -266,6 +279,54 @@
     </div>
 
 </div>
+
+<!-- ============================================== TAT MODALS ============================================== -->
+
+<!-- Edit TAT Rule Modal -->
+<div id="modal-edit-tat" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
+        <h3 class="text-base font-bold text-slate-850"><i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit TAT Classification</h3>
+        
+        <form id="edit-tat-form" method="POST" class="space-y-4 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification</label>
+                <input type="text" name="priority" id="edit-tat-priority" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes)</label>
+                <input type="number" name="max_tat_minutes" id="edit-tat-minutes" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
+                <input type="text" name="description" id="edit-tat-desc" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div class="flex justify-end gap-x-2 pt-2">
+                <button type="button" onclick="closeTATModal('modal-edit-tat')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete TAT Rule Confirmation Modal -->
+<div id="modal-delete-tat" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
+        <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete TAT Classification
+        </h3>
+        <p class="text-sm text-slate-600">
+            Are you sure you want to delete the TAT limit rule for <strong id="delete-tat-priority" class="text-rose-600"></strong>? 
+            Samples already registered with this priority won't be modified, but you won't be able to select it for new requests.
+        </p>
+        <form id="delete-tat-form" method="POST" class="flex justify-end gap-x-2 pt-2">
+            <button type="button" onclick="closeTATModal('modal-delete-tat')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">
+                Delete Rule
+            </button>
+        </form>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -285,5 +346,30 @@
         // Activate selected btn
         document.getElementById(`btn-config-${tabId.replace('tab-', '')}`).classList.add('active');
     }
+
+    function closeTATModal(modalId) {
+        document.getElementById(modalId).classList.replace('flex', 'hidden');
+    }
+
+    function openEditTATModal(id, priority, minutes, desc) {
+        document.getElementById('edit-tat-priority').value = priority;
+        document.getElementById('edit-tat-minutes').value = minutes;
+        document.getElementById('edit-tat-desc').value = desc;
+        document.getElementById('edit-tat-form').action = `/admin/config/tat-rule/edit/${id}`;
+        document.getElementById('modal-edit-tat').classList.replace('hidden', 'flex');
+    }
+
+    function openDeleteTATModal(id, priority) {
+        document.getElementById('delete-tat-priority').innerText = priority;
+        document.getElementById('delete-tat-form').action = `/admin/config/tat-rule/delete/${id}`;
+        document.getElementById('modal-delete-tat').classList.replace('hidden', 'flex');
+    }
+
+    // Close modal when clicking backdrop
+    document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeTATModal(modal.id);
+        });
+    });
 </script>
 {% endblock %}

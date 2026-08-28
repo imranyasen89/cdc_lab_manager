@@ -1,6 +1,7 @@
 from datetime import datetime, date, timedelta
 from app import create_app, db
-from app.models import User, Branch, Department, TATRule, OutsourcedLab, SampleRequest, Sample, Task, StatusHistory, LocationRecord
+from app.models import (User, Branch, Department, TATRule, OutsourcedLab, SampleRequest,
+                        Sample, Task, StatusHistory, LocationRecord, UserTaskPermission, CenterDistance)
 
 def seed_data():
     app = create_app()
@@ -47,7 +48,7 @@ def seed_data():
         
         # 5. User Accounts
         users = [
-            User(name="Super Administrator", username="admin", employee_id="EMP-1001", role="ADMIN", phone="0333-1111111", email="admin@cdc.com", status=True, joining_date=date.today()),
+            User(name="Super Administrator", username="admin", employee_id="EMP-1001", role="SUPER_ADMIN", phone="0333-1111111", email="admin@cdc.com", status=True, joining_date=date.today()),
             User(name="Dr. Ali Manager", username="manager", employee_id="EMP-1002", role="MANAGER", phone="0333-2222222", email="ali@cdc.com", status=True, joining_date=date.today()),
             User(name="Kamran Supervisor", username="supervisor", employee_id="EMP-1003", role="SUPERVISOR", phone="0333-3333333", email="kamran@cdc.com", status=True, joining_date=date.today()),
             User(name="Zahra Branch Staff (G11)", username="branch11", employee_id="EMP-1004", role="BRANCH_STAFF", phone="0333-4444444", email="zahra@cdc.com", branch_id=g11_branch.id, status=True, joining_date=date.today()),
@@ -56,7 +57,8 @@ def seed_data():
             # Riders
             User(name="Ahmed Courier", username="rider1", employee_id="EMP-2001", role="RIDER", phone="0345-1111111", email="ahmed@courier.com", status=True, joining_date=date.today()),
             User(name="Bilal Courier", username="rider2", employee_id="EMP-2002", role="RIDER", phone="0345-2222222", email="bilal@courier.com", status=True, joining_date=date.today()),
-            User(name="Hamza Courier", username="rider3", employee_id="EMP-2003", role="RIDER", phone="0345-3333333", email="hamza@courier.com", status=True, joining_date=date.today())
+            User(name="Hamza Courier", username="rider3", employee_id="EMP-2003", role="RIDER", phone="0345-3333333", email="hamza@courier.com", status=True, joining_date=date.today()),
+            User(name="CEO User", username="ceo", employee_id="EMP-1000", role="ADMIN", phone="0333-0000000", email="ceo@cdc.com", status=True, joining_date=date.today())
         ]
         
         # Set passwords matching username + '123'
@@ -99,7 +101,7 @@ def seed_data():
             db.session.add(task)
             
         # Request 1: Stage 'Pickup Requested' (New)
-        req1_id = "RIC-G11-20260820-000001"
+        req1_id = "CDC-G11-20260820-000001"
         req1 = SampleRequest(
             id=req1_id, patient_name="David Miller", gender="Male", patient_id="MRN-00101",
             priority="Emergency", branch_id=g11_branch.id, created_by_id=users[3].id,
@@ -111,7 +113,7 @@ def seed_data():
         add_task("PICKUP", req1_id, None, "RIDER", "PENDING", 15)
         
         # Request 2: Stage 'Rider Assigned' (Assigned to Rider Ahmed)
-        req2_id = "RIC-G11-20260820-000002"
+        req2_id = "CDC-G11-20260820-000002"
         req2 = SampleRequest(
             id=req2_id, patient_name="Sarah Connor", gender="Female", patient_id="MRN-00102",
             priority="Routine", branch_id=g11_branch.id, created_by_id=users[3].id,
@@ -126,7 +128,7 @@ def seed_data():
         db.session.add(LocationRecord(request_id=req2_id, rider_id=users[6].id, latitude=33.6820, longitude=73.0075, event_name="ACCEPT_PICKUP", timestamp=now - timedelta(minutes=35)))
 
         # Request 3: Stage 'Sample Collected' (Rider Bilal carrying)
-        req3_id = "RIC-G10-20260820-000003"
+        req3_id = "CDC-G10-20260820-000003"
         req3 = SampleRequest(
             id=req3_id, patient_name="Arthur Pendragon", gender="Male",
             priority="Urgent", branch_id=g10_branch.id, created_by_id=users[0].id,
@@ -143,7 +145,7 @@ def seed_data():
         db.session.add(LocationRecord(request_id=req3_id, rider_id=users[7].id, latitude=33.6850, longitude=73.0310, event_name="PERIODIC_UPDATE", timestamp=now - timedelta(minutes=25)))
 
         # Request 4: Stage 'Arrived at G-8' (Rider Hamza delivered)
-        req4_id = "RIC-G13-20260820-000004"
+        req4_id = "CDC-G13-20260820-000004"
         req4 = SampleRequest(
             id=req4_id, patient_name="Clark Kent", gender="Male",
             priority="Routine", branch_id=g13_branch.id, created_by_id=users[0].id,
@@ -162,7 +164,7 @@ def seed_data():
         db.session.add(LocationRecord(request_id=req4_id, rider_id=users[8].id, latitude=33.6811, longitude=73.0361, event_name="ARRIVE_G8", timestamp=now - timedelta(minutes=20)))
 
         # Request 5: Stage 'Received at G-8' (Tech Sana logged receiving)
-        req5_id = "RIC-G11-20260820-000005"
+        req5_id = "CDC-G11-20260820-000005"
         req5 = SampleRequest(
             id=req5_id, patient_name="Bruce Wayne", gender="Male",
             priority="Routine", branch_id=g11_branch.id, created_by_id=users[3].id,
@@ -181,7 +183,7 @@ def seed_data():
         add_task("PROCESS", req5_id, None, "LAB_STAFF", "PENDING", 60)
 
         # Request 6: Stage 'Processing' (Tech Sana processing)
-        req6_id = "RIC-G11-20260820-000006"
+        req6_id = "CDC-G11-20260820-000006"
         req6 = SampleRequest(
             id=req6_id, patient_name="Barry Allen", gender="Male",
             priority="Emergency", branch_id=g11_branch.id, created_by_id=users[3].id,
@@ -201,7 +203,7 @@ def seed_data():
         add_task("PROCESS", req6_id, users[4].id, None, "IN_PROGRESS", 55, 50)
 
         # Request 7: Stage 'Pending Verification' (Tech entered result, Verifier pending)
-        req7_id = "RIC-G13-20260820-000007"
+        req7_id = "CDC-G13-20260820-000007"
         req7 = SampleRequest(
             id=req7_id, patient_name="Diana Prince", gender="Female",
             priority="Urgent", branch_id=g13_branch.id, created_by_id=users[0].id,
@@ -225,7 +227,7 @@ def seed_data():
         add_task("VERIFY", req7_id, None, "VERIFIER", "PENDING", 35)
 
         # Request 8: Stage 'Verified' (Approved by Verifier, Ready for delivery)
-        req8_id = "RIC-G10-20260820-000008"
+        req8_id = "CDC-G10-20260820-000008"
         req8 = SampleRequest(
             id=req8_id, patient_name="Tony Stark", gender="Male",
             priority="Routine", branch_id=g10_branch.id, created_by_id=users[0].id,
@@ -251,7 +253,7 @@ def seed_data():
         add_task("DELIVER", req8_id, None, "BRANCH_STAFF", "PENDING", 80)
 
         # Request 9: Stage 'Completed' (Finished / Report Delivered)
-        req9_id = "RIC-G11-20260820-000009"
+        req9_id = "CDC-G11-20260820-000009"
         req9 = SampleRequest(
             id=req9_id, patient_name="Peter Parker", gender="Male",
             priority="Routine", branch_id=g11_branch.id, created_by_id=users[3].id,
@@ -276,9 +278,38 @@ def seed_data():
         add_task("ENTER_RESULT", req9_id, users[4].id, None, "COMPLETED", 160, 160, 150)
         add_task("VERIFY", req9_id, users[5].id, None, "COMPLETED", 150, 150, 130)
         add_task("DELIVER", req9_id, users[3].id, None, "COMPLETED", 130, 130, 100)
+        
+        # 6. Center Distances
+        print("Seeding center distances...")
+        distances = [
+            (g8_hq.id, g11_branch.id, 5.2),
+            (g8_hq.id, g10_branch.id, 2.5),
+            (g8_hq.id, g13_branch.id, 8.1),
+            (g11_branch.id, g10_branch.id, 3.0),
+            (g11_branch.id, g13_branch.id, 6.4),
+            (g10_branch.id, g13_branch.id, 5.8)
+        ]
+        
+        for from_bid, to_bid, dist_km in distances:
+            # Add both directions
+            cd1 = CenterDistance(from_branch_id=from_bid, to_branch_id=to_bid, distance_km=dist_km, is_manual=True)
+            cd2 = CenterDistance(from_branch_id=to_bid, to_branch_id=from_bid, distance_km=dist_km, is_manual=True)
+            db.session.add_all([cd1, cd2])
+            
+        # 7. User Task Permissions
+        print("Seeding user task permissions...")
+        # tech user is users[4], verifier user is users[5] since ceo was appended at the end (index 9)
+        tech_user = users[4]
+        verifier_user = users[5]
+        
+        # Add permissions
+        db.session.add(UserTaskPermission(user=tech_user, permission="SAMPLE_RECEIVING"))
+        db.session.add(UserTaskPermission(user=tech_user, permission="PROCESSING"))
+        db.session.add(UserTaskPermission(user=tech_user, permission="RESULT_ENTRY"))
+        db.session.add(UserTaskPermission(user=verifier_user, permission="VERIFICATION"))
 
         db.session.commit()
-        print("Database seeded successfully with all roles, branches and mock requests!")
+        print("Database seeded successfully with all roles, branches, distances, permissions, and mock requests!")
 
 if __name__ == '__main__':
     seed_data()

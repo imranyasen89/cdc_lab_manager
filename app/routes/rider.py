@@ -138,6 +138,98 @@ def deliver_sample(request_id):
         
     return redirect(url_for('rider.dashboard'))
 
+@rider_bp.route('/rider/bulk-collect', methods=['POST'])
+@login_required
+@role_required('RIDER', 'ADMIN')
+def bulk_collect():
+    request_ids = request.form.getlist('request_ids')
+    lat = request.form.get('latitude')
+    lng = request.form.get('longitude')
+    lat = float(lat) if lat else None
+    lng = float(lng) if lng else None
+    location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: Unavailable"
+    
+    collected_count = 0
+    errors = []
+    
+    for rid in request_ids:
+        success, msg = WorkflowService.transition_to(
+            request_id=rid,
+            new_status='Sample Collected',
+            user=current_user,
+            remarks="Bulk collected samples.",
+            location=location_str,
+            ip_address=request.remote_addr
+        )
+        if success:
+            collected_count += 1
+            if lat and lng:
+                loc = LocationRecord(
+                    request_id=rid,
+                    rider_id=current_user.id,
+                    latitude=lat,
+                    longitude=lng,
+                    event_name='CONFIRM_COLLECTION'
+                )
+                db.session.add(loc)
+        else:
+            errors.append(f"{rid}: {msg}")
+            
+    db.session.commit()
+    
+    if collected_count > 0:
+        flash(f"Successfully collected {collected_count} patient samples.", 'success')
+    if errors:
+        flash(f"Some errors occurred: {', '.join(errors)}", 'danger')
+        
+    return redirect(url_for('rider.dashboard'))
+
+@rider_bp.route('/rider/bulk-deliver', methods=['POST'])
+@login_required
+@role_required('RIDER', 'ADMIN')
+def bulk_deliver():
+    request_ids = request.form.getlist('request_ids')
+    lat = request.form.get('latitude')
+    lng = request.form.get('longitude')
+    lat = float(lat) if lat else None
+    lng = float(lng) if lng else None
+    location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: G-8 Lab Gate"
+    
+    delivered_count = 0
+    errors = []
+    
+    for rid in request_ids:
+        success, msg = WorkflowService.transition_to(
+            request_id=rid,
+            new_status='Arrived at G-8',
+            user=current_user,
+            remarks="Bulk delivered samples to G-8 entrance.",
+            location=location_str,
+            ip_address=request.remote_addr
+        )
+        if success:
+            delivered_count += 1
+            if lat and lng:
+                loc = LocationRecord(
+                    request_id=rid,
+                    rider_id=current_user.id,
+                    latitude=lat,
+                    longitude=lng,
+                    event_name='ARRIVE_G8'
+                )
+                db.session.add(loc)
+        else:
+            errors.append(f"{rid}: {msg}")
+            
+    db.session.commit()
+    
+    if delivered_count > 0:
+        flash(f"Successfully delivered {delivered_count} patient samples to G-8.", 'success')
+    if errors:
+        flash(f"Some errors occurred: {', '.join(errors)}", 'danger')
+        
+    return redirect(url_for('rider.dashboard'))
+
 @rider_bp.route('/rider/update-location', methods=['POST'])
 @login_required
 @role_required('RIDER', 'ADMIN')
@@ -149,18 +241,40 @@ def update_location():
     lat = data.get('latitude')
     lng = data.get('longitude')
     request_id = data.get('request_id')
+    request_ids = data.get('request_ids')
     event_name = data.get('event_name', 'PERIODIC_UPDATE')
     
-    if lat and lng:
-        loc = LocationRecord(
-            request_id=request_id,
-            rider_id=current_user.id,
-            latitude=float(lat),
-            longitude=float(lng),
-            event_name=event_name
-        )
-        db.session.add(loc)
-        db.session.commit()
-        return jsonify({'status': 'success', 'message': 'Location logged.'})
+    if lat is None or lng is None:
+        return jsonify({'status': 'error', 'message': 'Invalid coordinates.'}), 400
         
-    return jsonify({'status': 'error', 'message': 'Invalid coordinates.'}), 400
+    try:
+        lat_val = float(lat)
+        lng_val = float(lng)
+    except (ValueError, TypeError):
+        return jsonify({'status': 'error', 'message': 'Invalid coordinate values.'}), 400
+        
+    # Process multiple request IDs if provided
+    if request_ids and isinstance(request_ids, list):
+        for r_id in request_ids:
+            loc = LocationRecord(
+                request_id=r_id,
+                rider_id=current_user.id,
+                latitude=lat_val,
+                longitude=lng_val,
+                event_name=event_name
+            )
+            db.session.add(loc)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': f'Location logged for {len(request_ids)} tasks.'})
+    
+    # Single request ID or none (general periodic update)
+    loc = LocationRecord(
+        request_id=request_id,
+        rider_id=current_user.id,
+        latitude=lat_val,
+        longitude=lng_val,
+        event_name=event_name
+    )
+    db.session.add(loc)
+    db.session.commit()
+    return jsonify({'status': 'success', 'message': 'Location logged.'})

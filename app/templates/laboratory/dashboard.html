@@ -36,7 +36,7 @@
     </div>
 
     <!-- Supervisor & Manager Summary Panel -->
-    {% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+    {% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
     <!-- Metrics Cards -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-6">
         <div class="glass-panel rounded-xl p-4 text-center border border-slate-200">
@@ -62,59 +62,6 @@
         <div class="glass-panel rounded-xl p-4 text-center border border-slate-200">
             <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Verified</span>
             <span class="block text-xl font-bold metric-number mt-1">{{ verified|length }}</span>
-        </div>
-    </div>
-
-    <!-- Manager Live Dashboard Panel -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Live Map Dashboard -->
-        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col h-[480px] border border-slate-200">
-            <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-x-2">
-                <i class="fa-solid fa-map-location-dot text-brand-600"></i>
-                Live Operations Map (Islamabad Core)
-            </h3>
-            <div id="live-ops-map" class="flex-1 w-full rounded-xl bg-slate-100 overflow-hidden shadow-inner relative z-10"></div>
-        </div>
-
-        <!-- Supervisor Rider Assignment -->
-        <div class="glass-panel rounded-2xl p-5 flex flex-col h-[480px] border border-slate-200">
-            <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-x-2">
-                <i class="fa-solid fa-motorcycle text-brand-600"></i>
-                Supervisor Rider Assignment
-            </h3>
-            
-            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
-                {% for req in unassigned %}
-                <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-brand-300 transition text-xs space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between">
-                        <span class="font-mono font-bold text-brand-600">{{ req.id }}</span>
-                        <span class="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200">{{ req.priority }}</span>
-                    </div>
-                    <div>
-                        <div class="font-semibold text-slate-700">Branch: {{ req.branch.name }}</div>
-                        <div class="text-slate-500 mt-0.5">Patient: {{ req.patient_name }} ({{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }})</div>
-                    </div>
-                    
-                    <form action="{{ url_for('lab.assign_rider') }}" method="POST" class="flex gap-x-2 items-center">
-                        <input type="hidden" name="request_id" value="{{ req.id }}">
-                        <select name="rider_id" required class="flex-1 h-9 rounded-lg bg-white border border-slate-300 text-slate-700 px-2 text-2xs focus:outline-none focus:border-brand-500">
-                            <option value="">Choose Rider...</option>
-                            {% for rider in riders %}
-                            <option value="{{ rider.id }}">{{ rider.name }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit" class="h-9 px-3.5 rounded-lg bg-brand-600 font-semibold text-white hover:bg-brand-700 text-2xs transition">
-                            Assign
-                        </button>
-                    </form>
-                </div>
-                {% else %}
-                <div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs font-semibold py-12">
-                    <i class="fa-solid fa-check-circle text-2xl mb-2 text-emerald-400"></i>
-                    No unassigned pickup requests.
-                </div>
-                {% endfor %}
-            </div>
         </div>
     </div>
     {% endif %}
@@ -460,6 +407,63 @@
     </div>
 </div>
 
+<!-- Map & Rider Assignment Section (at bottom, per user request) -->
+{% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+<div class="space-y-6 mt-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Live Map Dashboard -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl p-5 flex flex-col h-[480px] border border-slate-200">
+            <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-x-2">
+                <i class="fa-solid fa-map-location-dot text-brand-600"></i>
+                Live Operations Map (Islamabad Core)
+            </h3>
+            <div id="live-ops-map" class="flex-1 w-full rounded-xl bg-slate-100 overflow-hidden shadow-inner relative z-10"></div>
+        </div>
+
+        <!-- Supervisor Rider Assignment -->
+        <div class="glass-panel rounded-2xl p-5 flex flex-col h-[480px] border border-slate-200">
+            <h3 class="font-semibold text-slate-700 mb-3 flex items-center gap-x-2">
+                <i class="fa-solid fa-motorcycle text-brand-600"></i>
+                Supervisor Rider Assignment
+            </h3>
+            
+            <div class="flex-1 overflow-y-auto space-y-3 pr-1">
+                {% for req in unassigned %}
+                <div class="p-3.5 rounded-xl border border-slate-200 bg-white hover:border-brand-300 transition text-xs space-y-3 shadow-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="font-mono font-bold text-brand-600">{{ req.id }}</span>
+                        <span class="px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase bg-rose-50 text-rose-600 border border-rose-200">{{ req.priority }}</span>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-slate-700">Branch: {{ req.branch.name }}</div>
+                        <div class="text-slate-500 mt-0.5">Patient: {{ req.patient_name }} ({{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }})</div>
+                    </div>
+                    
+                    <form action="{{ url_for('lab.assign_rider') }}" method="POST" class="flex gap-x-2 items-center">
+                        <input type="hidden" name="request_id" value="{{ req.id }}">
+                        <select name="rider_id" required class="flex-1 h-9 rounded-lg bg-white border border-slate-300 text-slate-700 px-2 text-2xs focus:outline-none focus:border-brand-500">
+                            <option value="">Choose Rider...</option>
+                            {% for rider in riders %}
+                            <option value="{{ rider.id }}">{{ rider.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="h-9 px-3.5 rounded-lg bg-brand-600 font-semibold text-white hover:bg-brand-700 text-2xs transition">
+                            Assign
+                        </button>
+                    </form>
+                </div>
+                {% else %}
+                <div class="h-full flex flex-col items-center justify-center text-slate-400 text-xs font-semibold py-12">
+                    <i class="fa-solid fa-check-circle text-2xl mb-2 text-emerald-400"></i>
+                    No unassigned pickup requests.
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <!-- ============================================== MODALS ============================================== -->
 
 <!-- 1. Acknowledge Receipt Modal -->
@@ -706,7 +710,7 @@
     });
 </script>
 
-{% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN'] %}
+{% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
 <script>
     // Leaflet live operations map
     let map;
@@ -716,10 +720,9 @@
         const center = [33.6811, 73.0361]; // G-8 Islamabad coordinates
         map = L.map('live-ops-map').setView(center, 13);
         
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CartoDB',
-            subdomains: 'abcd',
-            maxZoom: 20
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
         }).addTo(map);
         
         loadMapData();

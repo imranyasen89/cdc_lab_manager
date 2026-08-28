@@ -23,85 +23,175 @@
                 </h3>
                 
                 <form action="{{ url_for('reports.staff_submit_report') }}" method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Date (Always visible) -->
                     <div class="flex flex-col gap-y-1">
                         <label for="date" class="text-xs font-bold text-slate-650">Work Date</label>
                         <input type="date" name="date" id="date" required value="{{ today }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
                     </div>
-                    
+
+                    <!-- Daily Duty Status (Always visible) -->
                     <div class="flex flex-col gap-y-1">
-                        <label for="shift" class="text-xs font-bold text-slate-650">Shift</label>
-                        <select name="shift" id="shift" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                            <option value="Morning">Morning</option>
-                            <option value="Evening">Evening</option>
-                            <option value="Night">Night</option>
+                        <label for="duty_status" class="text-xs font-bold text-slate-650">Daily Duty Status</label>
+                        <select name="duty_status" id="duty_status" required onchange="toggleDutyFields(this.value)" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                            <option value="Present">Present & On Duty</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Off Duty">Off Duty / Rest Day</option>
                         </select>
                     </div>
 
-                    <div class="flex flex-col gap-y-1">
-                        <label for="branch_id" class="text-xs font-bold text-slate-650">Place of Duty (Branch)</label>
-                        <select name="branch_id" id="branch_id" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                            {% for b in branches %}
-                            <option value="{{ b.id }}" {% if current_user.branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <!-- Details Container (Hidden if On Leave / Off Duty) -->
+                    <div id="duty-details-container" class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        
+                        <!-- Shift -->
+                        <div class="flex flex-col gap-y-1">
+                            <label for="shift" class="text-xs font-bold text-slate-650">Shift</label>
+                            <select name="shift" id="shift" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                                <option value="Morning">Morning</option>
+                                <option value="Evening">Evening</option>
+                                <option value="Night">Night</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Place of Duty -->
+                        <div class="flex flex-col gap-y-1">
+                            <label for="branch_id" class="text-xs font-bold text-slate-650">Place of Duty (Branch)</label>
+                            <select name="branch_id" id="branch_id" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
+                                {% for b in branches %}
+                                <option value="{{ b.id }}" {% if current_user.branch_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
 
-                    <div class="flex flex-col gap-y-1">
-                        <label for="tests_processed" class="text-xs font-bold text-slate-650">Tests / Samples Processed</label>
-                        <input type="number" name="tests_processed" id="tests_processed" required min="0" value="0" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                    </div>
+                        <!-- Sections worked -->
+                        <div class="md:col-span-2 flex flex-col gap-y-2">
+                            <span class="text-xs font-bold text-slate-650">Sections Worked In Today</span>
+                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">
+                                {% for sec in ['Chemistry', 'Hematology', 'Microbiology', 'Molecular Biology', 'Histopathology', 'Phlebotomy'] %}
+                                <label class="inline-flex items-center gap-x-2 text-xs text-slate-600 cursor-pointer">
+                                    <input type="checkbox" name="sections" value="{{ sec }}" class="rounded text-brand-650 focus:ring-brand-500">
+                                    {{ sec }}
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
 
-                    <!-- Sections Checklist -->
-                    <div class="md:col-span-2 flex flex-col gap-y-2">
-                        <span class="text-xs font-bold text-slate-650">Sections Worked In Today</span>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 bg-slate-50/50 p-3.5 rounded-xl border border-slate-100">
-                            {% for sec in ['Chemistry', 'Hematology', 'Microbiology', 'Molecular Biology', 'Histopathology', 'Phlebotomy'] %}
-                            <label class="inline-flex items-center gap-x-2 text-xs text-slate-600 cursor-pointer">
-                                <input type="checkbox" name="sections" value="{{ sec }}" class="rounded text-brand-650 focus:ring-brand-500">
-                                {{ sec }}
-                            </label>
-                            {% endfor %}
+                        <!-- Daily Workload Metrics Header -->
+                        <div class="md:col-span-2 border-t border-slate-100 pt-3">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Workload Operational Metrics</h4>
+                            <p class="text-3xs text-slate-400 mt-0.5">Enter numerical counts for today's accomplishments</p>
+                        </div>
+
+                        <!-- Grid for Workload Counts -->
+                        <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            <div class="flex flex-col gap-y-1">
+                                <label for="patients_booked" class="text-2xs font-bold text-slate-500">No. of Patients Booked</label>
+                                <input type="number" name="patients_booked" id="patients_booked" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex flex-col gap-y-1">
+                                <label for="samples_collected" class="text-2xs font-bold text-slate-500">No. of Samples Collected</label>
+                                <input type="number" name="samples_collected" id="samples_collected" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex flex-col gap-y-1">
+                                <label for="tests_processed" class="text-2xs font-bold text-slate-500">No. of Samples Processed</label>
+                                <input type="number" name="tests_processed" id="tests_processed" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex flex-col gap-y-1">
+                                <label for="results_entered" class="text-2xs font-bold text-slate-500">No. of Results Entered</label>
+                                <input type="number" name="results_entered" id="results_entered" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex flex-col gap-y-1">
+                                <label for="samples_referred" class="text-2xs font-bold text-slate-500">No. of Samples Referred</label>
+                                <input type="number" name="samples_referred" id="samples_referred" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                            <div class="flex flex-col gap-y-1">
+                                <label for="pending_work" class="text-2xs font-bold text-slate-500">Pending Work/Samples</label>
+                                <input type="number" name="pending_work" id="pending_work" min="0" value="0" class="h-9 rounded-lg bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3 focus:outline-none focus:border-brand-500 transition">
+                            </div>
+                        </div>
+
+                        <!-- Operational Checks Header -->
+                        <div class="md:col-span-2 border-t border-slate-100 pt-3">
+                            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Quality & Incident Checks</h4>
+                            <p class="text-3xs text-slate-400 mt-0.5">Toggle and describe any checks performed or issues encountered today</p>
+                        </div>
+
+                        <!-- Toggles & Textareas -->
+                        <div class="md:col-span-2 space-y-3">
+                            
+                            <!-- QC Issue Toggle -->
+                            <div class="border border-slate-150 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-x-2">
+                                        <i class="fa-solid fa-flask-vial text-brand-600"></i> Any QC issues during your shift?
+                                    </span>
+                                    <select name="qc_issue" onchange="toggleFieldDisplay('qc-details-box', this.value)" class="h-8 rounded-lg border border-slate-200 bg-white text-2xs text-slate-700 px-2 focus:outline-none focus:border-brand-500">
+                                        <option value="false">No Issues</option>
+                                        <option value="true">Yes, Encountered</option>
+                                    </select>
+                                </div>
+                                <div id="qc-details-box" class="hidden">
+                                    <textarea name="qc_details" rows="2" placeholder="Describe the QC issue encountered..." class="w-full rounded-lg bg-white border border-slate-200 text-slate-800 text-xs p-2.5 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Equipment Issue Toggle -->
+                            <div class="border border-slate-150 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-x-2">
+                                        <i class="fa-solid fa-microscope text-brand-600"></i> Any analyzer or equipment issues?
+                                    </span>
+                                    <select name="equipment_issue" onchange="toggleFieldDisplay('equip-details-box', this.value)" class="h-8 rounded-lg border border-slate-200 bg-white text-2xs text-slate-700 px-2 focus:outline-none focus:border-brand-500">
+                                        <option value="false">No Issues</option>
+                                        <option value="true">Yes, Encountered</option>
+                                    </select>
+                                </div>
+                                <div id="equip-details-box" class="hidden">
+                                    <textarea name="equipment_details" rows="2" placeholder="Analyzer name & description of the issue faced..." class="w-full rounded-lg bg-white border border-slate-200 text-slate-800 text-xs p-2.5 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Additional Task Toggle -->
+                            <div class="border border-slate-150 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-x-2">
+                                        <i class="fa-solid fa-list-check text-brand-600"></i> Any additional task assigned?
+                                    </span>
+                                    <select name="additional_task" onchange="toggleFieldDisplay('task-details-box', this.value)" class="h-8 rounded-lg border border-slate-200 bg-white text-2xs text-slate-700 px-2 focus:outline-none focus:border-brand-500">
+                                        <option value="false">No Additional Tasks</option>
+                                        <option value="true">Yes, Assigned</option>
+                                    </select>
+                                </div>
+                                <div id="task-details-box" class="hidden">
+                                    <textarea name="task_details" rows="2" placeholder="Describe the additional task details..." class="w-full rounded-lg bg-white border border-slate-200 text-slate-800 text-xs p-2.5 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                                </div>
+                            </div>
+
+                            <!-- Incident Toggle -->
+                            <div class="border border-slate-150 rounded-xl p-3 bg-slate-50/50 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-700 flex items-center gap-x-2">
+                                        <i class="fa-solid fa-circle-exclamation text-brand-600"></i> Any incidents reported during shift?
+                                    </span>
+                                    <select name="incident" onchange="toggleFieldDisplay('incident-details-box', this.value)" class="h-8 rounded-lg border border-slate-200 bg-white text-2xs text-slate-700 px-2 focus:outline-none focus:border-brand-500">
+                                        <option value="false">No Incidents</option>
+                                        <option value="true">Yes, Incident Occurred</option>
+                                    </select>
+                                </div>
+                                <div id="incident-details-box" class="hidden">
+                                    <textarea name="incident_details" rows="2" placeholder="Describe the incident details..." class="w-full rounded-lg bg-white border border-slate-200 text-slate-800 text-xs p-2.5 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
+                    <!-- Remarks (Always visible) -->
                     <div class="md:col-span-2 flex flex-col gap-y-1">
-                        <label for="tasks_completed" class="text-xs font-bold text-slate-650">Specific Tasks Completed</label>
-                        <textarea name="tasks_completed" id="tasks_completed" rows="2" placeholder="Describe key accomplishments, runs completed, QC tests, etc." class="rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs p-3 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
+                        <label for="remarks" class="text-xs font-bold text-slate-650">General Remarks / Notes</label>
+                        <textarea name="remarks" id="remarks" rows="2" placeholder="Additional comments, shift handover notes, etc." class="rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs p-3 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
                     </div>
 
-                    <div class="md:col-span-2 flex flex-col gap-y-1">
-                        <label for="challenges" class="text-xs font-bold text-slate-650">Challenges or Issues Faced</label>
-                        <textarea name="challenges" id="challenges" rows="2" placeholder="e.g. Instrument downtime, reagent delay, staff shortage. Leave blank if none." class="rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs p-3 focus:outline-none focus:border-brand-500 transition resize-none"></textarea>
-                    </div>
-
-                    <div class="md:col-span-2 flex flex-col gap-y-2">
-                        <span class="text-xs font-bold text-slate-650">Daily Job Satisfaction</span>
-                        <div class="flex gap-x-4 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 justify-around">
-                            <label class="inline-flex items-center gap-x-2 text-xs text-emerald-700 font-semibold cursor-pointer">
-                                <input type="radio" name="satisfaction" value="Satisfied" checked class="text-emerald-600 focus:ring-emerald-500">
-                                <i class="fa-solid fa-smile mr-0.5"></i> Satisfied
-                            </label>
-                            <label class="inline-flex items-center gap-x-2 text-xs text-amber-700 font-semibold cursor-pointer">
-                                <input type="radio" name="satisfaction" value="Neutral" class="text-amber-600 focus:ring-amber-500">
-                                <i class="fa-solid fa-meh mr-0.5"></i> Neutral
-                            </label>
-                            <label class="inline-flex items-center gap-x-2 text-xs text-rose-700 font-semibold cursor-pointer">
-                                <input type="radio" name="satisfaction" value="Dissatisfied" class="text-rose-600 focus:ring-rose-500">
-                                <i class="fa-solid fa-frown mr-0.5"></i> Dissatisfied
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="flex flex-col gap-y-1">
-                        <label for="training_needs" class="text-xs font-bold text-slate-650">Skill Training or Learning Needs</label>
-                        <input type="text" name="training_needs" id="training_needs" placeholder="e.g. Molecular extraction course" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                    </div>
-
-                    <div class="flex flex-col gap-y-1">
-                        <label for="suggestions" class="text-xs font-bold text-slate-650">Suggestions for Lab Improvement</label>
-                        <input type="text" name="suggestions" id="suggestions" placeholder="e.g. Procure a secondary centrifuge" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                    </div>
-
+                    <!-- Submit Button -->
                     <div class="md:col-span-2 pt-2 flex justify-end">
                         <button type="submit" class="h-10 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center gap-x-1.5">
                             <i class="fa-solid fa-paper-plane"></i> Submit Daily Report
@@ -122,10 +212,10 @@
                         <thead class="bg-slate-50 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                             <tr>
                                 <th class="px-6 py-3.5">Date</th>
-                                <th class="px-6 py-3.5">Shift / Branch</th>
-                                <th class="px-6 py-3.5">Sections Worked</th>
-                                <th class="px-6 py-3.5">Tests Processed</th>
-                                <th class="px-6 py-3.5">Satisfaction</th>
+                                <th class="px-6 py-3.5">Status / Shift</th>
+                                <th class="px-6 py-3.5">Branch / Sections</th>
+                                <th class="px-6 py-3.5">Workload (B / C / P / E / R / P)</th>
+                                <th class="px-6 py-3.5">Issues</th>
                                 <th class="px-6 py-3.5">Details</th>
                             </tr>
                         </thead>
@@ -134,18 +224,65 @@
                             <tr class="hover:bg-slate-50/80 transition">
                                 <td class="px-6 py-4 font-mono font-bold text-slate-800">{{ r.date }}</td>
                                 <td class="px-6 py-4">
-                                    <span class="block font-semibold text-slate-700">{{ r.shift }}</span>
-                                    <span class="block text-3xs text-slate-400">{{ r.branch.name }}</span>
-                                </td>
-                                <td class="px-6 py-4">{{ r.section }}</td>
-                                <td class="px-6 py-4 font-mono font-semibold text-brand-600">{{ r.tests_processed }}</td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
-                                        {% if r.satisfaction == 'Satisfied' %}bg-emerald-50 border border-emerald-200 text-emerald-600
-                                        {% elif r.satisfaction == 'Neutral' %}bg-amber-50 border border-amber-200 text-amber-600
-                                        {% else %}bg-rose-50 border border-rose-200 text-rose-600{% endif %}">
-                                        {{ r.satisfaction or 'Satisfied' }}
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-3xs font-extrabold uppercase tracking-wider
+                                        {% if r.duty_status == 'Present' %}bg-emerald-50 border border-emerald-200 text-emerald-600
+                                        {% elif r.duty_status == 'On Leave' %}bg-amber-50 border border-amber-200 text-amber-600
+                                        {% else %}bg-blue-50 border border-blue-200 text-blue-600{% endif %}">
+                                        {{ r.duty_status }}
                                     </span>
+                                    {% if r.duty_status == 'Present' %}
+                                    <span class="block text-3xs text-slate-500 mt-1 font-semibold">{{ r.shift }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if r.duty_status == 'Present' %}
+                                    <span class="block font-semibold text-slate-700">{{ r.branch.name if r.branch else 'N/A' }}</span>
+                                    <span class="block text-3xs text-slate-400 mt-0.5 max-w-[150px] truncate" title="{{ r.section }}">{{ r.section }}</span>
+                                    {% else %}
+                                    <span class="text-slate-400 font-medium">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 font-mono">
+                                    {% if r.duty_status == 'Present' %}
+                                    <div class="flex items-center gap-x-1.5 font-semibold text-slate-700">
+                                        <span class="bg-indigo-50 border border-indigo-200 px-1 rounded text-3xs text-indigo-700" title="Booked">{{ r.patients_booked }}</span>
+                                        <span class="bg-blue-50 border border-blue-200 px-1 rounded text-3xs text-blue-700" title="Collected">{{ r.samples_collected }}</span>
+                                        <span class="bg-emerald-50 border border-emerald-200 px-1 rounded text-3xs text-emerald-700" title="Processed">{{ r.tests_processed }}</span>
+                                        <span class="bg-amber-50 border border-amber-200 px-1 rounded text-3xs text-amber-700" title="Entered">{{ r.results_entered }}</span>
+                                        <span class="bg-purple-50 border border-purple-200 px-1 rounded text-3xs text-purple-700" title="Referred">{{ r.samples_referred }}</span>
+                                        <span class="bg-rose-50 border border-rose-200 px-1 rounded text-3xs text-rose-700" title="Pending">{{ r.pending_work }}</span>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-slate-400 font-medium">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if r.duty_status == 'Present' %}
+                                    <div class="flex items-center gap-x-2">
+                                        {% if r.qc_issue %}
+                                        <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-rose-50 text-rose-600 border border-rose-200" title="QC Issue Reported">
+                                            <i class="fa-solid fa-flask-vial text-3xs"></i>
+                                        </span>
+                                        {% endif %}
+                                        {% if r.equipment_issue %}
+                                        <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-amber-50 text-amber-600 border border-amber-200" title="Equipment Issue Reported">
+                                            <i class="fa-solid fa-microscope text-3xs"></i>
+                                        </span>
+                                        {% endif %}
+                                        {% if r.incident %}
+                                        <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-rose-50 text-rose-700 border border-rose-300" title="Incident Reported">
+                                            <i class="fa-solid fa-circle-exclamation text-3xs"></i>
+                                        </span>
+                                        {% endif %}
+                                        {% if not r.qc_issue and not r.equipment_issue and not r.incident %}
+                                        <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-emerald-50 text-emerald-600 border border-emerald-250" title="No Issues">
+                                            <i class="fa-solid fa-check text-3xs"></i>
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% else %}
+                                    <span class="text-slate-400 font-medium">-</span>
+                                    {% endif %}
                                 </td>
                                 <td class="px-6 py-4">
                                     <button onclick="toggleDetails('details-{{ r.id }}')" class="text-brand-650 hover:underline font-semibold flex items-center">
@@ -156,26 +293,67 @@
                             <tr id="details-{{ r.id }}" class="hidden bg-slate-50/50">
                                 <td colspan="6" class="px-6 py-4 border-l-2 border-brand-500">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                        <div>
-                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Tasks Completed</span>
-                                            <p class="text-slate-600 mt-1 italic">{{ r.tasks_completed or 'No description provided.' }}</p>
-                                        </div>
-                                        <div>
-                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Challenges Faced</span>
-                                            <p class="text-rose-600 mt-1 italic">{{ r.challenges or 'None reported.' }}</p>
-                                        </div>
-                                        {% if r.training_needs %}
-                                        <div class="md:col-span-2 border-t border-slate-100 pt-2">
-                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Training Request</span>
-                                            <p class="text-indigo-600 mt-1 font-semibold">{{ r.training_needs }}</p>
+                                        {% if r.duty_status == 'Present' %}
+                                        <div class="md:col-span-2 grid grid-cols-6 gap-2 bg-white p-3 rounded-xl border border-slate-200 font-mono">
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Booked</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.patients_booked }}</span>
+                                            </div>
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Collected</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.samples_collected }}</span>
+                                            </div>
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Processed</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.tests_processed }}</span>
+                                            </div>
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Entered</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.results_entered }}</span>
+                                            </div>
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Referred</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.samples_referred }}</span>
+                                            </div>
+                                            <div class="text-center p-1.5 bg-slate-50 rounded">
+                                                <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Pending</span>
+                                                <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.pending_work }}</span>
+                                            </div>
                                         </div>
                                         {% endif %}
-                                        {% if r.suggestions %}
-                                        <div class="md:col-span-2 border-t border-slate-100 pt-2">
-                                            <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Improvement Suggestion</span>
-                                            <p class="text-slate-700 mt-1 font-medium">{{ r.suggestions }}</p>
+                                        
+                                        {% if r.qc_issue %}
+                                        <div>
+                                            <span class="font-bold block text-rose-700 text-3xs uppercase tracking-wider">QC Issue Detail</span>
+                                            <p class="text-rose-600 mt-1 italic font-medium">{{ r.qc_details or 'Details not specified.' }}</p>
                                         </div>
                                         {% endif %}
+                                        
+                                        {% if r.equipment_issue %}
+                                        <div>
+                                            <span class="font-bold block text-amber-700 text-3xs uppercase tracking-wider">Equipment Issue Detail</span>
+                                            <p class="text-amber-600 mt-1 italic font-medium">{{ r.equipment_details or 'Details not specified.' }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if r.additional_task %}
+                                        <div>
+                                            <span class="font-bold block text-indigo-700 text-3xs uppercase tracking-wider">Additional Task Details</span>
+                                            <p class="text-indigo-600 mt-1 font-medium">{{ r.task_details or 'Details not specified.' }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        {% if r.incident %}
+                                        <div>
+                                            <span class="font-bold block text-rose-800 text-3xs uppercase tracking-wider">Incident Details</span>
+                                            <p class="text-rose-700 mt-1 font-medium">{{ r.incident_details or 'Details not specified.' }}</p>
+                                        </div>
+                                        {% endif %}
+
+                                        <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                            <span class="font-bold block text-slate-650 text-3xs uppercase tracking-wider">General Remarks</span>
+                                            <p class="text-slate-600 mt-1 italic">{{ r.remarks or 'No remarks provided.' }}</p>
+                                        </div>
                                     </div>
                                 </td>
                             </tr>
@@ -376,6 +554,28 @@
 </div>
 
 <script>
+    function toggleDutyFields(status) {
+        const container = document.getElementById('duty-details-container');
+        if (container) {
+            if (status === 'Present') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
+        }
+    }
+
+    function toggleFieldDisplay(id, val) {
+        const el = document.getElementById(id);
+        if (el) {
+            if (val === 'true') {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        }
+    }
+
     function toggleDetails(id) {
         const tr = document.getElementById(id);
         if (tr) {

@@ -60,6 +60,24 @@
     <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl">
         <form class="space-y-6" action="{{ url_for('branch.create_request') }}" method="POST" id="create-request-form">
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <!-- Branch Selection (for Admin/Manager/Super Admin) -->
+                {% if current_user.role in ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] %}
+                <div class="sm:col-span-6 border-b border-slate-100 pb-4">
+                    <label for="branch_id" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Origin Branch / Collection Center *</label>
+                    <select name="branch_id" id="branch_id" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
+                        <option value="">Choose Branch...</option>
+                        {% for b in branches %}
+                        <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% else %}
+                <div class="sm:col-span-6 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
+                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Origin Branch</span>
+                    <span class="block text-sm font-semibold text-slate-700 mt-1">{{ user_branch.name }}</span>
+                </div>
+                {% endif %}
+
                 <!-- Patient Name -->
                 <div class="sm:col-span-4">
                     <label for="patient_name" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Patient / Sample Name</label>

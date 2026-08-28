@@ -101,6 +101,7 @@
                         <th class="px-6 py-3.5">Employee ID</th>
                         <th class="px-6 py-3.5">Rider Name</th>
                         <th class="px-6 py-3.5">Tasks Completed</th>
+                        <th class="px-6 py-3.5">Samples Carried</th>
                         <th class="px-6 py-3.5">Distance Covered</th>
                         <th class="px-6 py-3.5">Avg Pickup Response</th>
                         <th class="px-6 py-3.5">Avg Transport Time</th>
@@ -114,6 +115,7 @@
                         <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ row.emp_id }}</td>
                         <td class="px-6 py-4 font-semibold text-slate-700">{{ row.name }}</td>
                         <td class="px-6 py-4 font-mono">{{ row.handled }} requests</td>
+                        <td class="px-6 py-4 font-mono text-emerald-600 font-semibold">{{ row.samples_carried }} samples</td>
                         <td class="px-6 py-4 font-mono text-indigo-600 font-semibold">{{ row.distance }} km</td>
                         <td class="px-6 py-4 font-mono">{{ row.avg_pickup }} mins</td>
                         <td class="px-6 py-4 font-mono">{{ row.avg_transport }} mins</td>
@@ -150,6 +152,7 @@
                         <th class="px-6 py-3.5">Employee ID</th>
                         <th class="px-6 py-3.5">Rider Name</th>
                         <th class="px-6 py-3.5">Total Tasks Handled</th>
+                        <th class="px-6 py-3.5">Total Samples Carried</th>
                         <th class="px-6 py-3.5">Total Distance Covered</th>
                         <th class="px-6 py-3.5">Overall Avg Pickup</th>
                         <th class="px-6 py-3.5">Overall Avg Transport</th>
@@ -162,6 +165,7 @@
                         <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ rider.emp_id }}</td>
                         <td class="px-6 py-4 font-semibold text-slate-700">{{ rider.name }}</td>
                         <td class="px-6 py-4 font-mono">{{ rider.handled }} requests</td>
+                        <td class="px-6 py-4 font-mono text-emerald-600 font-semibold">{{ rider.samples_carried }} samples</td>
                         <td class="px-6 py-4 font-mono text-indigo-600 font-semibold">{{ rider.total_distance }} km</td>
                         <td class="px-6 py-4 font-mono">{{ rider.avg_pickup }} mins</td>
                         <td class="px-6 py-4 font-mono">{{ rider.avg_transport }} mins</td>

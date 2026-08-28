@@ -57,7 +57,7 @@ class ReportsTestCase(unittest.TestCase):
         # 4. Sample Requests and Location Logs
         # Request 1 (today)
         self.req1 = SampleRequest(
-            id="RIC-G11-20260822-000001",
+            id="CDC-G11-20260822-000001",
             patient_name="John Doe",
             gender="Male",
             priority="Routine",

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, Response, flash, redirect, url_for
+from flask import Blueprint, render_template, request, Response, flash, redirect, url_for, abort
 from flask_login import login_required, current_user
 from app.models import SampleRequest, User, Branch, TATRule, Task, LocationRecord, StaffProfile, StaffPerformanceReport
 from app.services.tat_service import TATService
@@ -125,7 +125,8 @@ def get_performance_data(preset, start_date_str, end_date_str):
             'pickup_times': [],
             'transport_times': [],
             'delays': 0,
-            'total_distance': 0.0
+            'total_distance': 0.0,
+            'samples_carried': 0
         }
         
     daily_performance = []
@@ -159,6 +160,11 @@ def get_performance_data(preset, start_date_str, end_date_str):
                         
             distance = rider_daily_distances.get((r.id, d), 0.0)
             
+            # Count samples carried
+            samples_carried = 0
+            for req in handled_requests:
+                samples_carried += sum(s.quantity for s in req.samples)
+            
             if len(handled_requests) > 0 or distance > 0.0:
                 avg_pickup = round(sum(pickup_times) / len(pickup_times), 1) if pickup_times else 0.0
                 avg_transport = round(sum(transport_times) / len(transport_times), 1) if transport_times else 0.0
@@ -172,7 +178,8 @@ def get_performance_data(preset, start_date_str, end_date_str):
                     'avg_pickup': avg_pickup,
                     'avg_transport': avg_transport,
                     'distance': distance,
-                    'delays': delays
+                    'delays': delays,
+                    'samples_carried': samples_carried
                 })
                 
                 r_sum = riders_summary[r.id]
@@ -181,6 +188,7 @@ def get_performance_data(preset, start_date_str, end_date_str):
                 r_sum['total_distance'] += distance
                 r_sum['pickup_times'].extend(pickup_times)
                 r_sum['transport_times'].extend(transport_times)
+                r_sum['samples_carried'] += samples_carried
                 
     def calculate_avg(lst):
         return round(sum(lst) / len(lst), 1) if lst else 0.0
@@ -364,6 +372,11 @@ def export_report(report_type):
 @reports_bp.route('/reports/staff/dashboard')
 @login_required
 def staff_dashboard():
+    # Enforce task permission check: SUPER_ADMIN, ADMIN, MANAGER can view. Others must have STAFF_WORKSPACE permission.
+    if current_user.role not in ['SUPER_ADMIN', 'ADMIN', 'MANAGER']:
+        if not current_user.has_task_permission('STAFF_WORKSPACE'):
+            abort(403)
+            
     # Load or initialize blank staff profile
     profile = StaffProfile.query.filter_by(user_id=current_user.id).first()
     if not profile:
@@ -403,17 +416,11 @@ def staff_dashboard():
 @reports_bp.route('/reports/staff/submit', methods=['POST'])
 @login_required
 def staff_submit_report():
-    shift = request.form.get('shift', 'Morning')
-    branch_id = request.form.get('branch_id', type=int)
-    sections_selected = request.form.getlist('sections')
-    section = ", ".join(sections_selected) if sections_selected else 'None'
-    tests_processed = request.form.get('tests_processed', 0, type=int)
-    tasks_completed = request.form.get('tasks_completed', '')
-    challenges = request.form.get('challenges', '')
-    satisfaction = request.form.get('satisfaction', 'Satisfied')
-    training_needs = request.form.get('training_needs', '')
-    suggestions = request.form.get('suggestions', '')
-    
+    if current_user.role not in ['SUPER_ADMIN', 'ADMIN', 'MANAGER']:
+        if not current_user.has_task_permission('STAFF_WORKSPACE'):
+            abort(403)
+            
+    duty_status = request.form.get('duty_status', 'Present')
     date_str = request.form.get('date')
     if date_str:
         try:
@@ -432,16 +439,38 @@ def staff_submit_report():
     report = StaffPerformanceReport(
         user_id=current_user.id,
         date=report_date,
-        shift=shift,
-        branch_id=branch_id,
-        section=section,
-        tests_processed=tests_processed,
-        tasks_completed=tasks_completed,
-        challenges=challenges,
-        satisfaction=satisfaction,
-        training_needs=training_needs,
-        suggestions=suggestions
+        duty_status=duty_status
     )
+    
+    if duty_status == 'Present':
+        report.shift = request.form.get('shift', 'Morning')
+        branch_id = request.form.get('branch_id', type=int)
+        report.branch_id = branch_id if branch_id else None
+        
+        sections_selected = request.form.getlist('sections')
+        report.section = ", ".join(sections_selected) if sections_selected else 'None'
+        
+        report.patients_booked = request.form.get('patients_booked', 0, type=int)
+        report.samples_collected = request.form.get('samples_collected', 0, type=int)
+        report.tests_processed = request.form.get('tests_processed', 0, type=int) # Samples Processed
+        report.results_entered = request.form.get('results_entered', 0, type=int)
+        report.samples_referred = request.form.get('samples_referred', 0, type=int)
+        report.pending_work = request.form.get('pending_work', 0, type=int)
+        
+        report.qc_issue = request.form.get('qc_issue') == 'true'
+        report.qc_details = request.form.get('qc_details', '')
+        
+        report.equipment_issue = request.form.get('equipment_issue') == 'true'
+        report.equipment_details = request.form.get('equipment_details', '')
+        
+        report.additional_task = request.form.get('additional_task') == 'true'
+        report.task_details = request.form.get('task_details', '')
+        
+        report.incident = request.form.get('incident') == 'true'
+        report.incident_details = request.form.get('incident_details', '')
+        
+    report.remarks = request.form.get('remarks', '')
+    
     db.session.add(report)
     db.session.commit()
     
@@ -451,6 +480,10 @@ def staff_submit_report():
 @reports_bp.route('/reports/staff/profile/update', methods=['POST'])
 @login_required
 def staff_profile_update():
+    if current_user.role not in ['SUPER_ADMIN', 'ADMIN', 'MANAGER']:
+        if not current_user.has_task_permission('STAFF_WORKSPACE'):
+            abort(403)
+            
     profile = StaffProfile.query.filter_by(user_id=current_user.id).first()
     if not profile:
         profile = StaffProfile(user_id=current_user.id)
@@ -484,28 +517,31 @@ def staff_admin():
     profiles = StaffProfile.query.all()
     
     # Aggregates
-    total_tests = sum(r.tests_processed for r in reports)
+    total_tests = sum(r.tests_processed for r in reports if r.duty_status == 'Present')
     total_submissions = len(reports)
+    total_booked = sum(r.patients_booked for r in reports if r.duty_status == 'Present')
+    total_collected = sum(r.samples_collected for r in reports if r.duty_status == 'Present')
+    total_entered = sum(r.results_entered for r in reports if r.duty_status == 'Present')
     
-    # Satisfaction counters
-    satisfaction_counts = {'Satisfied': 0, 'Neutral': 0, 'Dissatisfied': 0}
-    for r in reports:
-        sat = r.satisfaction or 'Satisfied'
-        if sat in satisfaction_counts:
-            satisfaction_counts[sat] += 1
-            
+    # Issue counts
+    qc_count = sum(1 for r in reports if r.duty_status == 'Present' and r.qc_issue)
+    equip_count = sum(1 for r in reports if r.duty_status == 'Present' and r.equipment_issue)
+    incident_count = sum(1 for r in reports if r.duty_status == 'Present' and r.incident)
+    
     # Branch breakdown of tests processed
     branch_tests = defaultdict(int)
     for r in reports:
-        branch_tests[r.branch.name] += r.tests_processed
+        if r.duty_status == 'Present' and r.branch:
+            branch_tests[r.branch.name] += r.tests_processed
         
     # Section breakdown of tests processed
     section_tests = defaultdict(int)
     for r in reports:
-        sections = [s.strip() for s in r.section.split(',')]
-        for sec in sections:
-            if sec and sec != 'None':
-                section_tests[sec] += r.tests_processed
+        if r.duty_status == 'Present' and r.section:
+            sections = [s.strip() for s in r.section.split(',')]
+            for sec in sections:
+                if sec and sec != 'None':
+                    section_tests[sec] += r.tests_processed
                 
     # Format charts
     branch_chart_labels = list(branch_tests.keys())
@@ -522,7 +558,12 @@ def staff_admin():
         profiles=profiles,
         total_tests=total_tests,
         total_submissions=total_submissions,
-        satisfaction=satisfaction_counts,
+        total_booked=total_booked,
+        total_collected=total_collected,
+        total_entered=total_entered,
+        qc_count=qc_count,
+        equip_count=equip_count,
+        incident_count=incident_count,
         branch_labels=branch_chart_labels,
         branch_values=branch_chart_values,
         section_labels=section_chart_labels,

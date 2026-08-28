@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
-from app.models import SampleRequest, Sample, Task, StatusHistory, AuditLog, TATRule
+from app.models import SampleRequest, Sample, Task, StatusHistory, AuditLog, TATRule, Branch
 from app.utils.decorators import role_required
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
@@ -10,10 +10,10 @@ branch_bp = Blueprint('branch', __name__)
 
 def generate_request_id(branch_code):
     """
-    Generates a unique tracking ID: RIC-<BranchCode>-<YYYYMMDD>-<SeqNum>
+    Generates a unique tracking ID: CDC-<BranchCode>-<YYYYMMDD>-<SeqNum>
     """
     today_str = now_pkt().strftime('%Y%m%d')
-    prefix = f"RIC-{branch_code}-{today_str}-"
+    prefix = f"CDC-{branch_code}-{today_str}-"
     
     # Query all requests for this branch today
     requests = SampleRequest.query.filter(
@@ -35,7 +35,7 @@ def generate_request_id(branch_code):
 
 @branch_bp.route('/branch/dashboard')
 @login_required
-@role_required('BRANCH_STAFF', 'ADMIN', 'MANAGER')
+@role_required('BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN')
 def dashboard():
     # Show requests from the logged-in user's branch
     if current_user.role == 'BRANCH_STAFF':
@@ -53,16 +53,23 @@ def dashboard():
 
 @branch_bp.route('/branch/request/create', methods=['GET', 'POST'])
 @login_required
-@role_required('BRANCH_STAFF', 'ADMIN')
+@role_required('BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN')
 def create_request():
-    branch = current_user.branch
-    if not branch:
-        flash('You must be assigned to a branch to create requests.', 'danger')
-        return redirect(url_for('branch.dashboard'))
-        
+    branches = Branch.query.all()
+    user_branch = current_user.branch
     priorities = TATRule.query.all()
     
     if request.method == 'POST':
+        if current_user.role in ['ADMIN', 'SUPER_ADMIN', 'MANAGER']:
+            branch_id = request.form.get('branch_id')
+            branch = Branch.query.get(branch_id) if branch_id else None
+        else:
+            branch = user_branch
+            
+        if not branch:
+            flash('A valid branch must be selected to create a request.', 'danger')
+            return redirect(url_for('branch.dashboard'))
+            
         patient_name = request.form.get('patient_name')
         gender = request.form.get('gender')
         patient_id = request.form.get('patient_id')
@@ -83,7 +90,7 @@ def create_request():
         
         if not selected_sample_types:
             flash('Please select at least one sample type.', 'danger')
-            return render_template('branch/create_request.html', priorities=priorities)
+            return render_template('branch/create_request.html', priorities=priorities, branches=branches, user_branch=user_branch)
         
         request_id = generate_request_id(branch.code)
         sample_types_str = ', '.join(selected_sample_types)
@@ -150,5 +157,5 @@ def create_request():
         flash(f"Pickup request {request_id} created successfully.", 'success')
         return redirect(url_for('branch.dashboard'))
         
-    return render_template('branch/create_request.html', priorities=priorities)
+    return render_template('branch/create_request.html', priorities=priorities, branches=branches, user_branch=user_branch)
 

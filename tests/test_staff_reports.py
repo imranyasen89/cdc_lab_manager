@@ -44,6 +44,12 @@ class StaffReportsTestCase(unittest.TestCase):
             
         db.session.commit()
 
+        # Assign STAFF_WORKSPACE permission to staff user
+        from app.models import UserTaskPermission
+        tp = UserTaskPermission(user_id=self.staff.id, permission='STAFF_WORKSPACE')
+        db.session.add(tp)
+        db.session.commit()
+
         # Initial Staff Profile
         self.profile = StaffProfile(
             user_id=self.staff.id,
@@ -80,15 +86,22 @@ class StaffReportsTestCase(unittest.TestCase):
                 sess['_fresh'] = True
                 
             response = client.post('/reports/staff/submit', data={
+                'duty_status': 'Present',
                 'shift': 'Evening',
                 'branch_id': str(self.branch.id),
                 'sections': ['Chemistry', 'Hematology'],
+                'patients_booked': '10',
+                'samples_collected': '12',
                 'tests_processed': '45',
-                'tasks_completed': 'Completed biochem panel runs and QC logs.',
-                'challenges': 'None',
-                'satisfaction': 'Satisfied',
-                'training_needs': 'None',
-                'suggestions': ' sekundary centrifuge '
+                'results_entered': '45',
+                'samples_referred': '2',
+                'pending_work': '5',
+                'qc_issue': 'true',
+                'qc_details': 'Instrument calibration error.',
+                'equipment_issue': 'false',
+                'additional_task': 'false',
+                'incident': 'false',
+                'remarks': 'Busy evening shift.'
             }, follow_redirects=True)
             
             self.assertEqual(response.status_code, 200)
@@ -98,9 +111,11 @@ class StaffReportsTestCase(unittest.TestCase):
             self.assertIsNotNone(report)
             self.assertEqual(report.shift, 'Evening')
             self.assertEqual(report.tests_processed, 45)
+            self.assertEqual(report.patients_booked, 10)
+            self.assertTrue(report.qc_issue)
+            self.assertEqual(report.qc_details, 'Instrument calibration error.')
             self.assertIn('Chemistry', report.section)
             self.assertIn('Hematology', report.section)
-            self.assertEqual(report.satisfaction, 'Satisfied')
 
     def test_staff_profile_update(self):
         with self.app.test_client() as client:

@@ -9,8 +9,8 @@ auth_bp = Blueprint('auth', __name__)
 def index():
     if current_user.is_authenticated:
         # Redirect to appropriate dashboard based on role
-        if current_user.role == 'ADMIN':
-            return redirect(url_for('admin.users'))
+        if current_user.role in ['SUPER_ADMIN', 'ADMIN']:
+            return redirect(url_for('admin.dashboard'))
         elif current_user.role in ['MANAGER', 'SUPERVISOR']:
             return redirect(url_for('lab.dashboard'))
         elif current_user.role == 'BRANCH_STAFF':

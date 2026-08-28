@@ -14,34 +14,34 @@
 
     <!-- Summary Metrics Cards Grid -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm border border-slate-200">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Total Patients Booked</span>
+            <span class="block text-3xl font-extrabold text-indigo-650 mt-1.5">{{ total_booked }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Aggregated booking logs</span>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm border border-slate-200">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Total Samples Collected</span>
+            <span class="block text-3xl font-extrabold text-blue-600 mt-1.5">{{ total_collected }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Aggregated collection logs</span>
+        </div>
+        
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm border border-slate-200">
             <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Total Tests Processed</span>
-            <span class="block text-3xl font-extrabold text-brand-600 mt-1.5">{{ total_tests }}</span>
-            <span class="text-3xs text-slate-400 mt-0.5 block">Aggregated across all daily submissions</span>
+            <span class="block text-3xl font-extrabold text-emerald-600 mt-1.5">{{ total_tests }}</span>
+            <span class="text-3xs text-slate-400 mt-0.5 block">Aggregated lab tests processed</span>
         </div>
         
-        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
-            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Daily Reports Logged</span>
-            <span class="block text-3xl font-extrabold text-slate-800 mt-1.5">{{ total_submissions }}</span>
-            <span class="text-3xs text-slate-400 mt-0.5 block">Active staff daily logs count</span>
-        </div>
-        
-        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
-            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Registered Profiles</span>
-            <span class="block text-3xl font-extrabold text-slate-800 mt-1.5">{{ profiles | length }}</span>
-            <span class="text-3xs text-slate-400 mt-0.5 block">Imported from CDC_lab.xlsx profiling</span>
-        </div>
-        
-        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm">
-            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Satisfaction Rating</span>
+        <div class="glass-panel rounded-2xl p-5 text-center shadow-sm border border-slate-200">
+            <span class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Incident & Quality Issues</span>
             <div class="flex items-center justify-center gap-x-2 mt-2">
-                <span class="text-emerald-600 font-bold text-sm"><i class="fa-solid fa-smile mr-0.5"></i> {{ satisfaction.Satisfied }}</span>
+                <span class="text-rose-600 font-bold text-sm" title="QC Issues"><i class="fa-solid fa-flask-vial mr-0.5"></i> {{ qc_count }}</span>
                 <span class="text-slate-300">|</span>
-                <span class="text-amber-600 font-bold text-sm"><i class="fa-solid fa-meh mr-0.5"></i> {{ satisfaction.Neutral }}</span>
+                <span class="text-amber-600 font-bold text-sm" title="Equipment Issues"><i class="fa-solid fa-microscope mr-0.5"></i> {{ equip_count }}</span>
                 <span class="text-slate-300">|</span>
-                <span class="text-rose-600 font-bold text-sm"><i class="fa-solid fa-frown mr-0.5"></i> {{ satisfaction.Dissatisfied }}</span>
+                <span class="text-rose-700 font-bold text-sm" title="Incidents"><i class="fa-solid fa-circle-exclamation mr-0.5"></i> {{ incident_count }}</span>
             </div>
-            <span class="text-3xs text-slate-400 mt-1.5 block">Staff feedback ratio</span>
+            <span class="text-3xs text-slate-400 mt-1.5 block">Total logged exceptions</span>
         </div>
     </div>
 
@@ -167,10 +167,10 @@
                     <tr>
                         <th class="px-6 py-3.5">Date</th>
                         <th class="px-6 py-3.5">Staff Employee</th>
-                        <th class="px-6 py-3.5">Shift / Branch</th>
-                        <th class="px-6 py-3.5">Sections Worked</th>
-                        <th class="px-6 py-3.5">Tests Processed</th>
-                        <th class="px-6 py-3.5">Satisfaction</th>
+                        <th class="px-6 py-3.5">Status / Shift</th>
+                        <th class="px-6 py-3.5">Branch / Sections</th>
+                        <th class="px-6 py-3.5">Workload (B / C / P / E / R / P)</th>
+                        <th class="px-6 py-3.5">Issues</th>
                         <th class="px-6 py-3.5">Action</th>
                     </tr>
                 </thead>
@@ -180,21 +180,68 @@
                         <td class="px-6 py-4 font-mono font-bold text-slate-800">{{ r.date }}</td>
                         <td class="px-6 py-4">
                             <span class="block font-bold text-slate-800">{{ r.user.name }}</span>
-                            <span class="block text-3xs text-slate-450">{{ r.user.employee_id }}</span>
+                            <span class="block text-3xs font-mono text-slate-450">{{ r.user.employee_id }}</span>
                         </td>
                         <td class="px-6 py-4">
-                            <span class="block font-semibold text-slate-700">{{ r.shift }}</span>
-                            <span class="block text-3xs text-slate-400">Hub: {{ r.branch.name }}</span>
-                        </td>
-                        <td class="px-6 py-4">{{ r.section }}</td>
-                        <td class="px-6 py-4 font-mono font-semibold text-brand-600">{{ r.tests_processed }}</td>
-                        <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
-                                {% if r.satisfaction == 'Satisfied' %}bg-emerald-50 border border-emerald-200 text-emerald-600
-                                {% elif r.satisfaction == 'Neutral' %}bg-amber-50 border border-amber-200 text-amber-600
-                                {% else %}bg-rose-50 border border-rose-200 text-rose-600{% endif %}">
-                                {{ r.satisfaction or 'Satisfied' }}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-3xs font-extrabold uppercase tracking-wider
+                                {% if r.duty_status == 'Present' %}bg-emerald-50 border border-emerald-200 text-emerald-600
+                                {% elif r.duty_status == 'On Leave' %}bg-amber-50 border border-amber-200 text-amber-600
+                                {% else %}bg-blue-50 border border-blue-200 text-blue-600{% endif %}">
+                                {{ r.duty_status }}
                             </span>
+                            {% if r.duty_status == 'Present' %}
+                            <span class="block text-3xs text-slate-500 mt-1 font-semibold">{{ r.shift }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if r.duty_status == 'Present' %}
+                            <span class="block font-semibold text-slate-700">{{ r.branch.name if r.branch else 'N/A' }}</span>
+                            <span class="block text-3xs text-slate-400 mt-0.5 max-w-[150px] truncate" title="{{ r.section }}">{{ r.section }}</span>
+                            {% else %}
+                            <span class="text-slate-400 font-medium">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 font-mono">
+                            {% if r.duty_status == 'Present' %}
+                            <div class="flex items-center gap-x-1.5 font-semibold text-slate-700">
+                                <span class="bg-indigo-50 border border-indigo-200 px-1 rounded text-3xs text-indigo-700" title="Booked">{{ r.patients_booked }}</span>
+                                <span class="bg-blue-50 border border-blue-200 px-1 rounded text-3xs text-blue-700" title="Collected">{{ r.samples_collected }}</span>
+                                <span class="bg-emerald-50 border border-emerald-200 px-1 rounded text-3xs text-emerald-700" title="Processed">{{ r.tests_processed }}</span>
+                                <span class="bg-amber-50 border border-amber-200 px-1 rounded text-3xs text-amber-700" title="Entered">{{ r.results_entered }}</span>
+                                <span class="bg-purple-50 border border-purple-200 px-1 rounded text-3xs text-purple-700" title="Referred">{{ r.samples_referred }}</span>
+                                <span class="bg-rose-50 border border-rose-200 px-1 rounded text-3xs text-rose-700" title="Pending">{{ r.pending_work }}</span>
+                            </div>
+                            {% else %}
+                            <span class="text-slate-400 font-medium">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if r.duty_status == 'Present' %}
+                            <div class="flex items-center gap-x-2">
+                                {% if r.qc_issue %}
+                                <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-rose-50 text-rose-600 border border-rose-200" title="QC Issue Reported">
+                                    <i class="fa-solid fa-flask-vial text-3xs"></i>
+                                </span>
+                                {% endif %}
+                                {% if r.equipment_issue %}
+                                <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-amber-50 text-amber-600 border border-amber-200" title="Equipment Issue Reported">
+                                    <i class="fa-solid fa-microscope text-3xs"></i>
+                                </span>
+                                {% endif %}
+                                {% if r.incident %}
+                                <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-rose-50 text-rose-700 border border-rose-300" title="Incident Reported">
+                                    <i class="fa-solid fa-circle-exclamation text-3xs"></i>
+                                </span>
+                                {% endif %}
+                                {% if not r.qc_issue and not r.equipment_issue and not r.incident %}
+                                <span class="inline-flex items-center justify-center h-5 w-5 rounded bg-emerald-50 text-emerald-600 border border-emerald-250" title="No Issues">
+                                    <i class="fa-solid fa-check text-3xs"></i>
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="text-slate-400 font-medium">-</span>
+                            {% endif %}
                         </td>
                         <td class="px-6 py-4">
                             <button onclick="toggleDetails('admin-details-{{ r.id }}')" class="text-brand-650 hover:underline font-semibold flex items-center">
@@ -205,26 +252,67 @@
                     <tr id="admin-details-{{ r.id }}" class="hidden bg-slate-50/50">
                         <td colspan="7" class="px-6 py-4 border-l-2 border-brand-500">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                                <div>
-                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Daily Tasks Done</span>
-                                    <p class="text-slate-650 mt-1 italic">{{ r.tasks_completed or 'No description provided.' }}</p>
-                                </div>
-                                <div>
-                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Challenges Reported</span>
-                                    <p class="text-rose-600 mt-1 italic font-medium">{{ r.challenges or 'None reported.' }}</p>
-                                </div>
-                                {% if r.training_needs %}
-                                <div class="md:col-span-2 border-t border-slate-100 pt-2">
-                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Training Request</span>
-                                    <p class="text-indigo-600 mt-1 font-semibold">{{ r.training_needs }}</p>
+                                {% if r.duty_status == 'Present' %}
+                                <div class="md:col-span-2 grid grid-cols-6 gap-2 bg-white p-3 rounded-xl border border-slate-200 font-mono">
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Booked</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.patients_booked }}</span>
+                                    </div>
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Collected</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.samples_collected }}</span>
+                                    </div>
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Processed</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.tests_processed }}</span>
+                                    </div>
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Entered</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.results_entered }}</span>
+                                    </div>
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Referred</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.samples_referred }}</span>
+                                    </div>
+                                    <div class="text-center p-1.5 bg-slate-50 rounded">
+                                        <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Pending</span>
+                                        <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.pending_work }}</span>
+                                    </div>
                                 </div>
                                 {% endif %}
-                                {% if r.suggestions %}
-                                <div class="md:col-span-2 border-t border-slate-100 pt-2">
-                                    <span class="font-bold block text-slate-600 text-3xs uppercase tracking-wider">Improvement Suggestion</span>
-                                    <p class="text-slate-800 mt-1 font-medium">{{ r.suggestions }}</p>
+                                
+                                {% if r.qc_issue %}
+                                <div>
+                                    <span class="font-bold block text-rose-700 text-3xs uppercase tracking-wider">QC Issue Detail</span>
+                                    <p class="text-rose-600 mt-1 italic font-medium">{{ r.qc_details or 'Details not specified.' }}</p>
                                 </div>
                                 {% endif %}
+                                
+                                {% if r.equipment_issue %}
+                                <div>
+                                    <span class="font-bold block text-amber-700 text-3xs uppercase tracking-wider">Equipment Issue Detail</span>
+                                    <p class="text-amber-600 mt-1 italic font-medium">{{ r.equipment_details or 'Details not specified.' }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if r.additional_task %}
+                                <div>
+                                    <span class="font-bold block text-indigo-700 text-3xs uppercase tracking-wider">Additional Task Details</span>
+                                    <p class="text-indigo-600 mt-1 font-medium">{{ r.task_details or 'Details not specified.' }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if r.incident %}
+                                <div>
+                                    <span class="font-bold block text-rose-800 text-3xs uppercase tracking-wider">Incident Details</span>
+                                    <p class="text-rose-700 mt-1 font-medium">{{ r.incident_details or 'Details not specified.' }}</p>
+                                </div>
+                                {% endif %}
+
+                                <div class="md:col-span-2 border-t border-slate-100 pt-2">
+                                    <span class="font-bold block text-slate-650 text-3xs uppercase tracking-wider">Remarks</span>
+                                    <p class="text-slate-600 mt-1 italic">{{ r.remarks or 'No remarks provided.' }}</p>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -263,7 +351,7 @@
     }
 
     function filterTable() {
-        const query = document.getElementById('search-input').value.toLowerCase().strip();
+        const query = document.getElementById('search-input').value.toLowerCase().trim();
         const activeTab = document.getElementById('profiles-tab').classList.contains('hidden') ? 'submissions' : 'profiles';
         
         if (activeTab === 'profiles') {
