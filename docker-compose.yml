@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    container_name: cdc-lab-manager
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    volumes:
+      - cdc_data:/app/instance
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      FLASK_APP: run.py
+      FLASK_ENV: production
+      DATABASE_URL: ${DATABASE_URL:-sqlite:///cdc_lab_manager.db}
+    command: gunicorn --bind 0.0.0.0:5000 run:app
+
+volumes:
+  cdc_data:
