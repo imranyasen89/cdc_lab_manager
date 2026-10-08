@@ -1,0 +1,84 @@
+<!-- Reusable Date Range Filter Component -->
+<form id="date-range-filter-form" method="GET" class="glass-panel p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs space-y-3">
+    <input type="hidden" name="preset" id="date-filter-preset" value="{{ active_preset|default('today') }}">
+    {% if filter_status %}<input type="hidden" name="status" value="{{ filter_status }}">{% endif %}
+    {% if filter_branch_id %}<input type="hidden" name="branch_id" value="{{ filter_branch_id }}">{% endif %}
+
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+        <!-- Preset Buttons -->
+        <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="text-3xs font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <i class="fa-solid fa-calendar-day text-brand-600"></i> Filter:
+            </span>
+            <button type="button" onclick="applyDatePreset('today')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset == 'today' %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                Today
+            </button>
+            <button type="button" onclick="applyDatePreset('yesterday')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset == 'yesterday' %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                Yesterday
+            </button>
+            <button type="button" onclick="applyDatePreset('7days')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset in ['7days', 'weekly'] %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                Last 7 Days
+            </button>
+            <button type="button" onclick="applyDatePreset('30days')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset in ['30days', 'monthly'] %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                Last 30 Days
+            </button>
+            <button type="button" onclick="applyDatePreset('this_month')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset == 'this_month' %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                This Month
+            </button>
+            {% if allow_all_time|default(true) %}
+            <button type="button" onclick="applyDatePreset('all')" 
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold transition border {% if active_preset == 'all' %}bg-brand-600 text-white border-brand-600 shadow-xs{% else %}bg-white text-slate-600 border-slate-200 hover:bg-slate-50{% endif %}">
+                All Time
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Active Range Label Badge -->
+        {% if date_label %}
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-2xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 self-start lg:self-auto">
+            <i class="fa-regular fa-calendar-check text-brand-600"></i>
+            <span>{{ date_label }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Custom Date Range Pickers -->
+    <div class="flex flex-col sm:flex-row sm:items-center gap-2 pt-2 border-t border-slate-100 text-xs">
+        <div class="flex items-center gap-2 flex-1">
+            <span class="text-3xs uppercase font-bold text-slate-400 shrink-0">Custom Range:</span>
+            <div class="relative flex-1 max-w-xs sm:max-w-[170px]">
+                <input type="date" name="start_date" id="filter-start-date" value="{{ start_date_str or '' }}" 
+                       class="w-full h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs focus:outline-none focus:border-brand-500">
+            </div>
+            <span class="text-slate-400 font-bold shrink-0">to</span>
+            <div class="relative flex-1 max-w-xs sm:max-w-[170px]">
+                <input type="date" name="end_date" id="filter-end-date" value="{{ end_date_str or '' }}" 
+                       class="w-full h-8 px-2.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-xs focus:outline-none focus:border-brand-500">
+            </div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+            <button type="submit" onclick="document.getElementById('date-filter-preset').value='custom'" 
+                    class="h-8 px-3.5 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-semibold transition shadow-xs flex items-center gap-1">
+                <i class="fa-solid fa-filter text-3xs"></i> Apply
+            </button>
+            <a href="{{ request.path }}" 
+               class="h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition flex items-center gap-1" title="Reset filter">
+                <i class="fa-solid fa-rotate-left text-3xs"></i> Reset
+            </a>
+        </div>
+    </div>
+</form>
+
+<script>
+    function applyDatePreset(preset) {
+        document.getElementById('date-filter-preset').value = preset;
+        document.getElementById('filter-start-date').value = '';
+        document.getElementById('filter-end-date').value = '';
+        document.getElementById('date-range-filter-form').submit();
+    }
+</script>

@@ -13,18 +13,14 @@
         
         <!-- Controls -->
         <div class="flex flex-wrap items-center gap-2.5">
-            <form action="{{ url_for('reports.daily_report') }}" method="GET" class="flex gap-x-2">
-                <input type="date" name="date" value="{{ date }}" class="h-10 rounded-xl bg-white border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500">
-                <button type="submit" class="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-slate-900 text-xs font-semibold flex items-center justify-center transition">
-                    View
-                </button>
-            </form>
-            
-            <a href="{{ url_for('reports.export_report', report_type='daily') }}" class="inline-flex items-center justify-center gap-x-1.5 h-10 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs">
+            <a href="{{ url_for('reports.export_report', report_type='daily', preset=active_preset, start_date=start_date_str, end_date=end_date_str) }}" class="inline-flex items-center justify-center gap-x-1.5 h-10 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs">
                 <i class="fa-solid fa-file-csv"></i> Export CSV
             </a>
         </div>
     </div>
+
+    <!-- Date Range Filter Bar -->
+    {% include 'components/date_filter_bar.html' %}
 
     <!-- Summary Metrics Cards Grid -->
     <div class="grid grid-cols-2 gap-4 lg:grid-cols-4">

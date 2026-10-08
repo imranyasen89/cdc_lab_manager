@@ -5,6 +5,7 @@ from app.services.tat_service import TATService
 from app.services.distance_service import DistanceService
 from app.utils.timezone import now_pkt
 from app.utils.decorators import role_required
+from app.utils.date_filter import get_date_range
 from app import db
 from datetime import datetime, timedelta
 from collections import defaultdict
@@ -16,19 +17,21 @@ reports_bp = Blueprint('reports', __name__)
 @reports_bp.route('/reports/daily')
 @login_required
 def daily_report():
-    # Filter by date, defaults to today (Pakistan time)
-    date_str = request.args.get('date', now_pkt().strftime('%Y-%m-%d'))
-    try:
-        target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-    except ValueError:
-        target_date = now_pkt().date()
-        date_str = target_date.strftime('%Y-%m-%d')
-        
-    # Start and end of day
-    start_dt = datetime.combine(target_date, datetime.min.time())
-    end_dt = datetime.combine(target_date, datetime.max.time())
+    preset = request.args.get('preset')
+    start_date_param = request.args.get('start_date') or request.args.get('date')
+    end_date_param = request.args.get('end_date') or request.args.get('date')
     
-    requests = SampleRequest.query.filter(SampleRequest.created_at.between(start_dt, end_dt)).all()
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_param,
+        end_date_str=end_date_param,
+        default_preset='today'
+    )
+    
+    if start_dt and end_dt:
+        requests = SampleRequest.query.filter(SampleRequest.created_at.between(start_dt, end_dt)).all()
+    else:
+        requests = SampleRequest.query.all()
     
     # Stats
     total = len(requests)
@@ -57,35 +60,29 @@ def daily_report():
         'delayed': delayed_count
     }
     
-    return render_template('reports/daily.html', stats=stats, date=date_str)
+    return render_template('reports/daily.html',
+                           stats=stats,
+                           date=date_label,
+                           active_preset=active_preset,
+                           date_label=date_label,
+                           start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
+                           end_date_str=end_date.strftime('%Y-%m-%d') if end_date else '')
 
 def get_performance_data(preset, start_date_str, end_date_str):
-    today = now_pkt().date()
-    
-    if preset == 'today':
-        start_date = today
-        end_date = today
-    elif preset == 'weekly':
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_str,
+        end_date_str=end_date_str,
+        default_preset='7days'
+    )
+    if not start_date or not end_date:
+        today = now_pkt().date()
         start_date = today - timedelta(days=6)
         end_date = today
-    elif preset == 'monthly':
-        start_date = today - timedelta(days=29)
-        end_date = today
-    elif preset == 'custom':
-        try:
-            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
-            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
-        except (ValueError, TypeError):
-            preset = 'weekly'
-            start_date = today - timedelta(days=6)
-            end_date = today
-    else:
-        preset = 'weekly'
-        start_date = today - timedelta(days=6)
-        end_date = today
-
-    start_dt = datetime.combine(start_date, datetime.min.time())
-    end_dt = datetime.combine(end_date, datetime.max.time())
+        start_dt = datetime.combine(start_date, datetime.min.time())
+        end_dt = datetime.combine(end_date, datetime.max.time())
+        active_preset = '7days'
+        date_label = f"{start_date.strftime('%b %d, %Y')} - {end_date.strftime('%b %d, %Y')}"
     
     requests = SampleRequest.query.filter(SampleRequest.created_at.between(start_dt, end_dt)).all()
     
@@ -265,9 +262,10 @@ def get_performance_data(preset, start_date_str, end_date_str):
     daily_performance.sort(key=lambda x: (x['date'], x['name']), reverse=True)
     
     return {
-        'preset': preset,
+        'preset': active_preset,
         'start_date': start_date.strftime('%Y-%m-%d'),
         'end_date': end_date.strftime('%Y-%m-%d'),
+        'date_label': date_label,
         'requests': requests,
         'riders_summary': list(riders_summary.values()),
         'daily_performance': daily_performance,
@@ -278,7 +276,7 @@ def get_performance_data(preset, start_date_str, end_date_str):
 @reports_bp.route('/reports/performance')
 @login_required
 def performance():
-    preset = request.args.get('preset', 'weekly')
+    preset = request.args.get('preset', '7days')
     start_date_str = request.args.get('start_date')
     end_date_str = request.args.get('end_date')
     
@@ -287,8 +285,12 @@ def performance():
     return render_template(
         'reports/performance.html',
         preset=data['preset'],
+        active_preset=data['preset'],
         start_date=data['start_date'],
         end_date=data['end_date'],
+        start_date_str=data['start_date'],
+        end_date_str=data['end_date'],
+        date_label=data['date_label'],
         riders=data['riders_summary'],
         daily_performance=data['daily_performance'],
         branches=data['branches'],
@@ -306,19 +308,26 @@ def export_report(report_type):
     writer = csv.writer(output)
     
     if report_type == 'daily':
+        preset = request.args.get('preset')
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
         date_str = request.args.get('date')
-        if date_str:
-            try:
-                target_date = datetime.strptime(date_str, '%Y-%m-%d').date()
-            except ValueError:
-                target_date = now_pkt().date()
-        else:
-            target_date = now_pkt().date()
+        if not preset and not start_date_str and date_str:
+            start_date_str = date_str
+            end_date_str = date_str
+            preset = 'custom'
             
-        start_dt = datetime.combine(target_date, datetime.min.time())
-        end_dt = datetime.combine(target_date, datetime.max.time())
+        start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+            preset=preset,
+            start_date_str=start_date_str,
+            end_date_str=end_date_str,
+            default_preset='today'
+        )
         
-        requests = SampleRequest.query.filter(SampleRequest.created_at.between(start_dt, end_dt)).order_by(SampleRequest.created_at.desc()).all()
+        query = SampleRequest.query
+        if start_dt and end_dt:
+            query = query.filter(SampleRequest.created_at.between(start_dt, end_dt))
+        requests = query.order_by(SampleRequest.created_at.desc()).all()
         
         writer.writerow(['Request ID', 'Branch', 'Patient Name', 'Gender', 'Priority', 'Status', 'Created At (PKT)', 'Total TAT (min)', 'Delayed'])
         for req in requests:
@@ -394,11 +403,25 @@ def staff_dashboard():
         db.session.commit()
         
     branches = Branch.query.all()
-    # Fetch past daily reports
-    my_reports = StaffPerformanceReport.query.filter_by(user_id=current_user.id).order_by(StaffPerformanceReport.date.desc()).all()
     
-    # Tests processed chart data (last 7 reports)
-    chart_reports = list(reversed(my_reports[:7]))
+    preset = request.args.get('preset')
+    start_date_param = request.args.get('start_date')
+    end_date_param = request.args.get('end_date')
+    
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_param,
+        end_date_str=end_date_param,
+        default_preset='all'
+    )
+    
+    query = StaffPerformanceReport.query.filter_by(user_id=current_user.id)
+    if start_date and end_date:
+        query = query.filter(StaffPerformanceReport.date.between(start_date, end_date))
+    my_reports = query.order_by(StaffPerformanceReport.date.desc()).all()
+    
+    # Tests processed chart data (up to last 14 reports)
+    chart_reports = list(reversed(my_reports[:14]))
     chart_dates = [r.date.strftime('%b %d') for r in chart_reports]
     chart_tests = [r.tests_processed for r in chart_reports]
     
@@ -410,7 +433,11 @@ def staff_dashboard():
         chart_dates=chart_dates,
         chart_tests=chart_tests,
         today=now_pkt().strftime('%Y-%m-%d'),
-        now_pkt=now_pkt
+        now_pkt=now_pkt,
+        active_preset=active_preset,
+        date_label=date_label,
+        start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
+        end_date_str=end_date.strftime('%Y-%m-%d') if end_date else ''
     )
 
 @reports_bp.route('/reports/staff/submit', methods=['POST'])
@@ -510,8 +537,21 @@ def staff_profile_update():
 @login_required
 @role_required('ADMIN', 'MANAGER', 'SUPERVISOR')
 def staff_admin():
-    # Load all submissions
-    reports = StaffPerformanceReport.query.order_by(StaffPerformanceReport.date.desc()).all()
+    preset = request.args.get('preset')
+    start_date_param = request.args.get('start_date')
+    end_date_param = request.args.get('end_date')
+    
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_param,
+        end_date_str=end_date_param,
+        default_preset='all'
+    )
+    
+    query = StaffPerformanceReport.query
+    if start_date and end_date:
+        query = query.filter(StaffPerformanceReport.date.between(start_date, end_date))
+    reports = query.order_by(StaffPerformanceReport.date.desc()).all()
     
     # Load all profiles
     profiles = StaffProfile.query.all()
@@ -568,5 +608,9 @@ def staff_admin():
         branch_values=branch_chart_values,
         section_labels=section_chart_labels,
         section_values=section_chart_values,
-        recent_submissions=recent_submissions
+        recent_submissions=recent_submissions,
+        active_preset=active_preset,
+        date_label=date_label,
+        start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
+        end_date_str=end_date.strftime('%Y-%m-%d') if end_date else ''
     )

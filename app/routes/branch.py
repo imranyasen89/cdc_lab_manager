@@ -5,6 +5,7 @@ from app.models import SampleRequest, Sample, Task, StatusHistory, AuditLog, TAT
 from app.utils.decorators import role_required
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
+from app.utils.date_filter import get_date_range
 
 branch_bp = Blueprint('branch', __name__)
 
@@ -37,19 +38,39 @@ def generate_request_id(branch_code):
 @login_required
 @role_required('BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN')
 def dashboard():
-    # Show requests from the logged-in user's branch
+    preset = request.args.get('preset')
+    start_date_param = request.args.get('start_date')
+    end_date_param = request.args.get('end_date')
+    
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_param,
+        end_date_str=end_date_param,
+        default_preset='all'
+    )
+    
+    query = SampleRequest.query
     if current_user.role == 'BRANCH_STAFF':
         branch = current_user.branch
         if not branch:
             flash('Your user account is not associated with any branch. Please contact an Admin.', 'warning')
             return render_template('branch/dashboard.html', requests=[])
-        requests_list = SampleRequest.query.filter_by(branch_id=branch.id).order_by(SampleRequest.created_at.desc()).all()
+        query = query.filter_by(branch_id=branch.id)
     else:
-        # Admins/Managers see all branch requests
-        requests_list = SampleRequest.query.order_by(SampleRequest.created_at.desc()).all()
         branch = None
         
-    return render_template('branch/dashboard.html', requests=requests_list, branch=branch)
+    if start_dt and end_dt:
+        query = query.filter(SampleRequest.created_at.between(start_dt, end_dt))
+        
+    requests_list = query.order_by(SampleRequest.created_at.desc()).all()
+        
+    return render_template('branch/dashboard.html',
+                           requests=requests_list,
+                           branch=branch,
+                           active_preset=active_preset,
+                           date_label=date_label,
+                           start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
+                           end_date_str=end_date.strftime('%Y-%m-%d') if end_date else '')
 
 @branch_bp.route('/branch/request/create', methods=['GET', 'POST'])
 @login_required

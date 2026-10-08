@@ -195,5 +195,82 @@ class ReportsTestCase(unittest.TestCase):
             self.assertEqual(g11_row[2], '1') # Requests
             self.assertEqual(g11_row[3], '5') # Samples
 
+    def test_date_filter_utility(self):
+        from app.utils.date_filter import get_date_range
+        from app.utils.timezone import now_pkt
+        
+        today = now_pkt().date()
+        
+        # Test today preset
+        _, _, s_d, e_d, preset, label = get_date_range(preset='today')
+        self.assertEqual(preset, 'today')
+        self.assertEqual(s_d, today)
+        self.assertEqual(e_d, today)
+        
+        # Test yesterday preset
+        _, _, s_d, e_d, preset, label = get_date_range(preset='yesterday')
+        self.assertEqual(preset, 'yesterday')
+        self.assertEqual(s_d, today - timedelta(days=1))
+        self.assertEqual(e_d, today - timedelta(days=1))
+
+        # Test 7days preset
+        _, _, s_d, e_d, preset, label = get_date_range(preset='7days')
+        self.assertEqual(preset, '7days')
+        self.assertEqual(s_d, today - timedelta(days=6))
+        self.assertEqual(e_d, today)
+
+        # Test all preset
+        s_dt, e_dt, s_d, e_d, preset, label = get_date_range(preset='all')
+        self.assertEqual(preset, 'all')
+        self.assertIsNone(s_dt)
+        self.assertIsNone(e_dt)
+        self.assertEqual(label, "All Time")
+
+        # Test custom dates with swapped order
+        s_dt, e_dt, s_d, e_d, preset, label = get_date_range(
+            preset='custom',
+            start_date_str='2026-10-05',
+            end_date_str='2026-10-01'
+        )
+        self.assertEqual(preset, 'custom')
+        self.assertEqual(s_d, date(2026, 10, 1))
+        self.assertEqual(e_d, date(2026, 10, 5))
+
+    def test_dashboard_date_filtering(self):
+        with self.app.test_client() as client:
+            with client.session_transaction() as sess:
+                sess['_user_id'] = str(self.admin.id)
+                sess['_fresh'] = True
+
+            # Admin dashboard with date range
+            res = client.get('/admin/dashboard?preset=7days')
+            self.assertEqual(res.status_code, 200)
+            self.assertIn(b'Last 7 Days', res.data)
+
+            # Admin dashboard with custom date range
+            res = client.get('/admin/dashboard?preset=custom&start_date=2026-08-01&end_date=2026-08-31')
+            self.assertEqual(res.status_code, 200)
+
+            # Daily report with preset
+            res = client.get('/reports/daily?preset=today')
+            self.assertEqual(res.status_code, 200)
+            self.assertIn(b'Today', res.data)
+
+            # Branch dashboard with preset
+            res = client.get('/branch/dashboard?preset=all')
+            self.assertEqual(res.status_code, 200)
+            self.assertIn(b'All Time', res.data)
+
+            # Lab dashboard with preset
+            res = client.get('/lab/dashboard?preset=all')
+            self.assertEqual(res.status_code, 200)
+            self.assertIn(b'All Time', res.data)
+
+            # Timeline with date range
+            res = client.get('/admin/timeline?preset=today')
+            self.assertEqual(res.status_code, 200)
+            self.assertIn(b'Today', res.data)
+
 if __name__ == '__main__':
     unittest.main()
+

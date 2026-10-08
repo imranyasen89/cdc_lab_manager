@@ -11,45 +11,12 @@
             <p class="text-sm text-slate-500">Evaluate courier efficiency, branch ingestion counts, and processing/verification bottleneck points</p>
         </div>
         
-        <!-- Preset Range Info Badge -->
-        <div class="flex items-center gap-x-2">
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200">
-                <i class="fa-regular fa-calendar mr-1.5"></i>
-                Active Period: {{ start_date }} to {{ end_date }}
-            </span>
-        </div>
     </div>
 
-    <!-- Filters Form -->
-    <div class="glass-panel rounded-2xl p-4 shadow-sm border border-slate-200">
-        <form action="{{ url_for('reports.performance') }}" method="GET" class="flex flex-wrap items-end gap-4">
-            <div class="flex flex-col gap-y-1">
-                <label for="preset-select" class="text-3xs font-bold uppercase tracking-wider text-slate-500">Time Range</label>
-                <select name="preset" id="preset-select" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-                    <option value="today" {% if preset == 'today' %}selected{% endif %}>Today</option>
-                    <option value="weekly" {% if preset == 'weekly' %}selected{% endif %}>Last 7 Days</option>
-                    <option value="monthly" {% if preset == 'monthly' %}selected{% endif %}>Last 30 Days</option>
-                    <option value="custom" {% if preset == 'custom' %}selected{% endif %}>Custom Range</option>
-                </select>
-            </div>
-            
-            <div class="flex flex-col gap-y-1" id="start-date-container">
-                <label for="start-date-input" class="text-3xs font-bold uppercase tracking-wider text-slate-500">Start Date</label>
-                <input type="date" name="start_date" id="start-date-input" value="{{ start_date }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-            </div>
-            
-            <div class="flex flex-col gap-y-1" id="end-date-container">
-                <label for="end-date-input" class="text-3xs font-bold uppercase tracking-wider text-slate-500">End Date</label>
-                <input type="date" name="end_date" id="end-date-input" value="{{ end_date }}" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-800 text-xs px-3.5 focus:outline-none focus:border-brand-500 transition">
-            </div>
-            
-            <div>
-                <button type="submit" class="h-10 px-5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center gap-x-1.5">
-                    <i class="fa-solid fa-filter"></i> Apply Filters
-                </button>
-            </div>
-        </form>
-    </div>
+    <!-- Date Range Filter Bar -->
+    {% with allow_all_time=false %}
+    {% include 'components/date_filter_bar.html' %}
+    {% endwith %}
 
     <!-- Laboratory Performance Metrics -->
     <div class="glass-panel rounded-2xl p-6 shadow-xl space-y-4">
@@ -239,51 +206,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const presetSelect = document.getElementById('preset-select');
-        const startDateInput = document.getElementById('start-date-input');
-        const endDateInput = document.getElementById('end-date-input');
-        const startDateContainer = document.getElementById('start-date-container');
-        const endDateContainer = document.getElementById('end-date-container');
-
-        function toggleCustomDates() {
-            if (presetSelect.value === 'custom') {
-                startDateInput.disabled = false;
-                endDateInput.disabled = false;
-                startDateContainer.style.opacity = '1';
-                endDateContainer.style.opacity = '1';
-            } else {
-                startDateInput.disabled = true;
-                endDateInput.disabled = true;
-                startDateContainer.style.opacity = '0.5';
-                endDateContainer.style.opacity = '0.5';
-                
-                const today = new Date();
-                let start = new Date();
-                if (presetSelect.value === 'today') {
-                    start = today;
-                } else if (presetSelect.value === 'weekly') {
-                    start.setDate(today.getDate() - 6);
-                } else if (presetSelect.value === 'monthly') {
-                    start.setDate(today.getDate() - 29);
-                }
-                
-                // Format date as YYYY-MM-DD local time
-                const formatLocalDate = (d) => {
-                    const offset = d.getTimezoneOffset();
-                    const localDate = new Date(d.getTime() - (offset*60*1000));
-                    return localDate.toISOString().split('T')[0];
-                };
-                
-                startDateInput.value = formatLocalDate(start);
-                endDateInput.value = formatLocalDate(today);
-            }
-        }
-
-        presetSelect.addEventListener('change', toggleCustomDates);
-        toggleCustomDates(); // run on load
-    });
-</script>
 {% endblock %}

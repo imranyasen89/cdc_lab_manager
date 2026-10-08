@@ -68,6 +68,16 @@ class TATRule(db.Model):
     max_tat_minutes = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(255), nullable=True)
 
+class SampleType(db.Model):
+    __tablename__ = 'sample_types'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    code = db.Column(db.String(50), nullable=True)  # e.g., EDTA, SERUM, URINE
+    description = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=now_pkt)
+
+
 class SampleRequest(db.Model):
     __tablename__ = 'sample_requests'
     

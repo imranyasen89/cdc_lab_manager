@@ -1,7 +1,8 @@
 from datetime import datetime, date, timedelta
 from app import create_app, db
 from app.models import (User, Branch, Department, TATRule, OutsourcedLab, SampleRequest,
-                        Sample, Task, StatusHistory, LocationRecord, UserTaskPermission, CenterDistance)
+                        Sample, Task, StatusHistory, LocationRecord, UserTaskPermission, CenterDistance,
+                        SampleType)
 
 def seed_data():
     app = create_app()
@@ -42,6 +43,20 @@ def seed_data():
         idc = OutsourcedLab(name="Islamabad Diagnostic Center", contact_info="+92-51-225-1212", address="G-8 Markaz, Islamabad")
         
         db.session.add_all([excel, idc])
+        db.session.commit()
+        
+        # 5. Sample Types (Specimen Types)
+        sample_types = [
+            SampleType(name="Blood (EDTA)", code="EDTA", description="Whole blood collected in EDTA tube (CBC, ESR, HbA1c)"),
+            SampleType(name="Blood (Serum)", code="SERUM", description="Clotted blood for serum separation (LFT, RFT, Electrolytes)"),
+            SampleType(name="Urine", code="URINE", description="Clean-catch midstream urine specimen"),
+            SampleType(name="Swab", code="SWAB", description="Throat, wound, or nasopharyngeal swab"),
+            SampleType(name="Sputum", code="SPUTUM", description="Deep respiratory sputum for microbiological examination"),
+            SampleType(name="Biopsy", code="BIOPSY", description="Tissue specimen for histopathological assessment"),
+            SampleType(name="CSF", code="CSF", description="Cerebrospinal fluid specimen"),
+            SampleType(name="Stool", code="STOOL", description="Fecal specimen for routine examination or culture"),
+        ]
+        db.session.add_all(sample_types)
         db.session.commit()
         
         print("Registering employee accounts...")

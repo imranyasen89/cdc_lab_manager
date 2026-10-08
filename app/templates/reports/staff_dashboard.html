@@ -200,11 +200,14 @@
                 </form>
             </div>
 
+            <!-- Date Range Filter for Past Reports -->
+            {% include 'components/date_filter_bar.html' %}
+
             <!-- Submission History Log -->
             <div class="glass-panel rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
                 <div class="px-6 py-4 border-b border-slate-200">
                     <h3 class="font-semibold text-slate-800 flex items-center gap-x-2">
-                        <i class="fa-solid fa-history text-brand-600"></i> Past Submission History
+                        <i class="fa-solid fa-history text-brand-600"></i> Past Submission History <span class="text-xs font-normal text-slate-500">({{ date_label }})</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">

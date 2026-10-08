@@ -20,10 +20,23 @@ instance/
 *.swp
 *.swo
 
-# Environment variables & secrets
+# Environment variables & secrets — NEVER commit these
 .env
 .env.local
+.env.production
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Data files
+*.xlsx
+
+# Scratch / temp
+scratch/
+
+# Agent config
+.agents/
+
+# Vercel build output
+.vercel/

@@ -1,4 +1,12 @@
 import os
+
+# Load .env file early (for local development convenience)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
@@ -11,13 +19,13 @@ migrate = Migrate()
 def create_app(config_class=None):
     app = Flask(__name__)
     
-    # Configure app
-    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-12345')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///cdc_lab_manager.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    
+    # Load configuration
     if config_class:
         app.config.from_object(config_class)
+    else:
+        from config import config
+        env = os.environ.get('FLASK_ENV', 'development')
+        app.config.from_object(config.get(env, config['default']))
         
     db.init_app(app)
     login_manager.init_app(app)
@@ -67,5 +75,20 @@ def create_app(config_class=None):
             ).count()
             return dict(unread_notifications_count=unread_count)
         return dict(unread_notifications_count=0)
+
+    # CLI commands
+    import click
+
+    @app.cli.command('seed')
+    @click.option('--force', is_flag=True, help='Force re-seed even if data exists.')
+    def seed_command(force):
+        """Seed the database with demo data."""
+        from app.models import User
+        if User.query.first() and not force:
+            click.echo('Database already contains data. Use --force to re-seed.')
+            return
+        from seed import seed_data
+        seed_data()
+        click.echo('Database seeded successfully!')
         
     return app

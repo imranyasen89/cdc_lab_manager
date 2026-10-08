@@ -5,93 +5,210 @@
 {% block extra_head %}
 <style>
     .tab-btn.active {
-        background: rgba(0, 102, 204, 0.08) !important;
+        background: rgba(0, 102, 204, 0.1) !important;
         color: #0066cc !important;
         border-color: #0066cc !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 102, 204, 0.1);
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Header -->
-    <div class="border-b border-slate-200 pb-4">
-        <h1 class="text-2xl font-bold text-slate-800">Master Data Console</h1>
-        <p class="text-sm text-slate-500">Configure associated branches, departments, TAT rule limits, and outsourced laboratory networks</p>
+    <!-- Header with Quick Action & Subtitle -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 pb-5">
+        <div>
+            <div class="flex items-center gap-x-3">
+                <div class="h-10 w-10 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center text-brand-600 shadow-sm">
+                    <i class="fa-solid fa-sliders text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-850">Master Data Control Console</h1>
+                    <p class="text-xs text-slate-500 mt-0.5">Manage branches, departments, TAT SLA thresholds, outsourced partner labs, and specimen types</p>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                System Live
+            </span>
+        </div>
     </div>
 
-    <!-- Configuration Tabs -->
+    <!-- Quick Overview Metric Cards -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+        <div onclick="switchConfigTab('tab-branches')" class="glass-panel p-3.5 rounded-2xl border border-slate-200 hover:border-brand-300 cursor-pointer transition shadow-xs group">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>Branches</span>
+                <i class="fa-solid fa-code-branch text-brand-600 group-hover:scale-110 transition"></i>
+            </div>
+            <div class="text-xl font-bold text-slate-800">{{ branches|length }}</div>
+            <div class="text-3xs text-slate-400 mt-0.5">Active collection hubs</div>
+        </div>
+
+        <div onclick="switchConfigTab('tab-depts')" class="glass-panel p-3.5 rounded-2xl border border-slate-200 hover:border-brand-300 cursor-pointer transition shadow-xs group">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>Departments</span>
+                <i class="fa-solid fa-building text-brand-600 group-hover:scale-110 transition"></i>
+            </div>
+            <div class="text-xl font-bold text-slate-800">{{ departments|length }}</div>
+            <div class="text-3xs text-slate-400 mt-0.5">Specialized lab units</div>
+        </div>
+
+        <div onclick="switchConfigTab('tab-tat')" class="glass-panel p-3.5 rounded-2xl border border-slate-200 hover:border-brand-300 cursor-pointer transition shadow-xs group">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>TAT Rules</span>
+                <i class="fa-solid fa-clock text-brand-600 group-hover:scale-110 transition"></i>
+            </div>
+            <div class="text-xl font-bold text-slate-800">{{ tat_rules|length }}</div>
+            <div class="text-3xs text-slate-400 mt-0.5">Priority SLA limits</div>
+        </div>
+
+        <div onclick="switchConfigTab('tab-outsource-partners')" class="glass-panel p-3.5 rounded-2xl border border-slate-200 hover:border-brand-300 cursor-pointer transition shadow-xs group">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>Outsource Labs</span>
+                <i class="fa-solid fa-share-nodes text-brand-600 group-hover:scale-110 transition"></i>
+            </div>
+            <div class="text-xl font-bold text-slate-800">{{ outsourced_labs|length }}</div>
+            <div class="text-3xs text-slate-400 mt-0.5">External lab partners</div>
+        </div>
+
+        <div onclick="switchConfigTab('tab-sample-types')" class="glass-panel p-3.5 rounded-2xl border border-slate-200 hover:border-brand-300 cursor-pointer transition shadow-xs group">
+            <div class="flex items-center justify-between text-xs text-slate-500 font-semibold mb-1">
+                <span>Specimen Types</span>
+                <i class="fa-solid fa-vial text-brand-600 group-hover:scale-110 transition"></i>
+            </div>
+            <div class="text-xl font-bold text-slate-800">{{ sample_types|length }}</div>
+            <div class="text-3xs text-slate-400 mt-0.5">Sample classifications</div>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
     <div class="border-b border-slate-200 flex gap-x-2 pb-1 overflow-x-auto">
-        <button onclick="switchConfigTab('tab-branches')" id="btn-config-branches" class="tab-btn active px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
-            <i class="fa-solid fa-code-branch mr-1.5"></i> Branches ({{ branches|length }})
+        <button onclick="switchConfigTab('tab-branches')" id="btn-config-branches" class="tab-btn active px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+            <i class="fa-solid fa-code-branch mr-2"></i> Branches <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ branches|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-depts')" id="btn-config-depts" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
-            <i class="fa-solid fa-building mr-1.5"></i> Departments ({{ departments|length }})
+        <button onclick="switchConfigTab('tab-depts')" id="btn-config-depts" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+            <i class="fa-solid fa-building mr-2"></i> Departments <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ departments|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-tat')" id="btn-config-tat" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
-            <i class="fa-solid fa-clock mr-1.5"></i> TAT Rules ({{ tat_rules|length }})
+        <button onclick="switchConfigTab('tab-tat')" id="btn-config-tat" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+            <i class="fa-solid fa-clock mr-2"></i> TAT Rules <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ tat_rules|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-outsource-partners')" id="btn-config-outsource-partners" class="tab-btn px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition">
-            <i class="fa-solid fa-share-nodes mr-1.5"></i> Outsourced Labs ({{ outsourced_labs|length }})
+        <button onclick="switchConfigTab('tab-outsource-partners')" id="btn-config-outsource-partners" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+            <i class="fa-solid fa-share-nodes mr-2"></i> Outsourced Labs <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ outsourced_labs|length }}</span>
+        </button>
+        <button onclick="switchConfigTab('tab-sample-types')" id="btn-config-sample-types" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+            <i class="fa-solid fa-vial mr-2"></i> Specimen Types <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ sample_types|length }}</span>
         </button>
     </div>
 
-    <!-- TAB: BRANCHES -->
+    <!-- ============================================== TAB: BRANCHES ============================================== -->
     <div id="tab-branches" class="config-tab space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Add Form -->
-            {% if current_user.role == 'ADMIN' %}
-            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
-                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure New Branch</h3>
+            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-850 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brand-600"></i> Register New Branch
+                    </h3>
+                    <span class="text-3xs uppercase tracking-wider font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">Hub Center</span>
+                </div>
                 <form action="{{ url_for('admin.create_branch') }}" method="POST" class="space-y-3.5 text-xs">
                     <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Name</label>
-                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G-11 Branch">
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G-11 Collection Center">
                     </div>
                     <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Code</label>
-                        <input type="text" name="code" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G11">
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Code <span class="text-rose-500">*</span></label>
+                        <input type="text" name="code" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 uppercase focus:outline-none focus:border-brand-500" placeholder="e.g. G11">
                     </div>
                     <div class="grid grid-cols-2 gap-x-2">
                         <div>
                             <label class="block font-bold uppercase text-slate-500 tracking-wider">Latitude</label>
-                            <input type="number" step="any" name="latitude" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="33.6822">
+                            <input type="number" step="any" name="latitude" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="33.6822">
                         </div>
                         <div>
                             <label class="block font-bold uppercase text-slate-500 tracking-wider">Longitude</label>
-                            <input type="number" step="any" name="longitude" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="73.0076">
+                            <input type="number" step="any" name="longitude" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="73.0076">
                         </div>
                     </div>
                     <div>
                         <label class="block font-bold uppercase text-slate-500 tracking-wider">Address Details</label>
-                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="G-11 Markaz, Islamabad">
+                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. G-11 Markaz, Islamabad">
                     </div>
-                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
-                        Register Branch Hub
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Register Branch Hub
                     </button>
                 </form>
             </div>
             {% endif %}
 
             <!-- Table -->
-            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+            <div class="{% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}lg:col-span-2{% else %}lg:col-span-3{% endif %} glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" onkeyup="filterTable('branches-table', this.value)" placeholder="Search branches by code, name, address..." class="w-full h-9 pl-9 pr-3 rounded-lg text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">Total: {{ branches|length }}</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
+                    <table id="branches-table" class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-3.5">Code</th>
-                                <th class="px-6 py-3.5">Branch Name</th>
-                                <th class="px-6 py-3.5">Coordinates</th>
-                                <th class="px-6 py-3.5">Address</th>
+                                <th class="px-5 py-3.5">Code</th>
+                                <th class="px-5 py-3.5">Branch Name</th>
+                                <th class="px-5 py-3.5">Coordinates</th>
+                                <th class="px-5 py-3.5">Address</th>
+                                <th class="px-5 py-3.5">Linked Records</th>
+                                <th class="px-5 py-3.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
                             {% for b in branches %}
                             <tr class="hover:bg-slate-50/80 transition">
-                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ b.code }}</td>
-                                <td class="px-6 py-4 font-semibold text-slate-800">{{ b.name }}</td>
-                                <td class="px-6 py-4 font-mono text-slate-600">{{ b.latitude or '0.0' }}, {{ b.longitude or '0.0' }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ b.address or 'N/A' }}</td>
+                                <td class="px-5 py-3.5 font-mono font-bold">
+                                    <span class="px-2 py-0.5 rounded-md bg-brand-50 border border-brand-200 text-brand-700">{{ b.code }}</span>
+                                </td>
+                                <td class="px-5 py-3.5 font-semibold text-slate-800">{{ b.name }}</td>
+                                <td class="px-5 py-3.5 font-mono text-slate-600">
+                                    {% if b.latitude and b.longitude %}
+                                        <i class="fa-solid fa-location-dot text-rose-500 mr-1"></i>{{ b.latitude|round(4) }}, {{ b.longitude|round(4) }}
+                                    {% else %}
+                                        <span class="text-slate-400 italic">No GPS</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-600">{{ b.address or 'N/A' }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="fa-solid fa-users text-slate-500"></i> {{ branch_metrics[b.id].users }} staff
+                                    </span>
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 ml-1">
+                                        <i class="fa-solid fa-box text-slate-500"></i> {{ branch_metrics[b.id].requests }} reqs
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-right">
+                                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                    <div class="flex gap-x-1.5 justify-end items-center">
+                                        <button onclick="openEditBranchModal('{{ b.id }}', '{{ b.name|escape }}', '{{ b.code|escape }}', '{{ b.latitude or '' }}', '{{ b.longitude or '' }}', '{{ b.address or ''|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit
+                                        </button>
+                                        <button onclick="openDeleteBranchModal('{{ b.id }}', '{{ b.name|escape }}', '{{ b.code|escape }}', '{{ branch_metrics[b.id].users }}', '{{ branch_metrics[b.id].requests }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition">
+                                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-3xs text-slate-400 italic">Read-only</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-5 py-8 text-center text-slate-400">No branches configured yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -101,46 +218,85 @@
         </div>
     </div>
 
-    <!-- TAB: DEPARTMENTS -->
+    <!-- ============================================== TAB: DEPARTMENTS ============================================== -->
     <div id="tab-depts" class="config-tab hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Add Form -->
-            {% if current_user.role == 'ADMIN' %}
-            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
-                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure Department</h3>
+            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-850 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brand-600"></i> Configure Department
+                    </h3>
+                    <span class="text-3xs uppercase tracking-wider font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">Lab Unit</span>
+                </div>
                 <form action="{{ url_for('admin.create_department') }}" method="POST" class="space-y-3.5 text-xs">
                     <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Department Name</label>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Department Name <span class="text-rose-500">*</span></label>
                         <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Hematology">
                     </div>
                     <div>
                         <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
-                        <textarea name="description" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500" placeholder="Cell counts, blood tests..."></textarea>
+                        <textarea name="description" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500" placeholder="Cell counts, blood tests, coagulation..."></textarea>
                     </div>
-                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
-                        Register Department
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Register Department
                     </button>
                 </form>
             </div>
             {% endif %}
 
             <!-- Table -->
-            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+            <div class="{% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}lg:col-span-2{% else %}lg:col-span-3{% endif %} glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" onkeyup="filterTable('depts-table', this.value)" placeholder="Search departments by name or description..." class="w-full h-9 pl-9 pr-3 rounded-lg text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">Total: {{ departments|length }}</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
+                    <table id="depts-table" class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-3.5">ID</th>
-                                <th class="px-6 py-3.5">Department Name</th>
-                                <th class="px-6 py-3.5">Description</th>
+                                <th class="px-5 py-3.5">ID</th>
+                                <th class="px-5 py-3.5">Department Name</th>
+                                <th class="px-5 py-3.5">Description</th>
+                                <th class="px-5 py-3.5">Staff Assigned</th>
+                                <th class="px-5 py-3.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
                             {% for d in departments %}
                             <tr class="hover:bg-slate-50/80 transition">
-                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ d.id }}</td>
-                                <td class="px-6 py-4 font-semibold text-slate-800">{{ d.name }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ d.description or 'N/A' }}</td>
+                                <td class="px-5 py-3.5 font-mono font-bold text-brand-600">#{{ d.id }}</td>
+                                <td class="px-5 py-3.5 font-semibold text-slate-800">{{ d.name }}</td>
+                                <td class="px-5 py-3.5 text-slate-600 truncate max-w-xs">{{ d.description or 'N/A' }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="fa-solid fa-user-doctor text-slate-500"></i> {{ dept_metrics[d.id].users }} technologist(s)
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-right">
+                                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                    <div class="flex gap-x-1.5 justify-end items-center">
+                                        <button onclick="openEditDeptModal('{{ d.id }}', '{{ d.name|escape }}', '{{ d.description or ''|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit
+                                        </button>
+                                        <button onclick="openDeleteDeptModal('{{ d.id }}', '{{ d.name|escape }}', '{{ dept_metrics[d.id].users }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition">
+                                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-3xs text-slate-400 italic">Read-only</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-5 py-8 text-center text-slate-400">No departments configured yet.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -150,68 +306,297 @@
         </div>
     </div>
 
-    <!-- TAB: TAT RULES -->
+    <!-- ============================================== TAB: TAT RULES ============================================== -->
     <div id="tab-tat" class="config-tab hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Add Form -->
-            {% if current_user.role == 'ADMIN' %}
-            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
-                <h3 class="font-semibold text-slate-855"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure TAT Limits</h3>
+            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-855 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brand-600"></i> Configure TAT Limits
+                    </h3>
+                    <span class="text-3xs uppercase tracking-wider font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">SLA Matrix</span>
+                </div>
                 <form action="{{ url_for('admin.create_tat_rule') }}" method="POST" class="space-y-3.5 text-xs">
                     <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification</label>
-                        <input type="text" name="priority" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Routine / Emergency">
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification <span class="text-rose-500">*</span></label>
+                        <input type="text" name="priority" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Routine / Urgent / Emergency">
                     </div>
                     <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes)</label>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes) <span class="text-rose-500">*</span></label>
                         <input type="number" name="max_tat_minutes" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. 180">
                     </div>
                     <div>
                         <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
-                        <input type="text" name="description" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="Target completion timeline">
+                        <input type="text" name="description" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="Standard diagnostic turnaround limit">
                     </div>
-                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
-                        Register / Update Rule
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Register / Update SLA Rule
                     </button>
                 </form>
             </div>
             {% endif %}
 
             <!-- Table -->
-            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+            <div class="{% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}lg:col-span-2{% else %}lg:col-span-3{% endif %} glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" onkeyup="filterTable('tat-table', this.value)" placeholder="Search rules by priority or description..." class="w-full h-9 pl-9 pr-3 rounded-lg text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">Total: {{ tat_rules|length }}</span>
+                </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
+                    <table id="tat-table" class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                             <tr>
-                                <th class="px-6 py-3.5">Priority</th>
-                                <th class="px-6 py-3.5">Max TAT Limit</th>
-                                <th class="px-6 py-3.5">Description</th>
-                                <th class="px-6 py-3.5 text-right">Actions</th>
+                                <th class="px-5 py-3.5">Priority</th>
+                                <th class="px-5 py-3.5">Max TAT Limit</th>
+                                <th class="px-5 py-3.5">Description</th>
+                                <th class="px-5 py-3.5 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
                             {% for t in tat_rules %}
                             <tr class="hover:bg-slate-50/80 transition">
-                                <td class="px-6 py-4 font-semibold text-slate-800">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
+                                <td class="px-5 py-3.5 font-semibold text-slate-800">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-3xs font-extrabold uppercase tracking-widest
                                         {% if t.priority == 'Emergency' %}bg-rose-50 border border-rose-200 text-rose-600
                                         {% elif t.priority == 'Urgent' %}bg-amber-50 border border-amber-200 text-amber-600
                                         {% else %}bg-indigo-50 border border-indigo-200 text-indigo-600{% endif %}">
                                         {{ t.priority }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ t.max_tat_minutes }} minutes ({{ (t.max_tat_minutes / 60)|round(1) }} hrs)</td>
-                                <td class="px-6 py-4 text-slate-600">{{ t.description or 'N/A' }}</td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex gap-x-2 justify-end items-center">
-                                        <button onclick="openEditTATModal('{{ t.id }}', '{{ t.priority }}', '{{ t.max_tat_minutes }}', '{{ t.description or '' }}')" 
-                                                class="glass-btn px-3 py-1.5 rounded-lg text-xs font-semibold">
-                                            Edit
+                                <td class="px-5 py-3.5 font-mono font-bold text-brand-600">
+                                    {{ t.max_tat_minutes }} mins <span class="text-slate-400 font-normal">({{ (t.max_tat_minutes / 60)|round(1) }} hrs)</span>
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-600">{{ t.description or 'N/A' }}</td>
+                                <td class="px-5 py-3.5 text-right">
+                                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                    <div class="flex gap-x-1.5 justify-end items-center">
+                                        <button onclick="openEditTATModal('{{ t.id }}', '{{ t.priority|escape }}', '{{ t.max_tat_minutes }}', '{{ t.description or ''|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit
                                         </button>
-                                        <button onclick="openDeleteTATModal('{{ t.id }}', '{{ t.priority }}')" 
-                                                class="h-9 px-3 rounded-lg text-xs font-semibold bg-rose-600 text-white hover:bg-rose-700 transition">
-                                            Delete
+                                        <button onclick="openDeleteTATModal('{{ t.id }}', '{{ t.priority|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition">
+                                            <i class="fa-solid fa-trash mr-1"></i> Delete
                                         </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-3xs text-slate-400 italic">Read-only</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="px-5 py-8 text-center text-slate-400">No TAT SLA rules configured yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== TAB: OUTSOURCED PARTNERS ============================================== -->
+    <div id="tab-outsource-partners" class="config-tab hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-850 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brand-600"></i> Register Outsource Lab
+                    </h3>
+                    <span class="text-3xs uppercase tracking-wider font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">Partner Lab</span>
+                </div>
+                <form action="{{ url_for('admin.create_outsourced_lab') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Laboratory Name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Excel Diagnostics Labs">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Contact details</label>
+                        <input type="text" name="contact_info" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. +92 51 111-222-333">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Address details</label>
+                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. F-8 Markaz, Islamabad">
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Register Partner Lab
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="{% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}lg:col-span-2{% else %}lg:col-span-3{% endif %} glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" onkeyup="filterTable('outsource-table', this.value)" placeholder="Search outsource partners..." class="w-full h-9 pl-9 pr-3 rounded-lg text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">Total: {{ outsourced_labs|length }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="outsource-table" class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-555 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-5 py-3.5">ID</th>
+                                <th class="px-5 py-3.5">Laboratory Name</th>
+                                <th class="px-5 py-3.5">Contact details</th>
+                                <th class="px-5 py-3.5">Address</th>
+                                <th class="px-5 py-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for partner in outsourced_labs %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-5 py-3.5 font-mono font-bold text-brand-600">#{{ partner.id }}</td>
+                                <td class="px-5 py-3.5 font-semibold text-slate-800">{{ partner.name }}</td>
+                                <td class="px-5 py-3.5 text-slate-600">
+                                    {% if partner.contact_info %}
+                                        <i class="fa-solid fa-phone text-slate-400 mr-1 text-3xs"></i>{{ partner.contact_info }}
+                                    {% else %}
+                                        <span class="text-slate-400">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-600 truncate max-w-xs">{{ partner.address or 'N/A' }}</td>
+                                <td class="px-5 py-3.5 text-right">
+                                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                    <div class="flex gap-x-1.5 justify-end items-center">
+                                        <button onclick="openEditOutsourceModal('{{ partner.id }}', '{{ partner.name|escape }}', '{{ partner.contact_info or ''|escape }}', '{{ partner.address or ''|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit
+                                        </button>
+                                        <button onclick="openDeleteOutsourceModal('{{ partner.id }}', '{{ partner.name|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition">
+                                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-3xs text-slate-400 italic">Read-only</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="px-5 py-8 text-center text-slate-400">No outsourced partners configured yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================== TAB: SPECIMEN / SAMPLE TYPES ============================================== -->
+    <div id="tab-sample-types" class="config-tab hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Add Form -->
+            {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm border border-slate-200/80">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-semibold text-slate-850 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-brand-600"></i> New Specimen Type
+                    </h3>
+                    <span class="text-3xs uppercase tracking-wider font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded">Specimen Master</span>
+                </div>
+                <form action="{{ url_for('admin.create_sample_type') }}" method="POST" class="space-y-3.5 text-xs">
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Specimen Name <span class="text-rose-500">*</span></label>
+                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Synovial Fluid">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Code / Container Tag</label>
+                        <input type="text" name="code" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 uppercase focus:outline-none focus:border-brand-500" placeholder="e.g. SYNOV">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Clinical Description</label>
+                        <textarea name="description" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500" placeholder="Joint fluid aspirate for crystal analysis or microscopy..."></textarea>
+                    </div>
+                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i class="fa-solid fa-plus text-xs"></i> Register Specimen Type
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Table -->
+            <div class="{% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}lg:col-span-2{% else %}lg:col-span-3{% endif %} glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="text" onkeyup="filterTable('sample-types-table', this.value)" placeholder="Search specimen types..." class="w-full h-9 pl-9 pr-3 rounded-lg text-xs bg-slate-50 border border-slate-200 focus:outline-none focus:border-brand-500">
+                    </div>
+                    <span class="text-xs text-slate-400 font-semibold">Total: {{ sample_types|length }}</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table id="sample-types-table" class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-550 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
+                            <tr>
+                                <th class="px-5 py-3.5">ID</th>
+                                <th class="px-5 py-3.5">Specimen Name</th>
+                                <th class="px-5 py-3.5">Code</th>
+                                <th class="px-5 py-3.5">Description</th>
+                                <th class="px-5 py-3.5">Samples Recorded</th>
+                                <th class="px-5 py-3.5 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
+                            {% for st in sample_types %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-5 py-3.5 font-mono font-bold text-brand-600">#{{ st.id }}</td>
+                                <td class="px-5 py-3.5 font-semibold text-slate-800">
+                                    <i class="fa-solid fa-vial text-brand-500 mr-1.5"></i>{{ st.name }}
+                                </td>
+                                <td class="px-5 py-3.5 font-mono">
+                                    {% if st.code %}
+                                        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 font-bold text-3xs">{{ st.code }}</span>
+                                    {% else %}
+                                        <span class="text-slate-400 text-3xs">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-5 py-3.5 text-slate-600 truncate max-w-xs">{{ st.description or 'N/A' }}</td>
+                                <td class="px-5 py-3.5">
+                                    <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-3xs font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                                        <i class="fa-solid fa-flask-vial text-slate-500"></i> {{ sample_type_counts.get(st.name, 0) }} samples
+                                    </span>
+                                </td>
+                                <td class="px-5 py-3.5 text-right">
+                                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                    <div class="flex gap-x-1.5 justify-end items-center">
+                                        <button onclick="openEditSampleTypeModal('{{ st.id }}', '{{ st.name|escape }}', '{{ st.code or ''|escape }}', '{{ st.description or ''|escape }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 transition">
+                                            <i class="fa-solid fa-pen-to-square mr-1 text-slate-400"></i> Edit
+                                        </button>
+                                        <button onclick="openDeleteSampleTypeModal('{{ st.id }}', '{{ st.name|escape }}', '{{ sample_type_counts.get(st.name, 0) }}')" 
+                                                class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition">
+                                            <i class="fa-solid fa-trash mr-1"></i> Delete
+                                        </button>
+                                    </div>
+                                    {% else %}
+                                    <span class="text-3xs text-slate-400 italic">Read-only</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="px-5 py-8 text-center text-slate-400">
+                                    <div class="space-y-2">
+                                        <p>No specimen types configured yet.</p>
+                                        {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                                        <form action="{{ url_for('admin.seed_default_sample_types') }}" method="POST">
+                                            <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 border border-brand-200 text-brand-700 hover:bg-brand-100 transition inline-flex items-center gap-1.5">
+                                                <i class="fa-solid fa-wand-magic-sparkles"></i> Load CDC Standard Specimen Types
+                                            </button>
+                                        </form>
+                                        {% endif %}
                                     </div>
                                 </td>
                             </tr>
@@ -223,105 +608,268 @@
         </div>
     </div>
 
-    <!-- TAB: OUTSOURCED PARTNERS -->
-    <div id="tab-outsource-partners" class="config-tab hidden space-y-6">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Add Form -->
-            {% if current_user.role == 'ADMIN' %}
-            <div class="glass-panel rounded-2xl p-5 space-y-4 shadow-sm">
-                <h3 class="font-semibold text-slate-850"><i class="fa-solid fa-circle-plus text-brand-600"></i> Configure Outsource Lab</h3>
-                <form action="{{ url_for('admin.create_outsourced_lab') }}" method="POST" class="space-y-3.5 text-xs">
-                    <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Laboratory Name</label>
-                        <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. Excel Labs">
-                    </div>
-                    <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Contact details</label>
-                        <input type="text" name="contact_info" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500" placeholder="e.g. +92 51 111-222-333">
-                    </div>
-                    <div>
-                        <label class="block font-bold uppercase text-slate-500 tracking-wider">Address details</label>
-                        <input type="text" name="address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none" placeholder="F-8 Markaz, Islamabad">
-                    </div>
-                    <button type="submit" class="w-full h-10 rounded-xl bg-brand-600 font-semibold text-white hover:bg-brand-500 transition">
-                        Register Partner Lab
-                    </button>
-                </form>
-            </div>
-            {% endif %}
-
-            <!-- Table -->
-            <div class="lg:col-span-2 glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-slate-50 text-slate-555 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
-                            <tr>
-                                <th class="px-6 py-3.5">ID</th>
-                                <th class="px-6 py-3.5">Laboratory Name</th>
-                                <th class="px-6 py-3.5">Contact details</th>
-                                <th class="px-6 py-3.5">Address</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-xs text-slate-650">
-                            {% for partner in outsourced_labs %}
-                            <tr class="hover:bg-slate-50/80 transition">
-                                <td class="px-6 py-4 font-mono font-bold text-brand-600">{{ partner.id }}</td>
-                                <td class="px-6 py-4 font-semibold text-slate-800">{{ partner.name }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ partner.contact_info or 'N/A' }}</td>
-                                <td class="px-6 py-4 text-slate-600">{{ partner.address or 'N/A' }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
 
-<!-- ============================================== TAT MODALS ============================================== -->
+<!-- ============================================== MODALS SECTION ============================================== -->
 
-<!-- Edit TAT Rule Modal -->
-<div id="modal-edit-tat" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
-        <h3 class="text-base font-bold text-slate-850"><i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit TAT Classification</h3>
+<!-- 1. Edit Branch Modal -->
+<div id="modal-edit-branch" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-850 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit Branch Hub
+            </h3>
+            <button type="button" onclick="closeConfigModal('modal-edit-branch')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
         
-        <form id="edit-tat-form" method="POST" class="space-y-4 text-xs">
+        <form id="edit-branch-form" method="POST" class="space-y-3.5 text-xs">
             <div>
-                <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification</label>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="edit-branch-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Branch Code <span class="text-rose-500">*</span></label>
+                <input type="text" name="code" id="edit-branch-code" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 uppercase focus:outline-none focus:border-brand-500">
+            </div>
+            <div class="grid grid-cols-2 gap-x-2">
+                <div>
+                    <label class="block font-bold uppercase text-slate-500 tracking-wider">Latitude</label>
+                    <input type="number" step="any" name="latitude" id="edit-branch-lat" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+                </div>
+                <div>
+                    <label class="block font-bold uppercase text-slate-500 tracking-wider">Longitude</label>
+                    <input type="number" step="any" name="longitude" id="edit-branch-lng" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+                </div>
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Address Details</label>
+                <input type="text" name="address" id="edit-branch-address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div class="flex justify-end gap-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeConfigModal('modal-edit-branch')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 2. Delete Branch Modal -->
+<div id="modal-delete-branch" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete Branch Hub
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to permanently delete <strong id="delete-branch-name" class="text-slate-800 font-bold"></strong> (<span id="delete-branch-code" class="font-mono text-brand-600"></span>)?
+        </p>
+        <div id="delete-branch-warning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-3xs text-amber-800 leading-normal">
+            <i class="fa-solid fa-circle-exclamation mr-1 text-amber-600"></i>
+            <span id="delete-branch-warning-text"></span>
+        </div>
+        <form id="delete-branch-form" method="POST" class="flex justify-end gap-x-2 pt-2">
+            <button type="button" onclick="closeConfigModal('modal-delete-branch')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+                Confirm Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- 3. Edit Department Modal -->
+<div id="modal-edit-dept" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-850 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit Department
+            </h3>
+            <button type="button" onclick="closeConfigModal('modal-edit-dept')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <form id="edit-dept-form" method="POST" class="space-y-3.5 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Department Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="edit-dept-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
+                <textarea name="description" id="edit-dept-desc" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500"></textarea>
+            </div>
+            <div class="flex justify-end gap-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeConfigModal('modal-edit-dept')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 4. Delete Department Modal -->
+<div id="modal-delete-dept" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete Department
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to delete department <strong id="delete-dept-name" class="text-slate-800 font-bold"></strong>?
+        </p>
+        <div id="delete-dept-warning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-3xs text-amber-800 leading-normal">
+            <i class="fa-solid fa-circle-exclamation mr-1 text-amber-600"></i>
+            <span id="delete-dept-warning-text"></span>
+        </div>
+        <form id="delete-dept-form" method="POST" class="flex justify-end gap-x-2 pt-2">
+            <button type="button" onclick="closeConfigModal('modal-delete-dept')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+                Confirm Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- 5. Edit TAT Rule Modal -->
+<div id="modal-edit-tat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-850 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit TAT Classification
+            </h3>
+            <button type="button" onclick="closeConfigModal('modal-edit-tat')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <form id="edit-tat-form" method="POST" class="space-y-3.5 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Priority Classification <span class="text-rose-500">*</span></label>
                 <input type="text" name="priority" id="edit-tat-priority" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
             </div>
             <div>
-                <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes)</label>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Max TAT Allowance (Minutes) <span class="text-rose-500">*</span></label>
                 <input type="number" name="max_tat_minutes" id="edit-tat-minutes" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
             </div>
             <div>
                 <label class="block font-bold uppercase text-slate-500 tracking-wider">Description</label>
                 <input type="text" name="description" id="edit-tat-desc" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
             </div>
-            <div class="flex justify-end gap-x-2 pt-2">
-                <button type="button" onclick="closeTATModal('modal-edit-tat')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
-                <button type="submit" class="px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold">Save Changes</button>
+            <div class="flex justify-end gap-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeConfigModal('modal-edit-tat')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm">Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- Delete TAT Rule Confirmation Modal -->
-<div id="modal-delete-tat" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200">
+<!-- 6. Delete TAT Rule Modal -->
+<div id="modal-delete-tat" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
         <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
             <i class="fa-solid fa-triangle-exclamation"></i> Delete TAT Classification
         </h3>
-        <p class="text-sm text-slate-600">
-            Are you sure you want to delete the TAT limit rule for <strong id="delete-tat-priority" class="text-rose-600"></strong>? 
-            Samples already registered with this priority won't be modified, but you won't be able to select it for new requests.
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to delete the TAT limit rule for <strong id="delete-tat-priority" class="text-rose-600 font-bold"></strong>?
         </p>
         <form id="delete-tat-form" method="POST" class="flex justify-end gap-x-2 pt-2">
-            <button type="button" onclick="closeTATModal('modal-delete-tat')" class="px-4 py-2 rounded-lg bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
-            <button type="submit" class="px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold">
-                Delete Rule
+            <button type="button" onclick="closeConfigModal('modal-delete-tat')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+                Confirm Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- 7. Edit Outsourced Lab Modal -->
+<div id="modal-edit-outsource" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-850 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit Partner Laboratory
+            </h3>
+            <button type="button" onclick="closeConfigModal('modal-edit-outsource')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <form id="edit-outsource-form" method="POST" class="space-y-3.5 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Laboratory Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="edit-outsource-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Contact details</label>
+                <input type="text" name="contact_info" id="edit-outsource-contact" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Address details</label>
+                <input type="text" name="address" id="edit-outsource-address" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div class="flex justify-end gap-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeConfigModal('modal-edit-outsource')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 8. Delete Outsourced Lab Modal -->
+<div id="modal-delete-outsource" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete Outsource Lab
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to remove <strong id="delete-outsource-name" class="text-slate-800 font-bold"></strong> from partner networks?
+        </p>
+        <form id="delete-outsource-form" method="POST" class="flex justify-end gap-x-2 pt-2">
+            <button type="button" onclick="closeConfigModal('modal-delete-outsource')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+                Confirm Delete
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- 9. Edit Specimen Type Modal -->
+<div id="modal-edit-sample-type" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-850 flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-brand-600"></i> Edit Specimen Type
+            </h3>
+            <button type="button" onclick="closeConfigModal('modal-edit-sample-type')" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        
+        <form id="edit-sample-type-form" method="POST" class="space-y-3.5 text-xs">
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Specimen Name <span class="text-rose-500">*</span></label>
+                <input type="text" name="name" id="edit-sample-type-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Code / Container Tag</label>
+                <input type="text" name="code" id="edit-sample-type-code" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-200 text-slate-800 px-3 uppercase focus:outline-none focus:border-brand-500">
+            </div>
+            <div>
+                <label class="block font-bold uppercase text-slate-500 tracking-wider">Clinical Description</label>
+                <textarea name="description" id="edit-sample-type-desc" rows="3" class="mt-1 block w-full rounded-xl bg-white border border-slate-200 p-3 text-slate-800 focus:outline-none focus:border-brand-500"></textarea>
+            </div>
+            <div class="flex justify-end gap-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeConfigModal('modal-edit-sample-type')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+                <button type="submit" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 10. Delete Specimen Type Modal -->
+<div id="modal-delete-sample-type" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs hidden items-center justify-center z-50 p-4">
+    <div class="glass-panel w-full max-w-sm rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 bg-white">
+        <h3 class="text-base font-bold text-rose-600 flex items-center gap-x-2">
+            <i class="fa-solid fa-triangle-exclamation"></i> Delete Specimen Type
+        </h3>
+        <p class="text-xs text-slate-600 leading-relaxed">
+            Are you sure you want to delete specimen type <strong id="delete-sample-type-name" class="text-slate-800 font-bold"></strong>?
+        </p>
+        <div id="delete-sample-type-warning" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-3xs text-amber-800 leading-normal">
+            <i class="fa-solid fa-circle-exclamation mr-1 text-amber-600"></i>
+            <span id="delete-sample-type-warning-text"></span>
+        </div>
+        <form id="delete-sample-type-form" method="POST" class="flex justify-end gap-x-2 pt-2">
+            <button type="button" onclick="closeConfigModal('modal-delete-sample-type')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 hover:text-slate-800 text-xs font-semibold border border-slate-200">Cancel</button>
+            <button type="submit" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm">
+                Confirm Delete
             </button>
         </form>
     </div>
@@ -331,45 +879,181 @@
 
 {% block extra_js %}
 <script>
+    // Tab switching with URL hash retention
     function switchConfigTab(tabId) {
-        // Hide all
         const tabs = document.querySelectorAll('.config-tab');
         tabs.forEach(tab => tab.classList.add('hidden'));
         
-        // Show selected
-        document.getElementById(tabId).classList.remove('hidden');
+        const targetTab = document.getElementById(tabId);
+        if (targetTab) {
+            targetTab.classList.remove('hidden');
+        }
         
-        // Deactivate all btns
         const tabBtns = document.querySelectorAll('.tab-btn');
         tabBtns.forEach(btn => btn.classList.remove('active'));
         
-        // Activate selected btn
-        document.getElementById(`btn-config-${tabId.replace('tab-', '')}`).classList.add('active');
+        const btnId = `btn-config-${tabId.replace('tab-', '')}`;
+        const targetBtn = document.getElementById(btnId);
+        if (targetBtn) {
+            targetBtn.classList.add('active');
+        }
+
+        // Store hash in URL without scrolling
+        if (history.replaceState) {
+            history.replaceState(null, null, `#${tabId}`);
+        }
     }
 
-    function closeTATModal(modalId) {
-        document.getElementById(modalId).classList.replace('flex', 'hidden');
+    // Modal helpers
+    function closeConfigModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.replace('flex', 'hidden');
+        }
     }
 
+    function openModalById(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.replace('hidden', 'flex');
+        }
+    }
+
+    // 1. Branch Modals
+    function openEditBranchModal(id, name, code, lat, lng, address) {
+        document.getElementById('edit-branch-name').value = name;
+        document.getElementById('edit-branch-code').value = code;
+        document.getElementById('edit-branch-lat').value = lat;
+        document.getElementById('edit-branch-lng').value = lng;
+        document.getElementById('edit-branch-address').value = address;
+        document.getElementById('edit-branch-form').action = `/admin/config/branch/edit/${id}`;
+        openModalById('modal-edit-branch');
+    }
+
+    function openDeleteBranchModal(id, name, code, userCount, reqCount) {
+        document.getElementById('delete-branch-name').innerText = name;
+        document.getElementById('delete-branch-code').innerText = code;
+        const warning = document.getElementById('delete-branch-warning');
+        const warningText = document.getElementById('delete-branch-warning-text');
+        
+        if (parseInt(userCount) > 0 || parseInt(reqCount) > 0) {
+            warning.classList.remove('hidden');
+            warningText.innerText = `This branch currently has ${userCount} staff member(s) and ${reqCount} sample request(s) linked to it. The system will prevent deletion until they are reassigned.`;
+        } else {
+            warning.classList.add('hidden');
+        }
+        document.getElementById('delete-branch-form').action = `/admin/config/branch/delete/${id}`;
+        openModalById('modal-delete-branch');
+    }
+
+    // 2. Department Modals
+    function openEditDeptModal(id, name, desc) {
+        document.getElementById('edit-dept-name').value = name;
+        document.getElementById('edit-dept-desc').value = desc;
+        document.getElementById('edit-dept-form').action = `/admin/config/department/edit/${id}`;
+        openModalById('modal-edit-dept');
+    }
+
+    function openDeleteDeptModal(id, name, userCount) {
+        document.getElementById('delete-dept-name').innerText = name;
+        const warning = document.getElementById('delete-dept-warning');
+        const warningText = document.getElementById('delete-dept-warning-text');
+        
+        if (parseInt(userCount) > 0) {
+            warning.classList.remove('hidden');
+            warningText.innerText = `This department has ${userCount} technologist(s) assigned. The system will prevent deletion until they are reassigned.`;
+        } else {
+            warning.classList.add('hidden');
+        }
+        document.getElementById('delete-dept-form').action = `/admin/config/department/delete/${id}`;
+        openModalById('modal-delete-dept');
+    }
+
+    // 3. TAT Modals
     function openEditTATModal(id, priority, minutes, desc) {
         document.getElementById('edit-tat-priority').value = priority;
         document.getElementById('edit-tat-minutes').value = minutes;
         document.getElementById('edit-tat-desc').value = desc;
         document.getElementById('edit-tat-form').action = `/admin/config/tat-rule/edit/${id}`;
-        document.getElementById('modal-edit-tat').classList.replace('hidden', 'flex');
+        openModalById('modal-edit-tat');
     }
 
     function openDeleteTATModal(id, priority) {
         document.getElementById('delete-tat-priority').innerText = priority;
         document.getElementById('delete-tat-form').action = `/admin/config/tat-rule/delete/${id}`;
-        document.getElementById('modal-delete-tat').classList.replace('hidden', 'flex');
+        openModalById('modal-delete-tat');
     }
 
-    // Close modal when clicking backdrop
+    // 4. Outsource Modals
+    function openEditOutsourceModal(id, name, contact, address) {
+        document.getElementById('edit-outsource-name').value = name;
+        document.getElementById('edit-outsource-contact').value = contact;
+        document.getElementById('edit-outsource-address').value = address;
+        document.getElementById('edit-outsource-form').action = `/admin/config/outsourced-lab/edit/${id}`;
+        openModalById('modal-edit-outsource');
+    }
+
+    function openDeleteOutsourceModal(id, name) {
+        document.getElementById('delete-outsource-name').innerText = name;
+        document.getElementById('delete-outsource-form').action = `/admin/config/outsourced-lab/delete/${id}`;
+        openModalById('modal-delete-outsource');
+    }
+
+    // 5. Specimen Type Modals
+    function openEditSampleTypeModal(id, name, code, desc) {
+        document.getElementById('edit-sample-type-name').value = name;
+        document.getElementById('edit-sample-type-code').value = code;
+        document.getElementById('edit-sample-type-desc').value = desc;
+        document.getElementById('edit-sample-type-form').action = `/admin/config/sample-type/edit/${id}`;
+        openModalById('modal-edit-sample-type');
+    }
+
+    function openDeleteSampleTypeModal(id, name, sampleCount) {
+        document.getElementById('delete-sample-type-name').innerText = name;
+        const warning = document.getElementById('delete-sample-type-warning');
+        const warningText = document.getElementById('delete-sample-type-warning-text');
+        
+        if (parseInt(sampleCount) > 0) {
+            warning.classList.remove('hidden');
+            warningText.innerText = `This specimen type is linked to ${sampleCount} registered sample(s). Deletion will be rejected if actively referenced.`;
+        } else {
+            warning.classList.add('hidden');
+        }
+        document.getElementById('delete-sample-type-form').action = `/admin/config/sample-type/delete/${id}`;
+        openModalById('modal-delete-sample-type');
+    }
+
+    // Real-time table filter
+    function filterTable(tableId, query) {
+        const filter = query.toLowerCase();
+        const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+        rows.forEach(row => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? '' : 'none';
+        });
+    }
+
+    // Close on backdrop click & ESC key
     document.querySelectorAll('[id^="modal-"]').forEach(modal => {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeTATModal(modal.id);
+            if (e.target === modal) closeConfigModal(modal.id);
         });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('[id^="modal-"]').forEach(modal => {
+                closeConfigModal(modal.id);
+            });
+        }
+    });
+
+    // Auto-restore tab from URL hash on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash.replace('#', '');
+        if (hash && document.getElementById(hash)) {
+            switchConfigTab(hash);
+        }
     });
 </script>
 {% endblock %}

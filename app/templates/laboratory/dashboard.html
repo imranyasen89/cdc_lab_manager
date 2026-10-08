@@ -35,6 +35,9 @@
         </div>
     </div>
 
+    <!-- Date Range Filter Bar -->
+    {% include 'components/date_filter_bar.html' %}
+
     <!-- Supervisor & Manager Summary Panel -->
     {% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
     <!-- Metrics Cards -->

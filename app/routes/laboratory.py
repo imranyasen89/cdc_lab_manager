@@ -5,6 +5,7 @@ from app.models import SampleRequest, User, Branch, OutsourcedLab, Sample, Task,
 from app.utils.decorators import role_required
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
+from app.utils.date_filter import get_date_range
 
 lab_bp = Blueprint('lab', __name__)
 
@@ -12,22 +13,38 @@ lab_bp = Blueprint('lab', __name__)
 @login_required
 @role_required('LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN')
 def dashboard():
+    preset = request.args.get('preset')
+    start_date_param = request.args.get('start_date')
+    end_date_param = request.args.get('end_date')
+    
+    start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
+        preset=preset,
+        start_date_str=start_date_param,
+        end_date_str=end_date_param,
+        default_preset='all'
+    )
+    
+    def apply_date_filter(query):
+        if start_dt and end_dt:
+            return query.filter(SampleRequest.created_at.between(start_dt, end_dt))
+        return query
+    
     # Fetch lists for dashboards based on status
-    unassigned = SampleRequest.query.filter_by(status='Pickup Requested').all()
-    in_transit = SampleRequest.query.filter_by(status='Sample Collected').all()
-    arrived = SampleRequest.query.filter_by(status='Arrived at G-8').all()
+    unassigned = apply_date_filter(SampleRequest.query.filter_by(status='Pickup Requested')).all()
+    in_transit = apply_date_filter(SampleRequest.query.filter_by(status='Sample Collected')).all()
+    arrived = apply_date_filter(SampleRequest.query.filter_by(status='Arrived at G-8')).all()
     
-    received = SampleRequest.query.filter(SampleRequest.status.in_(['Received at G-8', 'Processing'])).all()
+    received = apply_date_filter(SampleRequest.query.filter(SampleRequest.status.in_(['Received at G-8', 'Processing']))).all()
     
-    processing_completed = SampleRequest.query.filter(
+    processing_completed = apply_date_filter(SampleRequest.query.filter(
         SampleRequest.status.in_(['Processing Completed', 'Outsourced Result Received', 'Correction Required'])
-    ).all()
+    )).all()
     
-    pending_verification = SampleRequest.query.filter_by(status='Pending Verification').all()
-    verified = SampleRequest.query.filter_by(status='Verified').all()
+    pending_verification = apply_date_filter(SampleRequest.query.filter_by(status='Pending Verification')).all()
+    verified = apply_date_filter(SampleRequest.query.filter_by(status='Verified')).all()
     
-    outsource_pending = SampleRequest.query.filter_by(status='Outsource Requested').all()
-    outsource_sent = SampleRequest.query.filter_by(status='Sent to Outsourced Lab').all()
+    outsource_pending = apply_date_filter(SampleRequest.query.filter_by(status='Outsource Requested')).all()
+    outsource_sent = apply_date_filter(SampleRequest.query.filter_by(status='Sent to Outsourced Lab')).all()
     
     # Active riders list for supervisor assignment
     riders = User.query.filter_by(role='RIDER', status=True).all()
@@ -47,7 +64,11 @@ def dashboard():
         outsource_pending=outsource_pending,
         outsource_sent=outsource_sent,
         riders=riders,
-        outsource_labs=outsource_labs
+        outsource_labs=outsource_labs,
+        active_preset=active_preset,
+        date_label=date_label,
+        start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
+        end_date_str=end_date.strftime('%Y-%m-%d') if end_date else ''
     )
 
 @lab_bp.route('/lab/assign-rider', methods=['POST'])
