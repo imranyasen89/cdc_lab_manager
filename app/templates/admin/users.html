@@ -111,12 +111,12 @@
 <!-- ============================================== MODALS ============================================== -->
 
 <!-- Add User Modal -->
-<div id="modal-add-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="glass-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+<div id="modal-add-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
         <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-user-plus text-brand-600"></i> Add New Employee Profile</h3>
         
         <form action="{{ url_for('admin.create_user') }}" method="POST" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
                     <input type="text" name="name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
@@ -165,7 +165,7 @@
                         {% endfor %}
                     </select>
                 </div>
-                <div class="col-span-2">
+                <div class="sm:col-span-2">
                     <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Department (Main Lab)</label>
                     <select name="department_id" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
                         <option value="">None</option>
@@ -175,9 +175,9 @@
                     </select>
                 </div>
                 <!-- Task Permissions -->
-                <div class="col-span-2">
+                <div class="sm:col-span-2">
                     <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-2">Task Permissions (assign specific tasks)</label>
-                    <div class="grid grid-cols-2 gap-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {% for perm in task_permissions %}
                         <label class="flex items-center gap-x-2 p-2 rounded-lg border border-slate-200 hover:border-brand-300 transition cursor-pointer text-xs text-slate-700">
                             <input type="checkbox" name="task_permissions" value="{{ perm }}" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500">
@@ -197,12 +197,12 @@
 </div>
 
 <!-- Edit User Modal -->
-<div id="modal-edit-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="glass-panel w-full max-w-lg rounded-2xl p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
+<div id="modal-edit-user" class="fixed inset-0 bg-slate-800/50 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
         <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-user-pen text-brand-600"></i> Edit Employee Credentials</h3>
         
         <form id="edit-user-form" method="POST" class="space-y-4">
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                     <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500">Full Name</label>
                     <input type="text" name="name" id="edit-name" required class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
@@ -257,9 +257,9 @@
                     <input type="password" name="password" class="mt-1 block w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500" placeholder="Enter password to override">
                 </div>
                 <!-- Task Permissions -->
-                <div class="col-span-2">
+                <div class="sm:col-span-2">
                     <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-2">Task Permissions</label>
-                    <div class="grid grid-cols-2 gap-2" id="edit-permissions-container">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="edit-permissions-container">
                         {% for perm in task_permissions %}
                         <label class="flex items-center gap-x-2 p-2 rounded-lg border border-slate-200 hover:border-brand-300 transition cursor-pointer text-xs text-slate-700">
                             <input type="checkbox" name="task_permissions" value="{{ perm }}" class="edit-perm-checkbox rounded border-slate-300 text-brand-600 focus:ring-brand-500">

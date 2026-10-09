@@ -6,14 +6,14 @@
 <div class="max-w-2xl mx-auto space-y-6">
     
     <!-- Rider Header -->
-    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-900">Courier Dashboard</h1>
             <p class="text-sm text-slate-500">Manage your active courier deliveries</p>
         </div>
         
         <!-- Live GPS Info Panel -->
-        <div class="glass-panel px-3 py-2 rounded-xl text-right flex items-center gap-x-2.5">
+        <div class="glass-panel px-3 py-2 rounded-xl flex items-center gap-x-2.5 self-start sm:self-auto">
             <span class="relative flex h-2.5 w-2.5">
                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -116,7 +116,7 @@
                             </div>
                             
                             <!-- Bulk Action Forms -->
-                            <div class="flex gap-x-2 pt-1">
+                            <div class="flex flex-col sm:flex-row gap-2 pt-1">
                                 {% if pending_pickup_tasks %}
                                 <form action="{{ url_for('rider.bulk_collect') }}" method="POST" class="rider-action-form flex-1">
                                     <input type="hidden" name="latitude" class="form-lat" value="33.6822">
@@ -124,7 +124,7 @@
                                     {% for t in pending_pickup_tasks %}
                                     <input type="hidden" name="request_ids" value="{{ t.request.id }}">
                                     {% endfor %}
-                                    <button type="submit" class="w-full h-8 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-3xs font-bold flex items-center justify-center gap-x-1.5 transition">
+                                    <button type="submit" class="w-full h-9 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-3xs font-bold flex items-center justify-center gap-x-1.5 transition">
                                         <i class="fa-solid fa-box-archive"></i> Confirm Bulk Pickup ({{ pending_pickup_tasks|length }})
                                     </button>
                                 </form>
@@ -137,7 +137,7 @@
                                     {% for t in collected_tasks %}
                                     <input type="hidden" name="request_ids" value="{{ t.request.id }}">
                                     {% endfor %}
-                                    <button type="submit" class="w-full h-8 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-3xs font-bold flex items-center justify-center gap-x-1.5 transition">
+                                    <button type="submit" class="w-full h-9 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-3xs font-bold flex items-center justify-center gap-x-1.5 transition">
                                         <i class="fa-solid fa-truck"></i> Confirm Bulk Delivery ({{ collected_tasks|length }})
                                     </button>
                                 </form>
@@ -195,9 +195,9 @@
             </div>
 
             <!-- Action buttons depending on state -->
-            <div class="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+            <div class="mt-6 flex flex-col sm:flex-row gap-2 border-t border-slate-200 pt-4">
                 {% if task.request.status == 'Rider Assigned' %}
-                <form action="{{ url_for('rider.collect_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1 min-w-[120px]">
+                <form action="{{ url_for('rider.collect_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1">
                     <input type="hidden" name="latitude" class="form-lat" value="33.6822">
                     <input type="hidden" name="longitude" class="form-lng" value="73.0076">
                     <button type="submit" class="w-full h-11 rounded-xl bg-gradient-to-r from-amber-600 to-amber-500 font-semibold text-white hover:from-amber-500 hover:to-amber-400 text-sm flex items-center justify-center gap-x-2 transition">
@@ -206,7 +206,7 @@
                 </form>
                 
                 {% elif task.request.status == 'Sample Collected' %}
-                <form action="{{ url_for('rider.deliver_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1 min-w-[120px]">
+                <form action="{{ url_for('rider.deliver_sample', request_id=task.request.id) }}" method="POST" class="rider-action-form flex-1">
                     <input type="hidden" name="latitude" class="form-lat" value="33.6811">
                     <input type="hidden" name="longitude" class="form-lng" value="73.0361">
                     <button type="submit" class="w-full h-11 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white hover:from-brand-500 hover:to-rose-400 text-sm flex items-center justify-center gap-x-2 transition">
@@ -215,7 +215,7 @@
                 </form>
                 {% endif %}
                 
-                <a href="{{ url_for('workflow.detail', request_id=task.request.id) }}" class="glass-btn px-4 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-x-2">
+                <a href="{{ url_for('workflow.detail', request_id=task.request.id) }}" class="glass-btn px-4 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-x-2 w-full sm:w-auto">
                     <i class="fa-solid fa-circle-info"></i> Details
                 </a>
             </div>

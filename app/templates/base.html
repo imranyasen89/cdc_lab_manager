@@ -58,72 +58,101 @@
 
     <!-- Top Glass Header -->
     <header
-        class="glass-panel sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-slate-200 px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-        <div class="flex items-center gap-x-3">
-            <div
-                class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-rose-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                <i class="fa-solid fa-flask-vial text-white text-lg"></i>
-            </div>
-            <span
-                class="text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-brand-700 bg-clip-text text-transparent">CDC
-                Lab Manager</span>
+        class="glass-panel sticky top-0 z-40 flex h-16 shrink-0 items-center justify-between border-b border-slate-200 px-3 sm:px-6 lg:px-8 shadow-sm">
+        <div class="flex items-center gap-x-2 sm:gap-x-3">
+            {% if current_user.is_authenticated %}
+            <!-- Mobile Menu Trigger Button -->
+            <button type="button" onclick="toggleMobileDrawer()" class="md:hidden p-2 rounded-xl text-slate-600 hover:text-brand-600 hover:bg-slate-100 transition focus:outline-none" aria-label="Open navigation drawer">
+                <i class="fa-solid fa-bars text-lg"></i>
+            </button>
+            {% endif %}
+
+            <a href="/" class="flex items-center gap-x-2.5">
+                <div
+                    class="h-9 w-9 rounded-xl bg-gradient-to-tr from-brand-600 to-rose-500 flex items-center justify-center shadow-lg shadow-brand-500/20 shrink-0">
+                    <i class="fa-solid fa-flask-vial text-white text-base sm:text-lg"></i>
+                </div>
+                <span
+                    class="text-lg sm:text-xl font-bold tracking-tight bg-gradient-to-r from-slate-900 to-brand-700 bg-clip-text text-transparent truncate">
+                    CDC Lab Manager
+                </span>
+            </a>
         </div>
 
-        <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6 justify-end items-center">
-            <!-- Global Search Form -->
+        <div class="flex items-center gap-x-2 sm:gap-x-4">
+            <!-- Global Search Form (Desktop/Tablet) -->
             {% if current_user.is_authenticated %}
-            <form action="{{ url_for('workflow.search') }}" method="GET" class="relative hidden sm:flex w-64 md:w-80">
+            <form action="{{ url_for('workflow.search') }}" method="GET" class="relative hidden sm:flex w-48 md:w-72 lg:w-80">
                 <label for="search-field" class="sr-only">Search requests</label>
                 <i
-                    class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm"></i>
+                    class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs sm:text-sm"></i>
                 <input id="search-field"
-                    class="block h-10 w-full rounded-full bg-slate-100 border border-slate-200 pl-10 pr-4 text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all"
+                    class="block h-9 sm:h-10 w-full rounded-full bg-slate-100 border border-slate-200 pl-9 sm:pl-10 pr-3 sm:pr-4 text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-xs sm:text-sm focus:outline-none transition-all"
                     placeholder="Search Request ID, Patient Name..." type="search" name="query"
                     value="{{ request.args.get('query', '') }}">
             </form>
+
+            <!-- Mobile Quick Search Button -->
+            <button type="button" onclick="toggleMobileSearch()" class="sm:hidden p-2 rounded-xl text-slate-500 hover:text-brand-600 focus:outline-none" aria-label="Open search">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i>
+            </button>
             {% endif %}
 
-            <div class="flex items-center gap-x-4 lg:gap-x-6">
+            <div class="flex items-center gap-x-2 sm:gap-x-4">
                 {% if current_user.is_authenticated %}
                 <!-- Notifications Bell -->
                 <a href="{{ url_for('notifications.list_notifications') }}"
                     class="relative rounded-full p-2 text-slate-500 hover:text-brand-600 focus:outline-none transition"
                     id="notification-bell">
                     <span class="sr-only">View notifications</span>
-                    <i class="fa-regular fa-bell text-xl"></i>
+                    <i class="fa-regular fa-bell text-lg sm:text-xl"></i>
                     <!-- AJAX Unread Counter -->
                     <span id="notif-count-badge"
-                        class="absolute top-1.5 right-1.5 inline-flex items-center justify-center px-1.5 py-0.5 text-2xs font-bold leading-none text-white bg-rose-600 rounded-full scale-90 {% if unread_notifications_count == 0 %}hidden{% endif %}">
+                        class="absolute top-1 right-1 inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 text-3xs font-bold leading-none text-white bg-rose-600 rounded-full scale-90 {% if unread_notifications_count == 0 %}hidden{% endif %}">
                         {{ unread_notifications_count }}
                     </span>
                 </a>
 
                 <!-- User profile dropdown trigger -->
-                <div class="relative flex items-center gap-x-3 pl-4 border-l border-slate-200">
-                    <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-x-3">
+                <div class="relative flex items-center gap-x-2 sm:gap-x-3 pl-2 sm:pl-4 border-l border-slate-200">
+                    <a href="{{ url_for('auth.profile') }}" class="flex items-center gap-x-2 sm:gap-x-3">
                         <div
-                            class="h-9 w-9 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-brand-500/20">
-                            <i class="fa-regular fa-user text-slate-600"></i>
+                            class="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-slate-200 flex items-center justify-center ring-2 ring-brand-500/20 text-slate-600 text-sm">
+                            <i class="fa-regular fa-user"></i>
                         </div>
-                        <div class="hidden md:block text-left">
-                            <span class="block text-sm font-semibold text-slate-800">{{ current_user.name }}</span>
+                        <div class="hidden lg:block text-left">
+                            <span class="block text-sm font-semibold text-slate-800 max-w-[130px] truncate">{{ current_user.name }}</span>
                             <span class="block text-xs text-brand-600 font-medium uppercase tracking-wider">{{
                                 current_user.role.replace('_', ' ') }}</span>
                         </div>
                     </a>
                     <a href="{{ url_for('auth.logout') }}"
-                        class="ml-2 text-slate-500 hover:text-rose-500 p-2 rounded-full hover:bg-slate-200/50 transition"
+                        class="text-slate-400 hover:text-rose-500 p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 transition"
                         title="Log Out">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <i class="fa-solid fa-right-from-bracket text-sm sm:text-base"></i>
                     </a>
                 </div>
                 {% else %}
                 <a href="{{ url_for('auth.login') }}"
-                    class="text-sm font-semibold text-brand-600 hover:text-brand-500 transition">Log In</a>
+                    class="text-xs sm:text-sm font-semibold text-brand-600 hover:text-brand-500 transition">Log In</a>
                 {% endif %}
             </div>
         </div>
     </header>
+
+    <!-- Mobile Search Expandable Bar -->
+    {% if current_user.is_authenticated %}
+    <div id="mobile-search-bar" class="hidden sm:hidden border-b border-slate-200 bg-white px-4 py-2.5 shadow-xs">
+        <form action="{{ url_for('workflow.search') }}" method="GET" class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input class="block h-10 w-full rounded-xl bg-slate-100 border border-slate-200 pl-10 pr-10 text-slate-800 placeholder:text-slate-400 text-xs focus:outline-none focus:border-brand-500"
+                   placeholder="Search Request ID, Patient Name, MRN..." type="search" name="query" value="{{ request.args.get('query', '') }}">
+            <button type="button" onclick="toggleMobileSearch()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+        </form>
+    </div>
+    {% endif %}
 
     <!-- Main Container -->
     <div class="flex flex-1 overflow-hidden">
@@ -272,7 +301,7 @@
         {% endif %}
 
         <!-- Content Area -->
-        <main class="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-4 sm:p-6 lg:p-8">
+        <main class="flex-1 flex flex-col overflow-y-auto bg-slate-50 p-3 sm:p-6 lg:p-8 pb-24 md:pb-8">
             <!-- Flash Message Banner -->
             {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -302,39 +331,184 @@
         </main>
     </div>
 
-    <!-- Bottom Navigation Bar (Mobile only) -->
+    <!-- Mobile Slide-Out Drawer Navigation -->
     {% if current_user.is_authenticated %}
-    <div class="md:hidden glass-panel border-t border-slate-200 flex justify-around py-3 shrink-0">
-        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER'] %}
-        <a href="{{ url_for('branch.dashboard') }}"
-            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
-            <i class="fa-solid fa-code-branch text-lg"></i>
-            <span class="text-2xs font-semibold uppercase tracking-wider">Branch</span>
-        </a>
-        {% endif %}
-        {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR'] %}
-        <a href="{{ url_for('rider.dashboard') }}"
-            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
-            <i class="fa-solid fa-motorcycle text-lg"></i>
-            <span class="text-2xs font-semibold uppercase tracking-wider">Rider</span>
-        </a>
-        {% endif %}
-        {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN'] %}
-        <a href="{{ url_for('lab.dashboard') }}"
-            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
-            <i class="fa-solid fa-flask text-lg"></i>
-            <span class="text-2xs font-semibold uppercase tracking-wider">Lab</span>
-        </a>
-        {% endif %}
-        <a href="{{ url_for('notifications.list_notifications') }}"
-            class="flex flex-col items-center gap-y-1 text-slate-500 hover:text-brand-600 transition">
-            <i class="fa-solid fa-bell text-lg"></i>
-            <span class="text-2xs font-semibold uppercase tracking-wider">Alerts</span>
-        </a>
+    <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden transition-opacity duration-300 opacity-0" onclick="toggleMobileDrawer()"></div>
+    <div id="mobile-drawer" class="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white z-50 shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-in-out">
+        <!-- Drawer Header with User Profile -->
+        <div class="p-4 bg-gradient-to-r from-brand-600 to-indigo-600 text-white flex items-center justify-between">
+            <div class="flex items-center gap-x-3">
+                <div class="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center text-white ring-2 ring-white/30 text-base">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+                <div class="min-w-0">
+                    <span class="block text-sm font-bold truncate">{{ current_user.name }}</span>
+                    <span class="inline-block px-1.5 py-0.5 rounded text-3xs font-semibold uppercase bg-white/20 text-white tracking-wider mt-0.5">{{ current_user.role.replace('_', ' ') }}</span>
+                </div>
+            </div>
+            <button type="button" onclick="toggleMobileDrawer()" class="text-white/80 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition" aria-label="Close menu">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Drawer Menu Items (Scrollable) -->
+        <div class="flex-1 overflow-y-auto px-4 py-4 space-y-6">
+            <!-- Workspaces -->
+            <div>
+                <span class="text-2xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Workspaces</span>
+                <ul class="space-y-1 text-sm font-semibold">
+                    {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
+                    <li>
+                        <a href="{{ url_for('branch.dashboard') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.blueprint == 'branch' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-code-branch text-base w-5 text-center"></i> Branch Panel
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR', 'SUPER_ADMIN'] %}
+                    <li>
+                        <a href="{{ url_for('rider.dashboard') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.blueprint == 'rider' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-motorcycle text-base w-5 text-center"></i> Rider Panel
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+                    <li>
+                        <a href="{{ url_for('lab.dashboard') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.blueprint == 'lab' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-flask text-base w-5 text-center"></i> Lab Workspace
+                        </a>
+                    </li>
+                    {% endif %}
+                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] or current_user.has_task_permission('STAFF_WORKSPACE') %}
+                    <li>
+                        <a href="{{ url_for('reports.staff_dashboard') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'reports.staff_dashboard' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-user-gear text-base w-5 text-center"></i> Staff Workspace
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            <!-- Management Section -->
+            {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPERVISOR', 'SUPER_ADMIN'] %}
+            <div>
+                <span class="text-2xs font-bold uppercase tracking-wider text-slate-400 block mb-2">Management</span>
+                <ul class="space-y-1 text-sm font-semibold">
+                    <li>
+                        <a href="{{ url_for('reports.daily_report') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'reports.daily_report' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-chart-line text-base w-5 text-center"></i> Daily Analytics
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('reports.performance') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'reports.performance' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-gauge-high text-base w-5 text-center"></i> TAT Performance
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('reports.staff_admin') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'reports.staff_admin' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-chart-bar text-base w-5 text-center"></i> Staff Analytics
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- System Admin Section -->
+            {% if current_user.role in ['ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
+            <div>
+                <span class="text-2xs font-bold uppercase tracking-wider text-slate-400 block mb-2">System Admin</span>
+                <ul class="space-y-1 text-sm font-semibold">
+                    <li>
+                        <a href="{{ url_for('admin.dashboard') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.dashboard' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-gauge-high text-base w-5 text-center"></i> Admin Dashboard
+                        </a>
+                    </li>
+                    {% if current_user.role in ['ADMIN', 'SUPER_ADMIN'] %}
+                    <li>
+                        <a href="{{ url_for('admin.users') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.users' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-users text-base w-5 text-center"></i> Users Manager
+                        </a>
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('admin.center_distances') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.center_distances' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-route text-base w-5 text-center"></i> Center Distances
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.timeline') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.timeline' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-clock-rotate-left text-base w-5 text-center"></i> System Timeline
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('lab.local_receive') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'lab.local_receive' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-hand-holding-droplet text-base w-5 text-center"></i> Local Sample Entry
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.config') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.config' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-sliders text-base w-5 text-center"></i> Master Data
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('admin.audit_logs') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.audit_logs' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-shield-halved text-base w-5 text-center"></i> Audit Logs
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Drawer Footer -->
+        <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
+            <a href="{{ url_for('auth.profile') }}" class="text-xs font-semibold text-slate-700 hover:text-brand-600 flex items-center gap-x-2">
+                <i class="fa-regular fa-id-badge"></i> My Profile
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="text-xs font-semibold text-rose-600 hover:text-rose-700 flex items-center gap-x-1.5">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+            </a>
+        </div>
     </div>
     {% endif %}
 
-    <!-- Real-time notification poller script -->
+    <!-- Bottom Navigation Bar (Mobile only) -->
+    {% if current_user.is_authenticated %}
+    <nav class="md:hidden glass-panel border-t border-slate-200 flex justify-around items-center py-2 shrink-0 z-30 bg-white/95 backdrop-blur-md">
+        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
+        <a href="{{ url_for('branch.dashboard') }}"
+            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'branch' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-code-branch text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider">Branch</span>
+        </a>
+        {% endif %}
+        {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR', 'SUPER_ADMIN'] %}
+        <a href="{{ url_for('rider.dashboard') }}"
+            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'rider' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-motorcycle text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider">Rider</span>
+        </a>
+        {% endif %}
+        {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+        <a href="{{ url_for('lab.dashboard') }}"
+            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'lab' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-flask text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider">Lab</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('notifications.list_notifications') }}"
+            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'notifications' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition relative">
+            <i class="fa-solid fa-bell text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider">Alerts</span>
+        </a>
+        <button type="button" onclick="toggleMobileDrawer()"
+            class="flex flex-col items-center gap-y-0.5 px-3 py-1 text-slate-500 hover:text-brand-600 transition focus:outline-none">
+            <i class="fa-solid fa-bars text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider">Menu</span>
+        </button>
+    </nav>
+    {% endif %}
+
+    <!-- Real-time notification poller script & Mobile UI helpers -->
     {% if current_user.is_authenticated %}
     <script>
         function checkNotifications() {
@@ -354,7 +528,35 @@
                 .catch(err => console.log('Error polling notifications:', err));
         }
 
-        // Poll every 10 seconds
+        function toggleMobileDrawer() {
+            const drawer = document.getElementById('mobile-drawer');
+            const backdrop = document.getElementById('mobile-drawer-backdrop');
+            if (!drawer || !backdrop) return;
+            if (drawer.classList.contains('-translate-x-full')) {
+                // Open drawer
+                backdrop.classList.remove('hidden');
+                setTimeout(() => backdrop.classList.remove('opacity-0'), 10);
+                drawer.classList.remove('-translate-x-full');
+            } else {
+                // Close drawer
+                drawer.classList.add('-translate-x-full');
+                backdrop.classList.add('opacity-0');
+                setTimeout(() => backdrop.classList.add('hidden'), 300);
+            }
+        }
+
+        function toggleMobileSearch() {
+            const bar = document.getElementById('mobile-search-bar');
+            if (bar) {
+                bar.classList.toggle('hidden');
+                if (!bar.classList.contains('hidden')) {
+                    const input = bar.querySelector('input');
+                    if (input) input.focus();
+                }
+            }
+        }
+
+        // Poll notifications every 10 seconds
         setInterval(checkNotifications, 10000);
     </script>
     {% endif %}

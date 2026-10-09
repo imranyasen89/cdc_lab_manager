@@ -193,7 +193,7 @@
 
                     <!-- Submit Button -->
                     <div class="md:col-span-2 pt-2 flex justify-end">
-                        <button type="submit" class="h-10 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center gap-x-1.5">
+                        <button type="submit" class="w-full sm:w-auto h-10 px-8 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 active:translate-y-[1px] transition text-xs flex items-center justify-center gap-x-1.5">
                             <i class="fa-solid fa-paper-plane"></i> Submit Daily Report
                         </button>
                     </div>
@@ -297,7 +297,7 @@
                                 <td colspan="6" class="px-6 py-4 border-l-2 border-brand-500">
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                         {% if r.duty_status == 'Present' %}
-                                        <div class="md:col-span-2 grid grid-cols-6 gap-2 bg-white p-3 rounded-xl border border-slate-200 font-mono">
+                                        <div class="md:col-span-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 bg-white p-3 rounded-xl border border-slate-200 font-mono">
                                             <div class="text-center p-1.5 bg-slate-50 rounded">
                                                 <span class="text-3xs text-slate-400 uppercase font-sans font-bold">Booked</span>
                                                 <span class="block font-bold text-sm text-slate-800 mt-1">{{ r.patients_booked }}</span>
@@ -466,9 +466,9 @@
 </div>
 
 <!-- Profile Edit Modal -->
-<div id="profile-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-250 animate-in fade-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
+<div id="profile-modal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm items-center justify-center p-3 sm:p-4">
+    <div class="glass-panel w-full max-w-lg rounded-2xl shadow-xl overflow-hidden border border-slate-250 animate-in fade-in zoom-in-95 duration-200 my-auto">
+        <div class="px-4 sm:px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
             <h3 class="font-bold text-slate-800 flex items-center gap-x-2 text-sm">
                 <i class="fa-solid fa-edit text-brand-600"></i> Update Skills Profile
             </h3>
@@ -477,13 +477,13 @@
             </button>
         </div>
         
-        <form action="{{ url_for('reports.staff_profile_update') }}" method="POST" class="p-6 space-y-4 text-xs">
+        <form action="{{ url_for('reports.staff_profile_update') }}" method="POST" class="p-4 sm:p-6 space-y-4 text-xs">
             <div class="flex flex-col gap-y-1">
                 <label for="designation" class="font-bold text-slate-650">Designation / Role Title</label>
                 <input type="text" name="designation" id="designation" value="{{ profile.designation or '' }}" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div class="flex flex-col gap-y-1">
                     <label for="overall_experience" class="font-bold text-slate-650">Total Pathology Exp (Years)</label>
                     <input type="number" step="0.1" name="overall_experience" id="overall_experience" value="{{ profile.overall_experience or 0.0 }}" required class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
@@ -514,7 +514,7 @@
             <!-- Independent sections checklist -->
             <div class="flex flex-col gap-y-2">
                 <span class="font-bold text-slate-650">Sections You Can Work Independently</span>
-                <div class="grid grid-cols-2 gap-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50/50 p-3 rounded-xl border border-slate-100">
                     {% for sec in ['Chemistry', 'Hematology', 'Microbiology', 'Molecular Biology', 'Histopathology', 'Phlebotomy'] %}
                     <label class="inline-flex items-center gap-x-2 text-slate-600 cursor-pointer">
                         <input type="checkbox" name="sections" value="{{ sec }}" 
@@ -526,7 +526,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div class="flex flex-col gap-y-1">
                     <label for="study_further" class="font-bold text-slate-650">Wants to Study Further?</label>
                     <select name="study_further" id="study_further" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
@@ -548,9 +548,9 @@
                 <input type="text" name="training_requested" id="training_requested" value="{{ profile.training_requested or '' }}" placeholder="e.g. Molecular diagnostics, HPLC analysis" class="h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-850 px-3.5 focus:outline-none focus:border-brand-500">
             </div>
 
-            <div class="pt-4 flex justify-end gap-x-2.5">
-                <button type="button" onclick="toggleModal('profile-modal')" class="h-10 px-5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-800 font-semibold transition">Cancel</button>
-                <button type="submit" class="h-10 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 transition">Save Changes</button>
+            <div class="pt-4 flex flex-col-reverse sm:flex-row justify-end gap-2.5">
+                <button type="button" onclick="toggleModal('profile-modal')" class="w-full sm:w-auto h-10 px-5 rounded-xl border border-slate-200 text-slate-600 hover:text-slate-800 font-semibold transition">Cancel</button>
+                <button type="submit" class="w-full sm:w-auto h-10 px-6 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-md shadow-brand-600/10 transition">Save Changes</button>
             </div>
         </form>
     </div>
@@ -589,7 +589,13 @@
     function toggleModal(id) {
         const modal = document.getElementById(id);
         if (modal) {
-            modal.classList.toggle('hidden');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            } else {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
     }
 

@@ -32,11 +32,11 @@
             </h1>
             <p class="text-sm text-slate-500">System-wide overview • {{ today }}</p>
         </div>
-        <div class="flex gap-x-2">
-            <a href="{{ url_for('admin.timeline') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-x-1.5">
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <a href="{{ url_for('admin.timeline') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex-1 sm:flex-initial inline-flex items-center justify-center gap-x-1.5">
                 <i class="fa-solid fa-clock-rotate-left"></i> System Timeline
             </a>
-            <a href="{{ url_for('admin.users') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-x-1.5">
+            <a href="{{ url_for('admin.users') }}" class="glass-btn px-4 py-2 rounded-xl text-xs font-bold flex-1 sm:flex-initial inline-flex items-center justify-center gap-x-1.5">
                 <i class="fa-solid fa-users"></i> Manage Users
             </a>
         </div>
@@ -46,7 +46,7 @@
     {% include 'components/date_filter_bar.html' %}
 
     <!-- KPI Cards Row -->
-    <div class="grid grid-cols-2 lg:grid-cols-6 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div class="kpi-card kpi-gradient-1 rounded-xl p-4 border border-slate-200 shadow-sm">
             <span class="block text-2xs font-semibold text-slate-500 uppercase tracking-widest">Total in Range</span>
             <span class="kpi-number text-brand-700 mt-1 block">{{ total_today }}</span>

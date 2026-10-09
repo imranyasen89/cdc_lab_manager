@@ -85,20 +85,20 @@
     </div>
 
     <!-- Navigation Tabs -->
-    <div class="border-b border-slate-200 flex gap-x-2 pb-1 overflow-x-auto">
-        <button onclick="switchConfigTab('tab-branches')" id="btn-config-branches" class="tab-btn active px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+    <div class="border-b border-slate-200 flex gap-x-2 pb-1 overflow-x-auto scrollbar-none">
+        <button onclick="switchConfigTab('tab-branches')" id="btn-config-branches" class="tab-btn active px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center shrink-0 whitespace-nowrap">
             <i class="fa-solid fa-code-branch mr-2"></i> Branches <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ branches|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-depts')" id="btn-config-depts" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+        <button onclick="switchConfigTab('tab-depts')" id="btn-config-depts" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center shrink-0 whitespace-nowrap">
             <i class="fa-solid fa-building mr-2"></i> Departments <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ departments|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-tat')" id="btn-config-tat" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+        <button onclick="switchConfigTab('tab-tat')" id="btn-config-tat" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center shrink-0 whitespace-nowrap">
             <i class="fa-solid fa-clock mr-2"></i> TAT Rules <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ tat_rules|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-outsource-partners')" id="btn-config-outsource-partners" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+        <button onclick="switchConfigTab('tab-outsource-partners')" id="btn-config-outsource-partners" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center shrink-0 whitespace-nowrap">
             <i class="fa-solid fa-share-nodes mr-2"></i> Outsourced Labs <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ outsourced_labs|length }}</span>
         </button>
-        <button onclick="switchConfigTab('tab-sample-types')" id="btn-config-sample-types" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center">
+        <button onclick="switchConfigTab('tab-sample-types')" id="btn-config-sample-types" class="tab-btn px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-xl border border-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-100/60 transition flex items-center shrink-0 whitespace-nowrap">
             <i class="fa-solid fa-vial mr-2"></i> Specimen Types <span class="ml-2 px-1.5 py-0.2 rounded-full text-3xs font-extrabold bg-slate-200/80 text-slate-700">{{ sample_types|length }}</span>
         </button>
     </div>

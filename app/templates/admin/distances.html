@@ -78,34 +78,34 @@
             <i class="fa-solid fa-pen-ruler text-brand-600"></i> Set / Override Distance
         </h3>
         
-        <form action="{{ url_for('admin.save_distance') }}" method="POST" class="flex flex-wrap items-end gap-4">
-            <div>
+        <form action="{{ url_for('admin.save_distance') }}" method="POST" class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-end gap-3 sm:gap-4">
+            <div class="w-full lg:w-48">
                 <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">From Center</label>
-                <select name="from_branch_id" required class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-48">
+                <select name="from_branch_id" required class="w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
                     {% for b in branches %}
                     <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="flex items-center h-10">
+            <div class="hidden lg:flex items-center h-10">
                 <i class="fa-solid fa-arrow-right-arrow-left text-slate-400"></i>
             </div>
-            <div>
+            <div class="w-full lg:w-48">
                 <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">To Center</label>
-                <select name="to_branch_id" required class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-48">
+                <select name="to_branch_id" required class="w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500">
                     {% for b in branches %}
                     <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
                     {% endfor %}
                 </select>
             </div>
-            <div>
+            <div class="w-full sm:w-auto lg:w-32">
                 <label class="block text-2xs font-bold uppercase tracking-wider text-slate-500 mb-1">Distance (km)</label>
                 <input type="number" name="distance_km" step="0.01" min="0.01" required 
-                       class="h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500 w-32"
+                       class="w-full h-10 rounded-xl bg-white border border-slate-300 text-slate-700 text-xs px-3 focus:outline-none focus:border-brand-500"
                        placeholder="e.g. 5.20">
             </div>
-            <button type="submit" class="h-10 px-5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition">
-                <i class="fa-solid fa-floppy-disk mr-1"></i> Save Distance
+            <button type="submit" class="w-full sm:w-auto h-10 px-5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition flex items-center justify-center">
+                <i class="fa-solid fa-floppy-disk mr-1.5"></i> Save Distance
             </button>
         </form>
     </div>
