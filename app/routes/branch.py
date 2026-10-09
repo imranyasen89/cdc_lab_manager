@@ -13,8 +13,9 @@ def generate_request_id(branch_code):
     """
     Generates a unique tracking ID: CDC-<BranchCode>-<YYYYMMDD>-<SeqNum>
     """
+    code_clean = (branch_code or 'HQ').strip().replace(' ', '').upper()
     today_str = now_pkt().strftime('%Y%m%d')
-    prefix = f"CDC-{branch_code}-{today_str}-"
+    prefix = f"CDC-{code_clean}-{today_str}-"
     
     # Query all requests for this branch today
     requests = SampleRequest.query.filter(
@@ -99,8 +100,10 @@ def create_request():
         priority = request.form.get('priority', 'Routine')
         special_instructions = request.form.get('special_instructions')
         
-        # Collect selected sample types from checkboxes
+        # Collect selected sample types from checkboxes (supports both list and single value)
         selected_sample_types = request.form.getlist('sample_types')
+        if not selected_sample_types and request.form.get('sample_type'):
+            selected_sample_types = [request.form.get('sample_type')]
         other_type = request.form.get('other_sample_type', '').strip()
         
         # Replace 'Other' placeholder with custom text if provided
@@ -129,6 +132,7 @@ def create_request():
             status='Pickup Requested'
         )
         db.session.add(req)
+        db.session.flush()
         
         # Create one Sample record per selected type
         for st in selected_sample_types:

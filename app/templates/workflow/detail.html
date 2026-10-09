@@ -57,13 +57,15 @@
                 </div>
                 <div>
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Samples Dispatched</span>
-                    <span class="text-slate-800 font-medium">
+                    <div class="text-slate-800 font-medium flex flex-wrap gap-1 mt-0.5">
                         {% if sample_request.samples %}
-                        {{ sample_request.samples[0].quantity }}x {{ sample_request.samples[0].sample_type }}
+                            {% for s in sample_request.samples %}
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-medium">{{ s.quantity }}x {{ s.sample_type }}</span>
+                            {% endfor %}
                         {% else %}
-                        N/A
+                            <span>N/A</span>
                         {% endif %}
-                    </span>
+                    </div>
                 </div>
                 <div class="col-span-2">
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Remarks / Special Instructions</span>

@@ -391,6 +391,7 @@ def local_receive():
             status='Received at G-8'
         )
         db.session.add(req)
+        db.session.flush()
         
         # Create sample records
         for st in selected_sample_types:

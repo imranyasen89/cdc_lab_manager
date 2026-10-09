@@ -98,6 +98,7 @@ class SampleRequest(db.Model):
     tasks = db.relationship('Task', backref='request', cascade='all, delete-orphan')
     history = db.relationship('StatusHistory', backref='request', order_by='StatusHistory.timestamp', cascade='all, delete-orphan')
     location_records = db.relationship('LocationRecord', backref='request', cascade='all, delete-orphan')
+    audit_logs = db.relationship('AuditLog', backref='request', cascade='all, delete-orphan')
 
 class Sample(db.Model):
     __tablename__ = 'samples'

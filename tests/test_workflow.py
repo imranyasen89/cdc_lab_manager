@@ -194,6 +194,9 @@ class WorkflowTestCase(unittest.TestCase):
             }, follow_redirects=True)
             
             self.assertEqual(response.status_code, 200)
+            req = SampleRequest.query.filter_by(patient_name='Ayesha Khan').first()
+            self.assertIsNotNone(req)
+            self.assertEqual(req.status, 'Pickup Requested')
 
     def test_update_location_route(self):
         # Log in as rider
