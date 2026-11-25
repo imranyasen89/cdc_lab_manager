@@ -64,6 +64,15 @@ def create_app(config_class=None):
         except Exception:  # never block start-up; the error is logged
             app.logger.exception("Automatic schema upgrade failed")
 
+    # One-time data steps (staff import, demo data removal) — production only.
+    if app.config.get('AUTO_DATA_MIGRATIONS'):
+        from app.data_migrations import run_data_migrations
+        try:
+            with app.app_context():
+                run_data_migrations(db)
+        except Exception:
+            app.logger.exception("Automatic data migration failed")
+
     # Friendly handling of invalid / over-long input instead of HTTP 500
     from app.utils.validation import register_error_handlers
     register_error_handlers(app)

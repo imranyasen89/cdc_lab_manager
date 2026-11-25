@@ -53,6 +53,8 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
+    # Import staff from app/data/cdc_staff.json and remove seed demo data at start-up.
+    AUTO_DATA_MIGRATIONS = os.environ.get('AUTO_DATA_MIGRATIONS', '1') == '1'
 
     @classmethod
     def init_app(cls, app):
