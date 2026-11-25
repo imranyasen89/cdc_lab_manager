@@ -43,8 +43,23 @@ Open your browser and navigate to: **`http://localhost:5000`**
 
 ### Step C: Run Unit Tests
 ```bash
-python -m unittest tests/test_workflow.py
+python -m pytest
 ```
+
+---
+
+## Production (Vercel + Supabase)
+
+*   Set `DATABASE_URL` in Vercel to the Supabase **transaction pooler** URL (port `6543`), e.g.
+    `postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres`.
+    The app holds no connection pool of its own (each request opens one connection and closes it),
+    which suits serverless functions; the session pooler on port `5432` also works but allows fewer clients.
+*   Also set `SECRET_KEY` and `FLASK_ENV=production`.
+*   On a new, empty database, create the tables once from your machine (with `DATABASE_URL` set in `.env`):
+    ```bash
+    flask --app run init-db
+    flask --app run seed   # optional demo data — do not run against live data
+    ```
 
 ---
 
@@ -57,10 +72,12 @@ Use the following seeded accounts to test the dashboard view transitions:
 | **Super Admin** | `admin` | `admin123` | Users CRUD and audit trail logs |
 | **Lab Manager** | `manager` | `manager123` | View performance averages and daily reports |
 | **Lab Supervisor** | `supervisor` | `supervisor123` | Assign couriers to pending pickup requests |
-| **Branch Staff** | `branch11` | `branch123` | Create dispatches (G-11 Hub) |
+| **Branch Staff** | `branch11` | `branch11123` | Create dispatches (G-11 Hub) |
 | **Lab Technologist** | `tech` | `tech123` | Receive, process, and enter results at G-8 |
 | **Medical Verifier** | `verifier` | `verifier123` | Review, approve or reject reports |
-| **Courier (Rider 1)** | `rider1` | `rider123` | Ahmed Courier (G-11 route) |
-| **Courier (Rider 2)** | `rider2` | `rider123` | Bilal Courier (G-10 route) |
-| **Courier (Rider 3)** | `rider3` | `rider123` | Hamza Courier (G-13 route) |
-"# cdc_lab_manager" 
+| **Courier (Rider 1)** | `rider1` | `rider1123` | Ahmed Courier (G-11 route) |
+| **Courier (Rider 2)** | `rider2` | `rider2123` | Bilal Courier (G-10 route) |
+| **Courier (Rider 3)** | `rider3` | `rider3123` | Hamza Courier (G-13 route) |
+| **CEO (Admin)** | `ceo` | `ceo123` | Admin dashboards |
+
+All seeded passwords are the username followed by `123`.

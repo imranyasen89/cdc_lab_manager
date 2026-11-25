@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import login_required
 from app.models import SampleRequest, Branch, User, LocationRecord
 from app.services.tat_service import TATService
+from app.utils.validation import to_int, to_float
 
 api_bp = Blueprint('api', __name__)
 
@@ -19,7 +20,7 @@ def get_requests():
     query = SampleRequest.query
     
     if branch_id:
-        query = query.filter_by(branch_id=int(branch_id))
+        query = query.filter_by(branch_id=to_int(branch_id, 'branch_id'))
     if status:
         query = query.filter_by(status=status)
     if priority:

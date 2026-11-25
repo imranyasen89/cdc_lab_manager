@@ -54,13 +54,17 @@ def create_app(config_class=None):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
+
+    # Friendly handling of invalid / over-long input instead of HTTP 500
+    from app.utils.validation import register_error_handlers
+    register_error_handlers(app)
     
     # Import user model for login manager
     from app.models import User
     
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
         
     # Global context processor for notifications
     @app.context_processor
@@ -78,6 +82,12 @@ def create_app(config_class=None):
 
     # CLI commands
     import click
+
+    @app.cli.command('init-db')
+    def init_db_command():
+        """Create any missing tables (safe to run repeatedly; never drops data)."""
+        db.create_all()
+        click.echo('Database tables are up to date.')
 
     @app.cli.command('seed')
     @click.option('--force', is_flag=True, help='Force re-seed even if data exists.')

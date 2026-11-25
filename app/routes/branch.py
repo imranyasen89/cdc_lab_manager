@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import SampleRequest, Sample, Task, StatusHistory, AuditLog, TATRule, Branch
 from app.utils.decorators import role_required
+from app.utils.validation import form_int, form_float
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
 from app.utils.date_filter import get_date_range
@@ -96,7 +97,7 @@ def create_request():
         gender = request.form.get('gender')
         patient_id = request.form.get('patient_id')
         test_requested = request.form.get('test_requested')
-        quantity = int(request.form.get('quantity', 1))
+        quantity = form_int('quantity', 1, minimum=1)
         priority = request.form.get('priority', 'Routine')
         special_instructions = request.form.get('special_instructions')
         

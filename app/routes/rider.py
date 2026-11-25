@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import SampleRequest, Task, LocationRecord
 from app.utils.decorators import role_required
+from app.utils.validation import to_int, to_float
 from app.services.workflow_service import WorkflowService
 from datetime import datetime
 
@@ -29,8 +30,8 @@ def dashboard():
 def accept_task(request_id):
     lat = request.form.get('latitude')
     lng = request.form.get('longitude')
-    lat = float(lat) if lat else None
-    lng = float(lng) if lng else None
+    lat = to_float(lat, 'latitude') if lat else None
+    lng = to_float(lng, 'longitude') if lng else None
     
     location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: Denied/Unavailable"
     
@@ -69,8 +70,8 @@ def accept_task(request_id):
 def collect_sample(request_id):
     lat = request.form.get('latitude')
     lng = request.form.get('longitude')
-    lat = float(lat) if lat else None
-    lng = float(lng) if lng else None
+    lat = to_float(lat, 'latitude') if lat else None
+    lng = to_float(lng, 'longitude') if lng else None
     
     location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: Unavailable"
     remarks = request.form.get('remarks', 'Collected samples.')
@@ -107,8 +108,8 @@ def collect_sample(request_id):
 def deliver_sample(request_id):
     lat = request.form.get('latitude')
     lng = request.form.get('longitude')
-    lat = float(lat) if lat else None
-    lng = float(lng) if lng else None
+    lat = to_float(lat, 'latitude') if lat else None
+    lng = to_float(lng, 'longitude') if lng else None
     
     location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: G-8 Lab Gate"
     
@@ -145,8 +146,8 @@ def bulk_collect():
     request_ids = request.form.getlist('request_ids')
     lat = request.form.get('latitude')
     lng = request.form.get('longitude')
-    lat = float(lat) if lat else None
-    lng = float(lng) if lng else None
+    lat = to_float(lat, 'latitude') if lat else None
+    lng = to_float(lng, 'longitude') if lng else None
     location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: Unavailable"
     
     collected_count = 0
@@ -191,8 +192,8 @@ def bulk_deliver():
     request_ids = request.form.getlist('request_ids')
     lat = request.form.get('latitude')
     lng = request.form.get('longitude')
-    lat = float(lat) if lat else None
-    lng = float(lng) if lng else None
+    lat = to_float(lat, 'latitude') if lat else None
+    lng = to_float(lng, 'longitude') if lng else None
     location_str = f"GPS: {lat}, {lng}" if (lat and lng) else "GPS: G-8 Lab Gate"
     
     delivered_count = 0

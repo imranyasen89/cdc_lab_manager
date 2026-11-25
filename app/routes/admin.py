@@ -6,6 +6,7 @@ from app.models import (User, Branch, Department, TATRule, OutsourcedLab, AuditL
                         UserTaskPermission, CenterDistance, Sample, SampleType,
                         StaffPerformanceReport)
 from app.utils.decorators import role_required
+from app.utils.validation import form_int, form_float, to_int, to_float
 from app.utils.timezone import now_pkt
 from app.utils.date_filter import get_date_range
 from app.services.distance_service import DistanceService
@@ -198,8 +199,8 @@ def create_user():
         role=role,
         phone=phone,
         email=email,
-        branch_id=int(branch_id) if branch_id else None,
-        department_id=int(department_id) if department_id else None,
+        branch_id=to_int(branch_id, 'branch_id') if branch_id else None,
+        department_id=to_int(department_id, 'department_id') if department_id else None,
         joining_date=now_pkt().date()
     )
     user.set_password(password)
@@ -244,8 +245,8 @@ def edit_user(user_id):
     
     branch_id = request.form.get('branch_id')
     department_id = request.form.get('department_id')
-    user.branch_id = int(branch_id) if branch_id else None
-    user.department_id = int(department_id) if department_id else None
+    user.branch_id = to_int(branch_id, 'branch_id') if branch_id else None
+    user.department_id = to_int(department_id, 'department_id') if department_id else None
     
     password = request.form.get('password')
     if password:
@@ -353,9 +354,9 @@ def center_distances():
 @login_required
 @role_required('ADMIN')
 def save_distance():
-    from_id = int(request.form.get('from_branch_id'))
-    to_id = int(request.form.get('to_branch_id'))
-    distance_km = float(request.form.get('distance_km'))
+    from_id = form_int('from_branch_id')
+    to_id = form_int('to_branch_id')
+    distance_km = form_float('distance_km', minimum=0)
     
     # Save or update both directions
     for (fid, tid) in [(from_id, to_id), (to_id, from_id)]:
@@ -464,8 +465,8 @@ def create_branch():
         flash(f"Branch code '{code}' already exists.", 'danger')
         return redirect(url_for('admin.config', _anchor='tab-branches'))
         
-    latitude = float(lat) if lat else None
-    longitude = float(lng) if lng else None
+    latitude = to_float(lat, 'latitude') if lat else None
+    longitude = to_float(lng, 'longitude') if lng else None
     
     branch = Branch(
         name=name,
@@ -504,11 +505,11 @@ def edit_branch(branch_id):
     branch.code = code
     branch.address = address
     try:
-        branch.latitude = float(lat) if lat else None
+        branch.latitude = to_float(lat, 'latitude') if lat else None
     except ValueError:
         branch.latitude = None
     try:
-        branch.longitude = float(lng) if lng else None
+        branch.longitude = to_float(lng, 'longitude') if lng else None
     except ValueError:
         branch.longitude = None
         
@@ -624,10 +625,10 @@ def create_tat_rule():
     
     existing = TATRule.query.filter_by(priority=priority).first()
     if existing:
-        existing.max_tat_minutes = int(max_tat)
+        existing.max_tat_minutes = to_int(max_tat, 'max_tat_minutes')
         existing.description = desc
     else:
-        rule = TATRule(priority=priority, max_tat_minutes=int(max_tat), description=desc)
+        rule = TATRule(priority=priority, max_tat_minutes=to_int(max_tat, 'max_tat_minutes'), description=desc)
         db.session.add(rule)
         
     db.session.commit()
@@ -654,7 +655,7 @@ def edit_tat_rule(rule_id):
             return redirect(url_for('admin.config', _anchor='tab-tat'))
             
     rule.priority = priority
-    rule.max_tat_minutes = int(max_tat)
+    rule.max_tat_minutes = to_int(max_tat, 'max_tat_minutes')
     rule.description = desc
     db.session.commit()
     flash(f"TAT Rule '{rule.priority}' updated successfully.", 'success')

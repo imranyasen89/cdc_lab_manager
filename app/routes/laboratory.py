@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import SampleRequest, User, Branch, OutsourcedLab, Sample, Task, TATRule, StatusHistory, AuditLog
 from app.utils.decorators import role_required
+from app.utils.validation import form_int, form_float, to_int, to_float
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
 from app.utils.date_filter import get_date_range
@@ -76,7 +77,7 @@ def dashboard():
 @role_required('SUPERVISOR', 'MANAGER', 'ADMIN')
 def assign_rider():
     request_id = request.form.get('request_id')
-    rider_id = int(request.form.get('rider_id'))
+    rider_id = form_int('rider_id')
     
     success, msg = WorkflowService.transition_to(
         request_id=request_id,
@@ -101,7 +102,7 @@ def assign_rider():
 def receive_sample(request_id):
     action = request.form.get('action', 'accept')  # accept or reject
     condition = request.form.get('condition', 'Good')
-    quantity = int(request.form.get('quantity', 1))
+    quantity = form_int('quantity', 1, minimum=1)
     remarks = request.form.get('remarks', '')
     
     if action == 'reject':
@@ -175,7 +176,7 @@ def complete_processing(request_id):
 @login_required
 @role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
 def request_outsource(request_id):
-    outsourced_lab_id = int(request.form.get('outsourced_lab_id'))
+    outsourced_lab_id = form_int('outsourced_lab_id')
     reason = request.form.get('reason', '')
     
     lab = OutsourcedLab.query.get(outsourced_lab_id)
@@ -358,7 +359,7 @@ def local_receive():
         priority = request.form.get('priority', 'Routine')
         special_instructions = request.form.get('special_instructions')
         receiving_branch_id = request.form.get('receiving_branch_id')
-        quantity = int(request.form.get('quantity', 1))
+        quantity = form_int('quantity', 1, minimum=1)
         
         # Collect sample types
         selected_sample_types = request.form.getlist('sample_types')
@@ -376,7 +377,7 @@ def local_receive():
         sample_types_str = ', '.join(selected_sample_types)
         
         # Determine branch — default to first branch (G-8 HQ) if not specified
-        branch_id = int(receiving_branch_id) if receiving_branch_id else (branches[0].id if branches else None)
+        branch_id = to_int(receiving_branch_id, 'receiving_branch_id') if receiving_branch_id else (branches[0].id if branches else None)
         
         # Create SampleRequest — starts directly at 'Received at G-8' status
         req = SampleRequest(

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # build.sh — Production build script (Render / Railway)
-# For Vercel, use api/index.py as the entry point instead.
+# Vercel does not use this script; it runs run:app (see pyproject.toml [tool.vercel]).
 
 set -o errexit  # Exit on error
 
