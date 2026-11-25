@@ -418,5 +418,65 @@
   "shift": "Morning",
   "role": "BRANCH_STAFF",
   "username": "imad.ali"
+ },
+ {
+  "name": "Muhammad Faisal",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "muhammad.faisal"
+ },
+ {
+  "name": "M Yasir",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "m.yasir"
+ },
+ {
+  "name": "M Hashir",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "m.hashir"
+ },
+ {
+  "name": "M Kamran",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "m.kamran"
+ },
+ {
+  "name": "Bakht Buland",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "bakht.buland"
+ },
+ {
+  "name": "M Atif",
+  "email": "",
+  "designation": "Rider",
+  "current_role": "Rider",
+  "branch_code": "G8",
+  "shift": "",
+  "role": "RIDER",
+  "username": "m.atif"
  }
 ]

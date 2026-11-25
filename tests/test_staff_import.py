@@ -38,11 +38,15 @@ class StaffImportTestCase(unittest.TestCase):
 
         g8 = Branch.query.filter_by(code='G8').first()
         for user in User.query.all():
+            if user.role == 'RIDER':
+                continue
             if user.branch_id == g8.id:
                 self.assertIn(user.role, LAB_ROLES)
             else:
                 self.assertEqual(user.role, 'BRANCH_STAFF')
 
+        self.assertEqual(User.query.filter_by(role='RIDER').count(), 6)
+        self.assertTrue(User.query.filter_by(username='m.yasir').first().check_password('m.yasir123'))
         user = User.query.filter_by(username='naveed.ullah').first()
         self.assertTrue(user.check_password('naveed.ullah123'))
 

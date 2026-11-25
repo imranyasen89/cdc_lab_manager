@@ -6,6 +6,7 @@ again updates existing people instead of duplicating them.
 
 Rules:
 * G-8 staff are central lab staff (LAB_STAFF, or SUPERVISOR for supervisors/QC).
+* Riders (designation Rider) are RIDER accounts: they collect and transport samples.
 * Everyone else is BRANCH_STAFF at their own branch (they create pickup requests).
 * Credentials follow the existing pattern: password = username + "123".
 """
@@ -94,8 +95,12 @@ def import_cdc_staff(reset_passwords=True):
                 summary['branches_created'].append(branch.name)
         branch = branch_cache[code]
 
-        user = User.query.filter(User.email.ilike(person['email'])).first()
         username = person['username']
+        email = (person.get('email') or '').strip() or None
+        if email:
+            user = User.query.filter(User.email.ilike(email)).first()
+        else:  # no email (e.g. riders): the fixed username identifies the person
+            user = User.query.filter(User.username == username).first()
         clash = User.query.filter(User.username == username).first()
         if clash and (user is None or clash.id != user.id):
             # Username already used by someone else: add a numeric suffix.
@@ -105,7 +110,7 @@ def import_cdc_staff(reset_passwords=True):
             username = f"{username}{n}"
 
         if user is None:
-            user = User(employee_id=f"EMP-{next_emp}", email=person['email'],
+            user = User(employee_id=f"EMP-{next_emp}", email=email,
                         joining_date=now_pkt().date(), status=True)
             next_emp += 1
             db.session.add(user)
