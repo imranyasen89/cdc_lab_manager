@@ -1,0 +1,422 @@
+[
+ {
+  "name": "Sawaira Saif",
+  "email": "qasimkhokhar3232@gmail.com",
+  "designation": "Phlebotomist",
+  "current_role": "Phlebotomist",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "LAB_STAFF",
+  "username": "sawaira.saif"
+ },
+ {
+  "name": "Irfan Khan",
+  "email": "irfanjdaf1998@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Supervisor Pathology Lab",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "SUPERVISOR",
+  "username": "irfan.khan"
+ },
+ {
+  "name": "Muhammad Awais",
+  "email": "honnysingh537@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab supervisor",
+  "branch_code": "WAH",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "muhammad.awais"
+ },
+ {
+  "name": "Tahir Iqbal",
+  "email": "tahiriqbalsahil00@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Branch Manager",
+  "branch_code": "I10",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "tahir.iqbal"
+ },
+ {
+  "name": "Abad Ur Rehman",
+  "email": "geeabad27@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technologists",
+  "branch_code": "NGH",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "abad.rehman"
+ },
+ {
+  "name": "Abdul Rehman",
+  "email": "gbuy95@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technician",
+  "branch_code": "IHSF10",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "abdul.rehman"
+ },
+ {
+  "name": "Faisal Nawaz Danish",
+  "email": "faisalnawazdanish@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab Supervisor",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "SUPERVISOR",
+  "username": "faisal.danish"
+ },
+ {
+  "name": "Tofeeq Ur Rahman",
+  "email": "tofeeqrahman31@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Night shift control overall with Branch to",
+  "branch_code": "G8",
+  "shift": "Night",
+  "role": "LAB_STAFF",
+  "username": "tofeeq.rahman"
+ },
+ {
+  "name": "Areesha Batool",
+  "email": "areeshabatool4972@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab Technologist",
+  "branch_code": "WAH",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "areesha.batool"
+ },
+ {
+  "name": "Sadia Batool",
+  "email": "sbatool3331@gmail.com",
+  "designation": "Technician",
+  "current_role": "Intern",
+  "branch_code": "KAHUTA",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "sadia.batool"
+ },
+ {
+  "name": "Naveed Ullah",
+  "email": "navidmarwat327@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab Technician",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "LAB_STAFF",
+  "username": "naveed.ullah"
+ },
+ {
+  "name": "Syed Ahsan Raza",
+  "email": "syedahsanraza18@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Laboratory Supervisor/QC officer (All Branches)",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "SUPERVISOR",
+  "username": "syed.raza"
+ },
+ {
+  "name": "Umer Nawaz Khan Abbasi",
+  "email": "nawazumar773@gmail.com",
+  "designation": "Technician",
+  "current_role": "Laboratory Technician/ Technologist",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "LAB_STAFF",
+  "username": "umer.abbasi"
+ },
+ {
+  "name": "Sher Yar Khan",
+  "email": "itechsheryar871@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab Technologist",
+  "branch_code": "I10",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "sheryar.khan"
+ },
+ {
+  "name": "Shehzad Khan",
+  "email": "malakshehzad35@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab technician and look overall laboratory.",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "shehzad.khan"
+ },
+ {
+  "name": "Faiza Karim",
+  "email": "faizokareem345@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Microbiologist",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "faiza.karim"
+ },
+ {
+  "name": "Areeb Abbasi",
+  "email": "areebabbasi335@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab technician",
+  "branch_code": "BLUEAREA",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "areeb.abbasi"
+ },
+ {
+  "name": "Muhammad Aqib Khan",
+  "email": "maqibk25@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technologist",
+  "branch_code": "WAH",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "aqib.khan"
+ },
+ {
+  "name": "Shahzad Ahmad",
+  "email": "alrehmanlab374@gmail.com",
+  "designation": "Technician",
+  "current_role": "Medical Lab Technician",
+  "branch_code": "KAHUTA",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "shahzad.ahmad"
+ },
+ {
+  "name": "Tayyaba Shahid",
+  "email": "tayyaba.ar.shahid123@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technologist",
+  "branch_code": "WAH",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "tayyaba.shahid"
+ },
+ {
+  "name": "Rubab Riaz",
+  "email": "rubabriaz876@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Bio Technologist",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "rubab.riaz"
+ },
+ {
+  "name": "Maryam Bibi",
+  "email": "duafatima00374@gmail.com",
+  "designation": "Receptionist",
+  "current_role": "Receptionist",
+  "branch_code": "KAHUTA",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "maryam.bibi"
+ },
+ {
+  "name": "Habib Ullah",
+  "email": "habibbuneri010@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Medical Lab Technologist",
+  "branch_code": "G8",
+  "shift": "Night",
+  "role": "LAB_STAFF",
+  "username": "habib.ullah"
+ },
+ {
+  "name": "Gulsher Ahmad",
+  "email": "ahmadgulsher956@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Working As laboratory technologist.",
+  "branch_code": "G8",
+  "shift": "Night",
+  "role": "LAB_STAFF",
+  "username": "gulsher.ahmad"
+ },
+ {
+  "name": "Nabeela Tasaddaq",
+  "email": "nabeelatasaddaq@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab technician",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "nabeela.tasaddaq"
+ },
+ {
+  "name": "Nisma Satti",
+  "email": "nismasatti30@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab technician",
+  "branch_code": "BLUEAREA",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "nisma.satti"
+ },
+ {
+  "name": "Asma Bibi",
+  "email": "asmaakram305@gmail.com",
+  "designation": "Technician",
+  "current_role": "Branch manager",
+  "branch_code": "SHAHKHALID",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "asma.bibi"
+ },
+ {
+  "name": "Abdul Rehman",
+  "email": "ar8229815@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab Technician",
+  "branch_code": "SHAHKHALID",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "abdul.rehman2"
+ },
+ {
+  "name": "Muhammad Huzaifa Ali",
+  "email": "huzaifakhokhar244@gmail.com",
+  "designation": "Technician",
+  "current_role": "Technician",
+  "branch_code": "SHAHKHALID",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "huzaifa.ali"
+ },
+ {
+  "name": "Abdullah",
+  "email": "abdwlah055@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technician",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "LAB_STAFF",
+  "username": "abdullah"
+ },
+ {
+  "name": "Ch Shakir Mehboob",
+  "email": "chaudharyshakirmehboob@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technologist",
+  "branch_code": "WAH",
+  "shift": "Evening",
+  "role": "BRANCH_STAFF",
+  "username": "shakir.mehboob"
+ },
+ {
+  "name": "Aiman Bibi",
+  "email": "aimanbibi456@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Lab technologist (internee)",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "aiman.bibi"
+ },
+ {
+  "name": "Laiba Majeed",
+  "email": "laibamajeed726@gmail.com",
+  "designation": "Phlebotomist",
+  "current_role": "Philbotmist",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "laiba.majeed"
+ },
+ {
+  "name": "Muhammad Omais",
+  "email": "omaism63@gmail.com",
+  "designation": "Technician",
+  "current_role": "Phaelbotamist",
+  "branch_code": "INDUS",
+  "shift": "Rotation",
+  "role": "BRANCH_STAFF",
+  "username": "muhammad.omais"
+ },
+ {
+  "name": "Rizwan Khan",
+  "email": "rizwanutman.7542@gmail.com",
+  "designation": "Technologist",
+  "current_role": "As a lab technologist",
+  "branch_code": "BLUEAREA",
+  "shift": "Night",
+  "role": "BRANCH_STAFF",
+  "username": "rizwan.khan"
+ },
+ {
+  "name": "Umer Zada",
+  "email": "uzada2419@gmail.com",
+  "designation": "Phlebotomist",
+  "current_role": "Phlebotmist",
+  "branch_code": "G8",
+  "shift": "Morning",
+  "role": "LAB_STAFF",
+  "username": "umer.zada"
+ },
+ {
+  "name": "Anwar Jamal",
+  "email": "anwarbiotech123@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Inventory Incharge Laboratory",
+  "branch_code": "G8",
+  "shift": "Evening",
+  "role": "LAB_STAFF",
+  "username": "anwar.jamal"
+ },
+ {
+  "name": "Nomankhan",
+  "email": "noumankhan8210@gmail.com",
+  "designation": "Phlebotomist",
+  "current_role": "Phlebotomy",
+  "branch_code": "HAYAT",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "nomankhan"
+ },
+ {
+  "name": "Muzamil Khursheed",
+  "email": "muzamilpirhar38@gmail.com",
+  "designation": "Technician",
+  "current_role": "Lab Incharge",
+  "branch_code": "MARDAN",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "muzamil.khursheed"
+ },
+ {
+  "name": "Ihsan Ullah",
+  "email": "ihsankhani0302@gmail.com",
+  "designation": "Technician",
+  "current_role": "Phlebotomy",
+  "branch_code": "MARDAN",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "ihsan.ullah"
+ },
+ {
+  "name": "Arbaz Shah",
+  "email": "arbazshah196@gmail.com",
+  "designation": "Technologist",
+  "current_role": "Laboratory Technologist at CDC",
+  "branch_code": "MARDAN",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "arbaz.shah"
+ },
+ {
+  "name": "Imad Ali",
+  "email": "imadalibe23@gmail.com",
+  "designation": "Receptionist",
+  "current_role": "Collection point attendent",
+  "branch_code": "BUNER",
+  "shift": "Morning",
+  "role": "BRANCH_STAFF",
+  "username": "imad.ali"
+ }
+]

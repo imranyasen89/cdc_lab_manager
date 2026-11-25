@@ -89,6 +89,17 @@ def create_app(config_class=None):
         db.create_all()
         click.echo('Database tables are up to date.')
 
+    @app.cli.command('import-staff')
+    @click.option('--keep-passwords', is_flag=True, help="Don't reset passwords of accounts that already exist.")
+    def import_staff_command(keep_passwords):
+        """Import CDC staff from app/data/cdc_staff.json (safe to re-run)."""
+        from app.services.staff_import import import_cdc_staff
+        result = import_cdc_staff(reset_passwords=not keep_passwords)
+        for a in result['accounts']:
+            click.echo(f"{a['username']:<22} {a['password']:<26} {a['role']:<13} {a['branch']}  ({a['name']})")
+        click.echo(f"Created {result['created']}, updated {result['updated']} accounts; "
+                   f"new branches: {', '.join(result['branches_created']) or 'none'}")
+
     @app.cli.command('seed')
     @click.option('--force', is_flag=True, help='Force re-seed even if data exists.')
     def seed_command(force):

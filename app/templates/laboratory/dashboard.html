@@ -39,7 +39,7 @@
     {% include 'components/date_filter_bar.html' %}
 
     <!-- Supervisor & Manager Summary Panel -->
-    {% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+    {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
     <!-- Metrics Cards -->
     <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <div class="glass-panel rounded-xl p-4 text-center border border-slate-200">
@@ -411,7 +411,7 @@
 </div>
 
 <!-- Map & Rider Assignment Section (at bottom, per user request) -->
-{% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+{% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
 <div class="space-y-6 mt-6">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Live Map Dashboard -->
@@ -713,7 +713,7 @@
     });
 </script>
 
-{% if current_user.role in ['SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+{% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
 <script>
     // Leaflet live operations map
     let map;

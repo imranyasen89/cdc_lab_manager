@@ -165,6 +165,21 @@ def users():
     departments = Department.query.all()
     return render_template('admin/users.html', users=users_list, branches=branches, departments=departments, task_permissions=TASK_PERMISSIONS)
 
+@admin_bp.route('/admin/users/import-cdc-staff', methods=['POST'])
+@login_required
+@role_required('ADMIN')
+def import_cdc_staff():
+    from app.services.staff_import import import_cdc_staff as run_import
+    result = run_import(reset_passwords=True)
+    audit = AuditLog(user_id=current_user.id, action="STAFF_IMPORT", ip_address=request.remote_addr,
+                     location=f"{result['created']} created, {result['updated']} updated")
+    db.session.add(audit)
+    db.session.commit()
+    branches = ', '.join(result['branches_created']) or 'none'
+    flash(f"CDC staff imported: {result['created']} created, {result['updated']} updated. "
+          f"New branches: {branches}. Password pattern: username + 123.", 'success')
+    return redirect(url_for('admin.users'))
+
 @admin_bp.route('/admin/users/create', methods=['POST'])
 @login_required
 @role_required('ADMIN')

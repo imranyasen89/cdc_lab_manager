@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from app import db
 from app.models import SampleRequest, User, Branch, OutsourcedLab, Sample, Task, TATRule, StatusHistory, AuditLog
-from app.utils.decorators import role_required
+from app.utils.decorators import role_required, LAB_ROLES
 from app.utils.validation import form_int, form_float, to_int, to_float
 from app.services.workflow_service import WorkflowService
 from app.utils.timezone import now_pkt
@@ -12,7 +12,7 @@ lab_bp = Blueprint('lab', __name__)
 
 @lab_bp.route('/lab/dashboard')
 @login_required
-@role_required('LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def dashboard():
     preset = request.args.get('preset')
     start_date_param = request.args.get('start_date')
@@ -74,7 +74,7 @@ def dashboard():
 
 @lab_bp.route('/lab/assign-rider', methods=['POST'])
 @login_required
-@role_required('SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def assign_rider():
     request_id = request.form.get('request_id')
     rider_id = form_int('rider_id')
@@ -98,7 +98,7 @@ def assign_rider():
 
 @lab_bp.route('/lab/receive/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def receive_sample(request_id):
     action = request.form.get('action', 'accept')  # accept or reject
     condition = request.form.get('condition', 'Good')
@@ -133,7 +133,7 @@ def receive_sample(request_id):
 
 @lab_bp.route('/lab/process/start/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def start_processing(request_id):
     success, msg = WorkflowService.transition_to(
         request_id=request_id,
@@ -153,7 +153,7 @@ def start_processing(request_id):
 
 @lab_bp.route('/lab/process/complete/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def complete_processing(request_id):
     remarks = request.form.get('remarks', '')
     success, msg = WorkflowService.transition_to(
@@ -174,7 +174,7 @@ def complete_processing(request_id):
 
 @lab_bp.route('/lab/outsource/request/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def request_outsource(request_id):
     outsourced_lab_id = form_int('outsourced_lab_id')
     reason = request.form.get('reason', '')
@@ -201,7 +201,7 @@ def request_outsource(request_id):
 
 @lab_bp.route('/lab/outsource/send/<request_id>', methods=['POST'])
 @login_required
-@role_required('RIDER', 'LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required('RIDER', *LAB_ROLES, 'ADMIN')
 def send_outsource(request_id):
     remarks = request.form.get('remarks', 'Dispatched to outsourced lab.')
     success, msg = WorkflowService.transition_to(
@@ -222,7 +222,7 @@ def send_outsource(request_id):
 
 @lab_bp.route('/lab/outsource/receive/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def receive_outsource_result(request_id):
     remarks = request.form.get('remarks', 'Outsourced report received.')
     success, msg = WorkflowService.transition_to(
@@ -243,7 +243,7 @@ def receive_outsource_result(request_id):
 
 @lab_bp.route('/lab/result/enter/<request_id>', methods=['POST'])
 @login_required
-@role_required('LAB_STAFF', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def enter_result(request_id):
     ref_num = request.form.get('ref_num', '')
     remarks = request.form.get('remarks', '')
@@ -266,7 +266,7 @@ def enter_result(request_id):
 
 @lab_bp.route('/lab/verify/<request_id>', methods=['POST'])
 @login_required
-@role_required('VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def verify_report(request_id):
     action = request.form.get('action', 'approve')  # approve or reject
     remarks = request.form.get('remarks', '')
@@ -299,7 +299,7 @@ def verify_report(request_id):
 
 @lab_bp.route('/lab/deliver/<request_id>', methods=['POST'])
 @login_required
-@role_required('BRANCH_STAFF', 'LAB_STAFF', 'RECEPTION_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required('BRANCH_STAFF', 'RECEPTION_STAFF', *LAB_ROLES, 'ADMIN')
 def deliver_report(request_id):
     method = request.form.get('method', 'Branch Delivery')
     recipient = request.form.get('recipient', '')
@@ -346,7 +346,7 @@ def generate_local_request_id():
 
 @lab_bp.route('/lab/local-receive', methods=['GET', 'POST'])
 @login_required
-@role_required('LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN')
+@role_required(*LAB_ROLES, 'ADMIN')
 def local_receive():
     """Accept samples directly at local center (walk-in), bypassing rider pickup flow."""
     priorities = TATRule.query.all()

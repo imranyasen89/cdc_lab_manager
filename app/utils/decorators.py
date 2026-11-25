@@ -21,3 +21,9 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
+
+# Central (G-8) lab roles. For now every G-8 role may perform every in-lab
+# workflow step (receive, process, outsource, enter results, verify, deliver,
+# assign riders); sub-roles only affect menus and reports.
+LAB_ROLES = ('LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER')

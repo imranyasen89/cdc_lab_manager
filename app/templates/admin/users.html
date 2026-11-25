@@ -11,10 +11,19 @@
             <p class="text-sm text-slate-500">Add, configure, and manage system user credentials</p>
         </div>
         
+        <div class="flex flex-col sm:flex-row gap-2">
+        <form action="{{ url_for('admin.import_cdc_staff') }}" method="POST"
+              onsubmit="return confirm('Import / update all CDC staff from the staff sheet? Passwords of imported staff are reset to username + 123.');">
+            <button type="submit" class="w-full inline-flex items-center justify-center gap-x-2 px-5 py-2.5 rounded-xl border border-brand-200 bg-white font-semibold text-brand-700 hover:bg-brand-50 transition">
+                <i class="fa-solid fa-file-import text-sm"></i>
+                Import CDC Staff
+            </button>
+        </form>
         <button onclick="openAddUserModal()" class="inline-flex items-center justify-center gap-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 font-semibold text-white hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-600/20 active:translate-y-[1px] transition">
             <i class="fa-solid fa-user-plus text-sm"></i>
             Add New Employee
         </button>
+        </div>
     </div>
 
     <!-- Users Table -->

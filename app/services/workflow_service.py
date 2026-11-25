@@ -3,6 +3,9 @@ from app import db
 from app.models import SampleRequest, StatusHistory, AuditLog, Task, User, Branch
 from app.services.notification_service import NotificationService
 
+from app.utils.decorators import LAB_ROLES
+
+
 class WorkflowService:
     # State transitions: current_status -> list of next valid statuses
     TRANSITIONS = {
@@ -29,21 +32,25 @@ class WorkflowService:
     }
     
     # Authorized roles for each target status
+    # Authorized roles for each target status.
+    # Every G-8 lab role (LAB_ROLES) may perform every in-lab step for now.
+    _ADMINS = ['ADMIN', 'SUPER_ADMIN']
+    _LAB = list(LAB_ROLES) + _ADMINS
     ROLE_PERMISSIONS = {
-        'Pickup Requested': ['BRANCH_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Rider Assigned': ['RIDER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Sample Collected': ['RIDER', 'ADMIN', 'SUPER_ADMIN'],
-        'Arrived at G-8': ['RIDER', 'ADMIN', 'SUPER_ADMIN'],
-        'Received at G-8': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Processing': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
-        'Processing Completed': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
-        'Outsource Requested': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Sent to Outsourced Lab': ['RIDER', 'LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Outsourced Result Received': ['LAB_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Pending Verification': ['LAB_STAFF', 'ADMIN', 'SUPER_ADMIN'],
-        'Verified': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Correction Required': ['VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'],
-        'Completed': ['BRANCH_STAFF', 'LAB_STAFF', 'RECEPTION_STAFF', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN']
+        'Pickup Requested': ['BRANCH_STAFF'] + _LAB,
+        'Rider Assigned': ['RIDER'] + _LAB,
+        'Sample Collected': ['RIDER'] + _ADMINS,
+        'Arrived at G-8': ['RIDER'] + _ADMINS,
+        'Received at G-8': _LAB,
+        'Processing': _LAB,
+        'Processing Completed': _LAB,
+        'Outsource Requested': _LAB,
+        'Sent to Outsourced Lab': ['RIDER'] + _LAB,
+        'Outsourced Result Received': _LAB,
+        'Pending Verification': _LAB,
+        'Verified': _LAB,
+        'Correction Required': _LAB,
+        'Completed': ['BRANCH_STAFF', 'RECEPTION_STAFF'] + _LAB,
     }
 
     @staticmethod
