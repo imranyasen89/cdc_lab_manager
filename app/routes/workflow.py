@@ -36,13 +36,15 @@ def search():
     if query:
         # Search by ID, Patient name, patient MRN, status, branch code, or priority
         results = SampleRequest.query.join(Branch).outerjoin(User, SampleRequest.created_by_id == User.id).filter(
-            (SampleRequest.id.like(f"%{query}%")) |
-            (SampleRequest.patient_name.like(f"%{query}%")) |
-            (SampleRequest.patient_id.like(f"%{query}%")) |
-            (SampleRequest.status.like(f"%{query}%")) |
-            (SampleRequest.priority.like(f"%{query}%")) |
-            (Branch.name.like(f"%{query}%")) |
-            (User.name.like(f"%{query}%"))
+            (SampleRequest.id.ilike(f"%{query}%")) |
+            (SampleRequest.patient_name.ilike(f"%{query}%")) |
+            (SampleRequest.patient_id.ilike(f"%{query}%")) |
+            (SampleRequest.batch_id.ilike(f"%{query}%")) |
+            (SampleRequest.test_requested.ilike(f"%{query}%")) |
+            (SampleRequest.status.ilike(f"%{query}%")) |
+            (SampleRequest.priority.ilike(f"%{query}%")) |
+            (Branch.name.ilike(f"%{query}%")) |
+            (User.name.ilike(f"%{query}%"))
         ).order_by(SampleRequest.created_at.desc()).all()
         
     return render_template('workflow/search.html', query=query, results=results)

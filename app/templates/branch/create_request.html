@@ -1,264 +1,262 @@
 {% extends "base.html" %}
-
-{% block title %}Create Pickup Request - CDC Lab Manager{% endblock %}
+{% block title %}New Sample Dispatch - CDC Lab Manager{% endblock %}
 
 {% block extra_head %}
 <style>
-    /* Sample type checkbox cards */
-    .sample-card {
-        display: flex;
-        align-items: center;
-        gap: 0.625rem;
-        padding: 0.625rem 0.875rem;
-        border: 1.5px solid #e2e8f0;
-        border-radius: 0.75rem;
-        background: #ffffff;
-        cursor: pointer;
-        transition: all 0.18s ease;
-        user-select: none;
+    .vial-tile {
+        position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+        padding: 0.45rem 0.3rem 0.4rem; border: 1.5px solid #e2e8f0; border-radius: 0.75rem;
+        background: #fff; cursor: pointer; user-select: none; transition: all .15s ease; min-width: 0;
     }
-    .sample-card:hover {
-        border-color: #90caf9;
-        background: #f0f7ff;
+    .vial-tile:hover { border-color: #90caf9; background: #f8fbff; }
+    .vial-tile.on { border-color: var(--vial); background: color-mix(in srgb, var(--vial) 8%, white); }
+    .vial-tile .vial-name { font-size: 0.62rem; font-weight: 600; color: #334155; line-height: 1.1; text-align: center; }
+    .vial-tile .qty {
+        position: absolute; top: -0.45rem; right: -0.45rem; min-width: 1.3rem; height: 1.3rem; padding: 0 0.3rem;
+        border-radius: 999px; background: var(--vial); color: #fff; font-size: 0.68rem; font-weight: 700;
+        display: none; align-items: center; justify-content: center; box-shadow: 0 1px 3px rgba(0,0,0,.2);
     }
-    .sample-card input[type="checkbox"] {
-        width: 1rem;
-        height: 1rem;
-        accent-color: #0066cc;
-        cursor: pointer;
-        flex-shrink: 0;
+    .vial-tile.on .qty { display: flex; }
+    .vial-tile .minus {
+        position: absolute; top: -0.45rem; left: -0.45rem; width: 1.3rem; height: 1.3rem; border-radius: 999px;
+        background: #fff; border: 1px solid #cbd5e1; color: #475569; font-size: 0.7rem; font-weight: 700;
+        display: none; align-items: center; justify-content: center;
     }
-    .sample-card.checked {
-        border-color: #0066cc;
-        background: rgba(0,102,204,0.05);
+    .vial-tile.on .minus { display: flex; }
+    .test-chip {
+        font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 999px;
+        border: 1px solid #e2e8f0; background: #fff; color: #475569; cursor: pointer;
     }
-    .sample-card .sample-icon {
-        font-size: 1rem;
-        width: 1.5rem;
-        text-align: center;
-    }
-    .sample-card .sample-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        color: #334155;
-    }
+    .test-chip:hover { border-color: #0066cc; color: #0066cc; }
+    .field-label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #64748b; margin-bottom: .25rem; }
+    .field { display: block; width: 100%; height: 2.5rem; border-radius: .75rem; background: #fff; border: 1px solid #e2e8f0; padding: 0 .75rem; font-size: .85rem; color: #1e293b; }
+    .field:focus { outline: none; border-color: #0077ee; box-shadow: 0 0 0 1px #0077ee; }
+    .patient-row.has-error { border-color: #f43f5e !important; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto">
+{% set vial_svg %}<svg viewBox="0 0 24 40" width="18" height="30" aria-hidden="true"><rect x="5" y="1" width="14" height="8" rx="2" fill="var(--vial)"/><path d="M6 9h12v23a6 6 0 0 1-12 0z" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.2"/><path d="M6.6 22h10.8v10a5.4 5.4 0 0 1-10.8 0z" fill="var(--vial)" opacity=".35"/></svg>{% endset %}
+
+<div class="max-w-6xl mx-auto">
     <div class="flex items-center gap-x-3 mb-6">
         <div class="h-10 w-10 rounded-xl bg-brand-600/5 flex items-center justify-center border border-brand-500/10">
-            <i class="fa-solid fa-file-invoice text-brand-600 text-lg"></i>
+            <i class="fa-solid fa-truck-medical text-brand-600 text-lg"></i>
         </div>
         <div>
-            <h1 class="text-2xl font-bold text-slate-900">New Pickup Request</h1>
-            <p class="text-sm text-slate-500">Generate a tracking ID and request sample pickup</p>
+            <h1 class="text-2xl font-bold text-slate-900">New Sample Dispatch</h1>
+            <p class="text-sm text-slate-500">Add one row per patient. Each patient gets its own tracking ID; rows sent together share a batch number.</p>
         </div>
     </div>
 
-    <div class="glass-panel rounded-2xl p-6 sm:p-8 shadow-xl">
-        <form class="space-y-6" action="{{ url_for('branch.create_request') }}" method="POST" id="create-request-form" onsubmit="return validateSamples()">
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <!-- Branch Selection (for Admin/Manager/Super Admin) -->
+    <form action="{{ url_for('branch.create_request') }}" method="POST" id="dispatch-form" class="space-y-5" novalidate>
+        <!-- Batch details -->
+        <div class="glass-panel rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {% if current_user.role in ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] %}
-                <div class="sm:col-span-6 border-b border-slate-100 pb-4">
-                    <label for="branch_id" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Origin Branch / Collection Center *</label>
-                    <select name="branch_id" id="branch_id" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
-                        <option value="">Choose Branch...</option>
-                        {% for b in branches %}
-                        <option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>
-                        {% endfor %}
+                <div>
+                    <label for="branch_id" class="field-label">Origin Branch *</label>
+                    <select name="branch_id" id="branch_id" required class="field">
+                        <option value="">Choose branch…</option>
+                        {% for b in branches %}<option value="{{ b.id }}">{{ b.name }} ({{ b.code }})</option>{% endfor %}
                     </select>
                 </div>
                 {% else %}
-                <div class="sm:col-span-6 bg-slate-50/50 p-4 rounded-xl border border-slate-200">
-                    <span class="block text-xs font-bold uppercase tracking-wider text-slate-400">Origin Branch</span>
-                    <span class="block text-sm font-semibold text-slate-700 mt-1">
-                        {% if user_branch %}
-                            {{ user_branch.name }} ({{ user_branch.code }})
-                        {% else %}
-                            <span class="text-rose-600 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i> No branch assigned to your user account. Please contact an Administrator.</span>
-                        {% endif %}
-                    </span>
+                <div>
+                    <span class="field-label">Origin Branch</span>
+                    <div class="h-10 flex items-center px-3 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-700">
+                        {% if user_branch %}{{ user_branch.name }} ({{ user_branch.code }}){% else %}<span class="text-rose-600">No branch assigned — contact an administrator</span>{% endif %}
+                    </div>
                 </div>
                 {% endif %}
-
-                <!-- Patient Name -->
-                <div class="sm:col-span-4">
-                    <label for="patient_name" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Patient / Sample Name</label>
-                    <input type="text" name="patient_name" id="patient_name" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. Muhammad Ali">
+                <div>
+                    <label for="handed_over_to" class="field-label">Handed over to (rider / person)</label>
+                    <input type="text" name="handed_over_to" id="handed_over_to" list="rider-list" maxlength="100" class="field" placeholder="Leave blank if not handed over yet">
+                    <datalist id="rider-list">
+                        {% for r in riders %}<option value="{{ r.name }}">{{ r.phone or '' }}</option>{% endfor %}
+                    </datalist>
                 </div>
-
-                <!-- Gender -->
-                <div class="sm:col-span-2">
-                    <label for="gender" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Gender</label>
-                    <select name="gender" id="gender" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                <!-- Patient MRN / ID -->
-                <div class="sm:col-span-3">
-                    <label for="patient_id" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Patient Reg ID / MRN (Optional)</label>
-                    <input type="text" name="patient_id" id="patient_id" class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. MRN-10029">
-                </div>
-
-                <!-- Priority -->
-                <div class="sm:col-span-3">
-                    <label for="priority" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Priority Level</label>
-                    <select name="priority" id="priority" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all">
-                        {% for prio in priorities %}
-                        <option value="{{ prio.priority }}">{{ prio.priority }} (Limit: {{ prio.max_tat_minutes }} mins)</option>
-                        {% else %}
-                        <option value="Routine">Routine</option>
-                        <option value="Urgent">Urgent</option>
-                        <option value="Emergency">Emergency</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Service / Test Name -->
-                <div class="sm:col-span-6 border-t border-slate-200 pt-6">
-                    <label for="test_requested" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Test / Service Requested</label>
-                    <input type="text" name="test_requested" id="test_requested" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. CBC, Liver Function Test, Lipid Profile">
-                </div>
-
-                <!-- Sample Type Checkboxes -->
-                <div class="sm:col-span-6">
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
-                        Sample Types to Book
-                        <span class="ml-1 text-rose-500">*</span>
-                        <span class="ml-2 text-slate-400 normal-case font-normal">(Select one or more)</span>
-                    </label>
-                    <div id="sample-cards-container" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <!-- Blood (EDTA) -->
-                        <label class="sample-card" id="card-edta">
-                            <input type="checkbox" name="sample_types" value="Blood (EDTA)" onchange="toggleCard(this, 'card-edta')">
-                            <span class="sample-icon">🩸</span>
-                            <span class="sample-label">Blood (EDTA)</span>
-                        </label>
-                        <!-- Blood (Serum) -->
-                        <label class="sample-card" id="card-serum">
-                            <input type="checkbox" name="sample_types" value="Blood (Serum)" onchange="toggleCard(this, 'card-serum')">
-                            <span class="sample-icon">💉</span>
-                            <span class="sample-label">Blood (Serum)</span>
-                        </label>
-                        <!-- Urine -->
-                        <label class="sample-card" id="card-urine">
-                            <input type="checkbox" name="sample_types" value="Urine" onchange="toggleCard(this, 'card-urine')">
-                            <span class="sample-icon">🧪</span>
-                            <span class="sample-label">Urine</span>
-                        </label>
-                        <!-- Swab -->
-                        <label class="sample-card" id="card-swab">
-                            <input type="checkbox" name="sample_types" value="Swab" onchange="toggleCard(this, 'card-swab')">
-                            <span class="sample-icon">🔬</span>
-                            <span class="sample-label">Swab</span>
-                        </label>
-                        <!-- Sputum -->
-                        <label class="sample-card" id="card-sputum">
-                            <input type="checkbox" name="sample_types" value="Sputum" onchange="toggleCard(this, 'card-sputum')">
-                            <span class="sample-icon">🫁</span>
-                            <span class="sample-label">Sputum</span>
-                        </label>
-                        <!-- Biopsy -->
-                        <label class="sample-card" id="card-biopsy">
-                            <input type="checkbox" name="sample_types" value="Biopsy" onchange="toggleCard(this, 'card-biopsy')">
-                            <span class="sample-icon">🔭</span>
-                            <span class="sample-label">Biopsy</span>
-                        </label>
-                        <!-- CSF -->
-                        <label class="sample-card" id="card-csf">
-                            <input type="checkbox" name="sample_types" value="CSF" onchange="toggleCard(this, 'card-csf')">
-                            <span class="sample-icon">🧠</span>
-                            <span class="sample-label">CSF</span>
-                        </label>
-                        <!-- Stool -->
-                        <label class="sample-card" id="card-stool">
-                            <input type="checkbox" name="sample_types" value="Stool" onchange="toggleCard(this, 'card-stool')">
-                            <span class="sample-icon">🧫</span>
-                            <span class="sample-label">Stool</span>
-                        </label>
-                        <!-- Other -->
-                        <label class="sample-card" id="card-other">
-                            <input type="checkbox" name="sample_types" value="Other" onchange="toggleCard(this, 'card-other'); toggleOtherInput(this)">
-                            <span class="sample-icon">📋</span>
-                            <span class="sample-label">Other</span>
-                        </label>
-                    </div>
-
-                    <!-- "Other" custom type input (hidden by default) -->
-                    <div id="other-type-container" class="hidden mt-3">
-                        <input type="text" name="other_sample_type" id="other-sample-type" class="block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="Specify sample type...">
-                    </div>
-
-                    <!-- Validation message -->
-                    <p id="sample-error" class="hidden mt-2 text-xs text-rose-500 font-semibold">
-                        <i class="fa-solid fa-circle-exclamation mr-1"></i> Please select at least one sample type.
-                    </p>
-                </div>
-
-                <!-- Number of Samples per type -->
-                <div class="sm:col-span-3">
-                    <label for="quantity" class="block text-xs font-bold uppercase tracking-wider text-slate-500">No. of Samples (per type)</label>
-                    <input type="number" name="quantity" id="quantity" min="1" max="20" required class="mt-2 block w-full h-11 rounded-xl bg-white border border-slate-200 pl-4 pr-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" value="1">
-                </div>
-
-                <!-- Special Instructions -->
-                <div class="sm:col-span-6">
-                    <label for="special_instructions" class="block text-xs font-bold uppercase tracking-wider text-slate-500">Special Instructions / Remarks</label>
-                    <textarea name="special_instructions" id="special_instructions" rows="3" class="mt-2 block w-full rounded-xl bg-white border border-slate-200 p-4 text-slate-800 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 text-sm focus:outline-none transition-all" placeholder="e.g. Keep refrigerated, urgent delivery required..."></textarea>
+                <div>
+                    <label for="special_instructions" class="field-label">Batch note</label>
+                    <input type="text" name="special_instructions" id="special_instructions" class="field" placeholder="e.g. keep cold box, urgent samples first">
                 </div>
             </div>
+        </div>
 
-            <div class="flex justify-end gap-x-3 pt-6 border-t border-slate-200">
+        <!-- Patient rows -->
+        <div id="patient-rows" class="space-y-4"></div>
+
+        <div id="form-error" class="hidden rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700"></div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <button type="button" onclick="addPatient()" class="inline-flex items-center justify-center gap-x-2 px-4 py-2.5 rounded-xl border border-dashed border-brand-500 text-brand-700 bg-white font-semibold text-sm hover:bg-brand-50">
+                <i class="fa-solid fa-user-plus"></i> Add patient
+            </button>
+            <div class="flex items-center gap-3">
+                <span id="summary" class="text-sm text-slate-500"></span>
                 <a href="{{ url_for('branch.dashboard') }}" class="glass-btn inline-flex items-center justify-center px-4 py-2.5 rounded-xl text-sm font-semibold">Cancel</a>
-                <button type="submit" onclick="return validateSamples()" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white hover:from-brand-500 hover:to-rose-400 shadow-lg shadow-brand-600/10 active:translate-y-[1px] transition">
-                    <i class="fa-solid fa-paper-plane mr-2"></i> Dispatch Request
+                <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 font-semibold text-white shadow-lg shadow-brand-600/20">
+                    <i class="fa-solid fa-paper-plane mr-2"></i> Dispatch
                 </button>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
+
+<!-- One patient row; __N__ is replaced with the row index -->
+<template id="patient-template">
+    <div class="patient-row glass-panel rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm" data-index="__N__">
+        <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold uppercase tracking-wider text-brand-700"><i class="fa-solid fa-user mr-1"></i> Patient <span class="row-no"></span></span>
+            <div class="flex gap-2">
+                <button type="button" onclick="duplicatePatient(this)" class="text-xs font-semibold text-slate-500 hover:text-brand-600" title="Copy tests and vials to a new row"><i class="fa-regular fa-copy"></i> Duplicate</button>
+                <button type="button" onclick="removePatient(this)" class="text-xs font-semibold text-slate-500 hover:text-rose-600"><i class="fa-solid fa-trash-can"></i> Remove</button>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-12 gap-3">
+            <div class="col-span-1 sm:col-span-2">
+                <label class="field-label">Patient ID / MR#</label>
+                <input type="text" name="p-__N__-mrn" maxlength="50" class="field">
+            </div>
+            <div class="col-span-1 sm:col-span-4">
+                <label class="field-label">Patient name *</label>
+                <input type="text" name="p-__N__-name" maxlength="100" class="field" data-required>
+            </div>
+            <div class="col-span-1 sm:col-span-2">
+                <label class="field-label">Age</label>
+                <input type="text" name="p-__N__-age" maxlength="20" class="field" placeholder="e.g. 34Y">
+            </div>
+            <div class="col-span-1 sm:col-span-2">
+                <label class="field-label">Gender</label>
+                <select name="p-__N__-gender" class="field"><option>Male</option><option>Female</option><option>Other</option></select>
+            </div>
+            <div class="col-span-2 sm:col-span-2">
+                <label class="field-label">Priority</label>
+                <select name="p-__N__-priority" class="field">
+                    {% for prio in priorities %}<option value="{{ prio.priority }}" {% if prio.priority == 'Routine' %}selected{% endif %}>{{ prio.priority }}</option>
+                    {% else %}<option>Routine</option><option>Urgent</option><option>Emergency</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-span-2 sm:col-span-12">
+                <label class="field-label">Tests *</label>
+                <input type="text" name="p-__N__-tests" class="field tests-input" placeholder="e.g. CBC, LFT, PT/INR" data-required>
+                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                    {% for t, code in [('CBC','EDTA'), ('ESR','EDTA'), ('HbA1c','EDTA'), ('LFT','SST'), ('RFT','SST'), ('Lipid Profile','SST'), ('TSH','SST'), ('PT/INR','CITRATE'), ('APTT','CITRATE'), ('Glucose','FLUORIDE'), ('Urine R/E','URINE'), ('Stool R/E','STOOL')] %}
+                    <button type="button" class="test-chip" onclick="quickTest(this, '{{ t }}', '{{ code }}')">+ {{ t }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-span-2 sm:col-span-12">
+                <label class="field-label">Samples / vials * <span class="normal-case font-normal text-slate-400">(tap to add, tap − to remove)</span></label>
+                <div class="grid grid-cols-3 sm:grid-cols-9 gap-2.5 pt-1.5">
+                    {% for code, label, stype, color, hint in containers %}
+                    <div class="vial-tile" style="--vial: {{ color }}" data-code="{{ code }}" onclick="bumpVial(this, 1)" title="{{ hint }}">
+                        <span class="minus" onclick="event.stopPropagation(); bumpVial(this.parentElement, -1)">−</span>
+                        <span class="qty">0</span>
+                        {{ vial_svg }}
+                        <span class="vial-name">{{ label }}</span>
+                        <input type="hidden" name="p-__N__-qty-{{ code }}" value="0">
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="text" name="p-__N__-other" maxlength="50" class="field mt-2 other-input" style="display:none" placeholder="Describe the other sample (e.g. CSF, Pus, Sputum)">
+            </div>
+            <div class="col-span-1 sm:col-span-4">
+                <label class="field-label">Condition / integrity</label>
+                <select name="p-__N__-condition" class="field">
+                    {% for c in conditions %}<option>{{ c }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="col-span-1 sm:col-span-8">
+                <label class="field-label">Remarks</label>
+                <input type="text" name="p-__N__-remarks" maxlength="255" class="field" placeholder="Fasting, on anticoagulants, collection time…">
+            </div>
+        </div>
+    </div>
+</template>
 {% endblock %}
 
 {% block extra_js %}
 <script>
-    function toggleCard(checkbox, cardId) {
-        const card = document.getElementById(cardId);
-        if (checkbox.checked) {
-            card.classList.add('checked');
-        } else {
-            card.classList.remove('checked');
-        }
-    }
+    let nextIndex = 0;
+    const rowsEl = document.getElementById('patient-rows');
 
-    function toggleOtherInput(checkbox) {
-        const container = document.getElementById('other-type-container');
-        const input = document.getElementById('other-sample-type');
-        if (checkbox.checked) {
-            container.classList.remove('hidden');
-            input.required = true;
-        } else {
-            container.classList.add('hidden');
-            input.required = false;
-            input.value = '';
+    function addPatient(copyFrom) {
+        const html = document.getElementById('patient-template').innerHTML.replaceAll('__N__', nextIndex++);
+        const wrap = document.createElement('div');
+        wrap.innerHTML = html.trim();
+        const row = wrap.firstElementChild;
+        rowsEl.appendChild(row);
+        if (copyFrom) {
+            ['tests', 'priority', 'condition', 'gender', 'other'].forEach(f => {
+                const src = copyFrom.querySelector(`[name$="-${f}"]`), dst = row.querySelector(`[name$="-${f}"]`);
+                if (src && dst) dst.value = src.value;
+            });
+            copyFrom.querySelectorAll('.vial-tile').forEach(t => {
+                const n = +t.querySelector('input').value;
+                if (n) bumpVial(row.querySelector(`.vial-tile[data-code="${t.dataset.code}"]`), n);
+            });
         }
+        renumber();
+        row.querySelector('[name$="-mrn"]').focus();
+        return row;
     }
-
-    function validateSamples() {
-        const checkboxes = document.querySelectorAll('input[name="sample_types"]:checked');
-        const errorEl = document.getElementById('sample-error');
-        if (checkboxes.length === 0) {
-            errorEl.classList.remove('hidden');
-            document.getElementById('sample-cards-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            return false;
+    function duplicatePatient(btn) { addPatient(btn.closest('.patient-row')); }
+    function removePatient(btn) {
+        btn.closest('.patient-row').remove();
+        if (!rowsEl.children.length) addPatient();
+        renumber();
+    }
+    function renumber() {
+        [...rowsEl.children].forEach((r, i) => r.querySelector('.row-no').textContent = i + 1);
+        updateSummary();
+    }
+    function bumpVial(tile, delta) {
+        const input = tile.querySelector('input');
+        const n = Math.max(0, Math.min(20, (+input.value || 0) + delta));
+        input.value = n;
+        tile.querySelector('.qty').textContent = n;
+        tile.classList.toggle('on', n > 0);
+        if (tile.dataset.code === 'OTHER') {
+            const other = tile.closest('.patient-row').querySelector('.other-input');
+            other.style.display = n === 0 ? 'none' : 'block';
         }
-        errorEl.classList.add('hidden');
-        return true;
+        updateSummary();
     }
+    function quickTest(btn, test, code) {
+        const row = btn.closest('.patient-row');
+        const input = row.querySelector('.tests-input');
+        const tests = input.value.split(',').map(s => s.trim()).filter(Boolean);
+        if (!tests.includes(test)) { tests.push(test); input.value = tests.join(', '); }
+        const tile = row.querySelector(`.vial-tile[data-code="${code}"]`);
+        if (tile && !(+tile.querySelector('input').value)) bumpVial(tile, 1);
+    }
+    function updateSummary() {
+        const rows = rowsEl.children.length;
+        let vials = 0;
+        rowsEl.querySelectorAll('.vial-tile input').forEach(i => vials += (+i.value || 0));
+        document.getElementById('summary').textContent = `${rows} patient${rows === 1 ? '' : 's'} · ${vials} sample${vials === 1 ? '' : 's'}`;
+    }
+    document.getElementById('dispatch-form').addEventListener('submit', e => {
+        const err = document.getElementById('form-error');
+        let message = '';
+        [...rowsEl.children].forEach((row, i) => {
+            row.classList.remove('has-error');
+            const name = row.querySelector('[name$="-name"]').value.trim();
+            const tests = row.querySelector('[name$="-tests"]').value.trim();
+            const vials = [...row.querySelectorAll('.vial-tile input')].reduce((a, x) => a + (+x.value || 0), 0);
+            const problem = !name ? 'patient name' : !tests ? 'tests' : !vials ? 'at least one sample / vial' : '';
+            if (problem && !message) {
+                message = `Patient ${i + 1}: please enter ${problem}.`;
+                row.classList.add('has-error');
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        const branch = document.getElementById('branch_id');
+        if (!message && branch && !branch.value) message = 'Choose the origin branch.';
+        if (message) { e.preventDefault(); err.textContent = message; err.classList.remove('hidden'); }
+        else err.classList.add('hidden');
+    });
+    addPatient();
 </script>
 {% endblock %}

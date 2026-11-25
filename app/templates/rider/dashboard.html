@@ -100,9 +100,7 @@
                                     </div>
                                     <div class="flex items-center gap-x-2">
                                         <span class="text-slate-500">
-                                            {% for s in bt.request.samples %}
-                                            {{ s.quantity }}x {{ s.sample_type }}{% if not loop.last %}, {% endif %}
-                                            {% endfor %}
+                                            {% with samples=bt.request.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}
                                         </span>
                                         <span class="px-1.5 py-0.5 rounded text-4xs font-bold uppercase tracking-wider 
                                             {% if bt.request.status == 'Rider Assigned' %}bg-amber-50 text-amber-600 border border-amber-200
@@ -170,10 +168,7 @@
                         <div>
                             <span class="text-slate-400 font-semibold uppercase tracking-wider block text-2xs">Samples Detail</span>
                             <span class="text-slate-800 font-medium space-x-1">
-                                {% if task.request.samples %}
-                                    {% for s in task.request.samples %}
-                                        <span class="inline-block bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-3xs">{{ s.quantity }}x {{ s.sample_type }}</span>
-                                    {% endfor %}
+                                {% if task.request.samples %}{% with samples=task.request.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}
                                 {% else %}
                                     N/A
                                 {% endif %}
@@ -243,11 +238,7 @@
                     <p class="text-xs font-semibold text-slate-700 mt-1">Patient: {{ req.patient_name }}</p>
                     <div class="mt-2.5 flex items-center flex-wrap gap-2 text-xs text-slate-500 font-medium">
                         <span class="flex items-center gap-x-1"><i class="fa-solid fa-file-invoice text-slate-400"></i> 
-                            {% for s in req.samples %}
-                                <span class="bg-slate-100 px-1.5 py-0.5 rounded text-3xs font-semibold">{{ s.quantity }}x {{ s.sample_type }}</span>
-                            {% else %}
-                                N/A
-                            {% endfor %}
+                            {% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}
                         </span>
                         <span class="flex items-center gap-x-1"><i class="fa-regular fa-clock text-slate-400"></i> {{ req.created_at.strftime('%H:%M') }}</span>
                     </div>

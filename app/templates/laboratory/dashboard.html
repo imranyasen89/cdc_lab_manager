@@ -115,7 +115,7 @@
                             <td class="px-6 py-4 font-semibold text-slate-700">{{ req.branch.name }}</td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
-                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }}</div>
+                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
@@ -168,7 +168,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
-                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }}</div>
+                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
@@ -234,7 +234,7 @@
                             <td class="px-6 py-4 font-mono text-xs font-semibold text-brand-600">{{ req.id }}</td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
-                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }}</div>
+                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-amber-50 text-amber-600 border border-amber-200 uppercase">{{ req.status }}</span>
@@ -254,7 +254,7 @@
                             <td class="px-6 py-4 font-mono text-xs font-semibold text-brand-600">{{ req.id }}</td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
-                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }}</div>
+                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase">{{ req.status }}</span>
@@ -301,7 +301,7 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="font-semibold text-slate-700">{{ req.patient_name }}</div>
-                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }}</div>
+                                <div class="text-2xs text-slate-400 font-semibold uppercase tracking-wider">{% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider 
@@ -439,7 +439,7 @@
                     </div>
                     <div>
                         <div class="font-semibold text-slate-700">Branch: {{ req.branch.name }}</div>
-                        <div class="text-slate-500 mt-0.5">Patient: {{ req.patient_name }} ({{ req.samples[0].quantity ~ 'x ' ~ req.samples[0].sample_type if req.samples else 'No samples' }})</div>
+                        <div class="text-slate-500 mt-0.5">Patient: {{ req.patient_name }} ({% with samples=req.samples, size='3xs' %}{% include 'components/sample_chips.html' %}{% endwith %})</div>
                     </div>
                     
                     <form action="{{ url_for('lab.assign_rider') }}" method="POST" class="flex gap-x-2 items-center">

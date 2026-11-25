@@ -180,6 +180,23 @@ def import_cdc_staff():
           f"New branches: {branches}. Password pattern: username + 123.", 'success')
     return redirect(url_for('admin.users'))
 
+@admin_bp.route('/admin/users/remove-demo-data', methods=['POST'])
+@login_required
+@role_required('ADMIN')
+def remove_demo_data():
+    from app.services.demo_cleanup import remove_demo_data as run_cleanup
+    result = run_cleanup()
+    db.session.add(AuditLog(user_id=current_user.id, action="DEMO_DATA_REMOVED", ip_address=request.remote_addr,
+                            location=f"{len(result['users'])} users, {result['requests']} requests"))
+    db.session.commit()
+    msg = (f"Demo data removed: {len(result['users'])} accounts, {result['requests']} requests, "
+           f"branches: {', '.join(result['branches']) or 'none'}.")
+    if result['kept_riders']:
+        msg += (f" Kept demo riders ({', '.join(result['kept_riders'])}) because no real rider exists yet — "
+                "add real riders, then run this again.")
+    flash(msg, 'success')
+    return redirect(url_for('admin.users'))
+
 @admin_bp.route('/admin/users/create', methods=['POST'])
 @login_required
 @role_required('ADMIN')

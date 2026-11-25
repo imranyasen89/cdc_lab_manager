@@ -55,6 +55,15 @@ def create_app(config_class=None):
     app.register_blueprint(reports_bp)
     app.register_blueprint(api_bp)
 
+    # Add any new tables/columns to an existing database (additive only).
+    if app.config.get('AUTO_SCHEMA_UPGRADE', True) and not app.config['SQLALCHEMY_DATABASE_URI'].endswith(':memory:'):
+        from app.schema_upgrade import upgrade_schema
+        try:
+            with app.app_context():
+                upgrade_schema(db)
+        except Exception:  # never block start-up; the error is logged
+            app.logger.exception("Automatic schema upgrade failed")
+
     # Friendly handling of invalid / over-long input instead of HTTP 500
     from app.utils.validation import register_error_handlers
     register_error_handlers(app)
@@ -87,6 +96,9 @@ def create_app(config_class=None):
     def init_db_command():
         """Create any missing tables (safe to run repeatedly; never drops data)."""
         db.create_all()
+        from app.schema_upgrade import upgrade_schema
+        for change in upgrade_schema(db):
+            click.echo(f"  {change}")
         click.echo('Database tables are up to date.')
 
     @app.cli.command('import-staff')
@@ -99,6 +111,14 @@ def create_app(config_class=None):
             click.echo(f"{a['username']:<22} {a['password']:<26} {a['role']:<13} {a['branch']}  ({a['name']})")
         click.echo(f"Created {result['created']}, updated {result['updated']} accounts; "
                    f"new branches: {', '.join(result['branches_created']) or 'none'}")
+
+    @app.cli.command('remove-demo-data')
+    @click.option('--dry-run', is_flag=True, help='Only list what would be removed.')
+    def remove_demo_data_command(dry_run):
+        """Delete seed.py demo accounts, branches and requests (keeps admin and real staff)."""
+        from app.services.demo_cleanup import remove_demo_data
+        result = remove_demo_data(dry_run=dry_run)
+        click.echo(('Would remove: ' if dry_run else 'Removed: ') + str(result))
 
     @app.cli.command('seed')
     @click.option('--force', is_flag=True, help='Force re-seed even if data exists.')

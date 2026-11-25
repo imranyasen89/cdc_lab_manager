@@ -45,7 +45,7 @@
             <div class="border-t border-slate-200 pt-4 grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 gap-x-6 text-sm">
                 <div>
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Gender</span>
-                    <span class="text-slate-800 font-medium">{{ sample_request.gender }}</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.gender }}{% if sample_request.patient_age %} · {{ sample_request.patient_age }}{% endif %}</span>
                 </div>
                 <div>
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Patient Reg / MRN</span>
@@ -59,14 +59,35 @@
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Samples Dispatched</span>
                     <div class="text-slate-800 font-medium flex flex-wrap gap-1 mt-0.5">
                         {% if sample_request.samples %}
-                            {% for s in sample_request.samples %}
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 border border-slate-200 text-xs font-medium">{{ s.quantity }}x {{ s.sample_type }}</span>
-                            {% endfor %}
+                            {% with samples=sample_request.samples, size='xs' %}{% include 'components/sample_chips.html' %}{% endwith %}
                         {% else %}
                             <span>N/A</span>
                         {% endif %}
                     </div>
                 </div>
+                <div class="sm:col-span-2">
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Tests Requested</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.test_requested or 'N/A' }}</span>
+                </div>
+                {% set flagged = sample_request.samples|selectattr('condition')|rejectattr('condition', 'equalto', 'Good')|list %}
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Sample Condition</span>
+                    {% if flagged %}
+                        <span class="text-amber-700 font-semibold"><i class="fa-solid fa-triangle-exclamation mr-1"></i>{{ flagged|map(attribute='condition')|unique|join(', ') }}</span>
+                    {% else %}
+                        <span class="text-emerald-700 font-medium"><i class="fa-solid fa-circle-check mr-1"></i>Good</span>
+                    {% endif %}
+                </div>
+                <div>
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Handed Over To</span>
+                    <span class="text-slate-800 font-medium">{{ sample_request.handed_over_to or 'Not recorded' }}{% if sample_request.handed_over_at %} <span class="text-slate-400 text-xs">({{ sample_request.handed_over_at.strftime('%d %b %H:%M') }})</span>{% endif %}</span>
+                </div>
+                {% if sample_request.batch_id %}
+                <div class="sm:col-span-2">
+                    <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Dispatch Batch</span>
+                    <a href="{{ url_for('workflow.search', query=sample_request.batch_id) }}" class="text-brand-600 font-mono text-xs hover:underline">{{ sample_request.batch_id }}</a>
+                </div>
+                {% endif %}
                 <div class="sm:col-span-2">
                     <span class="text-slate-400 font-bold uppercase tracking-wider block text-2xs">Remarks / Special Instructions</span>
                     <span class="text-slate-800 font-medium">{{ sample_request.special_instructions or 'No special instructions recorded.' }}</span>

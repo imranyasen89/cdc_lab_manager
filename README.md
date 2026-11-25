@@ -55,6 +55,11 @@ python -m pytest
     The app holds no connection pool of its own (each request opens one connection and closes it),
     which suits serverless functions; the session pooler on port `5432` also works but allows fewer clients.
 *   Also set `SECRET_KEY` and `FLASK_ENV=production`.
+*   New columns/tables are added automatically when the app starts (additive only — nothing is dropped).
+*   **Admin → Users** has two maintenance buttons: **Import CDC Staff** (creates/updates staff from
+    `app/data/cdc_staff.json`; password = username + `123`) and **Remove Demo Data** (deletes the seed
+    demo accounts, branches G-10/G-11/G-13 and their requests; keeps `admin`). CLI equivalents:
+    `flask --app run import-staff` and `flask --app run remove-demo-data --dry-run`.
 *   On a new, empty database, create the tables once from your machine (with `DATABASE_URL` set in `.env`):
     ```bash
     flask --app run init-db

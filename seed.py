@@ -4,8 +4,8 @@ from app.models import (User, Branch, Department, TATRule, OutsourcedLab, Sample
                         Sample, Task, StatusHistory, LocationRecord, UserTaskPermission, CenterDistance,
                         SampleType)
 
-def seed_data():
-    app = create_app()
+def seed_data(app=None):
+    app = app or create_app()
     with app.app_context():
         print("Recreating database tables...")
         db.drop_all()

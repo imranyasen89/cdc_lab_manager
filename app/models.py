@@ -89,6 +89,11 @@ class SampleRequest(db.Model):
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'), nullable=False)
     created_by_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     special_instructions = db.Column(db.Text, nullable=True)
+    patient_age = db.Column(db.String(20), nullable=True)      # e.g. "34Y", "8M"
+    test_requested = db.Column(db.Text, nullable=True)         # tests ordered for this patient
+    batch_id = db.Column(db.String(50), nullable=True, index=True)  # groups patients dispatched together
+    handed_over_to = db.Column(db.String(100), nullable=True)  # rider / person the samples were handed to
+    handed_over_at = db.Column(db.DateTime, nullable=True)
     status = db.Column(db.String(50), nullable=False, default='Pickup Requested')
     created_at = db.Column(db.DateTime, default=now_pkt)
     updated_at = db.Column(db.DateTime, default=now_pkt, onupdate=now_pkt)
@@ -107,6 +112,14 @@ class Sample(db.Model):
     request_id = db.Column(db.String(50), db.ForeignKey('sample_requests.id'), nullable=False)
     sample_type = db.Column(db.String(50), nullable=False)  # Blood, Urine, Swab, Sputum, etc.
     quantity = db.Column(db.Integer, default=1)
+    container = db.Column(db.String(30), nullable=True)   # code from app.utils.containers (EDTA, SST, CITRATE ...)
+    condition = db.Column(db.String(30), nullable=True, default='Good')  # integrity at dispatch
+    remarks = db.Column(db.String(255), nullable=True)
+
+    @property
+    def container_info(self):
+        from app.utils.containers import container_info
+        return container_info(self.container, self.sample_type)
 
 class Task(db.Model):
     __tablename__ = 'tasks'

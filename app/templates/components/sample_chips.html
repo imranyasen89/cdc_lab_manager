@@ -1,0 +1,13 @@
+{# Usage: {% with samples=req.samples, size='xs' %}{% include 'components/sample_chips.html' %}{% endwith %} #}
+{% if samples %}
+<span class="inline-flex flex-wrap gap-1 align-middle">
+{% for s in samples %}{% set ci = s.container_info %}
+    <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-{{ size or '2xs' }} font-semibold text-slate-700 bg-white"
+          style="border-color: {{ ci.color }}55" title="{{ s.sample_type }}{% if s.condition and s.condition != 'Good' %} — {{ s.condition }}{% endif %}">
+        <span class="inline-block h-2.5 w-2.5 rounded-full" style="background: {{ ci.color }}"></span>
+        {{ s.quantity }}× {{ ci.label }}
+        {% if s.condition and s.condition != 'Good' %}<i class="fa-solid fa-triangle-exclamation text-amber-500" title="{{ s.condition }}"></i>{% endif %}
+    </span>
+{% endfor %}
+</span>
+{% else %}<span class="text-slate-400">No samples</span>{% endif %}
