@@ -410,29 +410,41 @@ def save_distance():
 @login_required
 @role_required('ADMIN', 'MANAGER', 'SUPERVISOR')
 def timeline():
-    # Date range filters
+    """Chronological status changes across all requests, filterable by date, branch, status and text."""
+    from app.services.workflow_service import WorkflowService
     preset = request.args.get('preset')
     start_date_param = request.args.get('start_date') or request.args.get('date')
     end_date_param = request.args.get('end_date') or request.args.get('date')
-    
     start_dt, end_dt, start_date, end_date, active_preset, date_label = get_date_range(
-        preset=preset,
-        start_date_str=start_date_param,
-        end_date_str=end_date_param,
-        default_preset='today'
-    )
-    
-    # Get all status changes for the selected date range
-    query = StatusHistory.query
+        preset=preset, start_date_str=start_date_param, end_date_str=end_date_param, default_preset='today')
+
+    q = (request.args.get('q') or '').strip()
+    status = (request.args.get('status') or '').strip()
+    branch_id = request.args.get('branch_id', type=int)
+
+    query = StatusHistory.query.join(SampleRequest, StatusHistory.request_id == SampleRequest.id)
     if start_dt and end_dt:
         query = query.filter(StatusHistory.timestamp.between(start_dt, end_dt))
-    history_entries = query.order_by(StatusHistory.timestamp.desc()).all()
-    
+    if status:
+        query = query.filter(StatusHistory.status == status)
+    if branch_id:
+        query = query.filter(SampleRequest.branch_id == branch_id)
+    if q:
+        like = f"%{q}%"
+        query = query.filter(SampleRequest.id.ilike(like) | SampleRequest.patient_name.ilike(like) |
+                             SampleRequest.patient_id.ilike(like) | SampleRequest.batch_id.ilike(like) |
+                             StatusHistory.remarks.ilike(like))
+    limit = 500
+    history_entries = query.order_by(StatusHistory.timestamp.desc()).limit(limit + 1).all()
+    truncated = len(history_entries) > limit
+    history_entries = history_entries[:limit]
+
     return render_template('admin/timeline.html',
-                           history=history_entries,
-                           date=date_label,
-                           active_preset=active_preset,
-                           date_label=date_label,
+                           history=history_entries, truncated=truncated, limit=limit,
+                           branches=Branch.query.order_by(Branch.name).all(),
+                           statuses=list(WorkflowService.ROLE_PERMISSIONS.keys()),
+                           filter_query=q, filter_status=status, filter_branch_id=branch_id,
+                           date=date_label, active_preset=active_preset, date_label=date_label,
                            start_date_str=start_date.strftime('%Y-%m-%d') if start_date else '',
                            end_date_str=end_date.strftime('%Y-%m-%d') if end_date else '')
 

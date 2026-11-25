@@ -47,7 +47,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <!-- Chart.js for Dashboards -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 
     <!-- Global Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -232,6 +232,13 @@
                                     Staff Analytics
                                 </a>
                             </li>
+                            <li>
+                                <a href="{{ url_for('admin.timeline') }}"
+                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.timeline' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
+                                    <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                                    System Timeline
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {% endif %}
@@ -262,13 +269,6 @@
                                     class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.center_distances' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
                                     <i class="fa-solid fa-route text-lg"></i>
                                     Center Distances
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{{ url_for('admin.timeline') }}"
-                                    class="group flex gap-x-3 rounded-lg p-3 text-sm font-semibold {% if request.endpoint == 'admin.timeline' %}bg-brand-600 text-white{% else %}text-slate-500 hover:text-brand-700 hover:bg-slate-100{% endif %} transition">
-                                    <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-                                    System Timeline
                                 </a>
                             </li>
                             <li>
@@ -408,6 +408,11 @@
                             <i class="fa-solid fa-chart-bar text-base w-5 text-center"></i> Staff Analytics
                         </a>
                     </li>
+                    <li>
+                        <a href="{{ url_for('admin.timeline') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.timeline' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
+                            <i class="fa-solid fa-clock-rotate-left text-base w-5 text-center"></i> System Timeline
+                        </a>
+                    </li>
                 </ul>
             </div>
             {% endif %}
@@ -432,11 +437,6 @@
                     <li>
                         <a href="{{ url_for('admin.center_distances') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.center_distances' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
                             <i class="fa-solid fa-route text-base w-5 text-center"></i> Center Distances
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ url_for('admin.timeline') }}" class="flex items-center gap-x-3 px-3 py-2.5 rounded-xl {% if request.endpoint == 'admin.timeline' %}bg-brand-50 text-brand-600 font-bold{% else %}text-slate-600 hover:bg-slate-50{% endif %}">
-                            <i class="fa-solid fa-clock-rotate-left text-base w-5 text-center"></i> System Timeline
                         </a>
                     </li>
                     <li>
@@ -473,35 +473,48 @@
 
     <!-- Bottom Navigation Bar (Mobile only) -->
     {% if current_user.is_authenticated %}
-    <nav class="md:hidden glass-panel border-t border-slate-200 flex justify-around items-center py-2 shrink-0 z-30 bg-white/95 backdrop-blur-md">
-        {% if current_user.role in ['BRANCH_STAFF', 'ADMIN', 'MANAGER', 'SUPER_ADMIN'] %}
-        <a href="{{ url_for('branch.dashboard') }}"
-            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'branch' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+    <nav class="md:hidden glass-panel border-t border-slate-200 flex items-stretch px-1 py-1.5 shrink-0 z-30 bg-white/95 backdrop-blur-md">
+        {% set r = current_user.role %}
+        {% if r in ['ADMIN', 'SUPER_ADMIN', 'MANAGER'] %}
+        <a href="{{ url_for('admin.dashboard') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.endpoint == 'admin.dashboard' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-gauge-high text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Admin</span>
+        </a>
+        {% elif r == 'BRANCH_STAFF' %}
+        <a href="{{ url_for('branch.dashboard') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.blueprint == 'branch' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
             <i class="fa-solid fa-code-branch text-base"></i>
-            <span class="text-3xs font-semibold uppercase tracking-wider">Branch</span>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Branch</span>
         </a>
-        {% endif %}
-        {% if current_user.role in ['RIDER', 'ADMIN', 'SUPERVISOR', 'SUPER_ADMIN'] %}
-        <a href="{{ url_for('rider.dashboard') }}"
-            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'rider' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+        {% elif r == 'RIDER' %}
+        <a href="{{ url_for('rider.dashboard') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.blueprint == 'rider' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
             <i class="fa-solid fa-motorcycle text-base"></i>
-            <span class="text-3xs font-semibold uppercase tracking-wider">Rider</span>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Tasks</span>
         </a>
         {% endif %}
-        {% if current_user.role in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
-        <a href="{{ url_for('lab.dashboard') }}"
-            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'lab' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+        {% if r in ['LAB_STAFF', 'VERIFIER', 'SUPERVISOR', 'MANAGER', 'ADMIN', 'SUPER_ADMIN'] %}
+        <a href="{{ url_for('lab.dashboard') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.blueprint == 'lab' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
             <i class="fa-solid fa-flask text-base"></i>
-            <span class="text-3xs font-semibold uppercase tracking-wider">Lab</span>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Lab</span>
         </a>
         {% endif %}
-        <a href="{{ url_for('notifications.list_notifications') }}"
-            class="flex flex-col items-center gap-y-0.5 px-3 py-1 {% if request.blueprint == 'notifications' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition relative">
+        {% if r == 'SUPERVISOR' %}
+        <a href="{{ url_for('rider.dashboard') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.blueprint == 'rider' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-motorcycle text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Riders</span>
+        </a>
+        {% endif %}
+        {% if r in ['ADMIN', 'SUPER_ADMIN', 'MANAGER', 'SUPERVISOR'] %}
+        <a href="{{ url_for('admin.timeline') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.endpoint == 'admin.timeline' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
+            <i class="fa-solid fa-clock-rotate-left text-base"></i>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Timeline</span>
+        </a>
+        {% endif %}
+        <a href="{{ url_for('notifications.list_notifications') }}" class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 {% if request.blueprint == 'notifications' %}text-brand-600 font-bold{% else %}text-slate-500 hover:text-brand-600{% endif %} transition">
             <i class="fa-solid fa-bell text-base"></i>
-            <span class="text-3xs font-semibold uppercase tracking-wider">Alerts</span>
+            <span class="text-3xs font-semibold uppercase tracking-wider truncate max-w-full">Alerts</span>
         </a>
         <button type="button" onclick="toggleMobileDrawer()"
-            class="flex flex-col items-center gap-y-0.5 px-3 py-1 text-slate-500 hover:text-brand-600 transition focus:outline-none">
+            class="flex-1 min-w-0 flex flex-col items-center gap-y-0.5 py-1 text-slate-500 hover:text-brand-600 transition focus:outline-none">
             <i class="fa-solid fa-bars text-base"></i>
             <span class="text-3xs font-semibold uppercase tracking-wider">Menu</span>
         </button>

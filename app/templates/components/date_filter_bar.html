@@ -3,6 +3,7 @@
     <input type="hidden" name="preset" id="date-filter-preset" value="{{ active_preset|default('today') }}">
     {% if filter_status %}<input type="hidden" name="status" value="{{ filter_status }}">{% endif %}
     {% if filter_branch_id %}<input type="hidden" name="branch_id" value="{{ filter_branch_id }}">{% endif %}
+    {% if filter_query %}<input type="hidden" name="q" value="{{ filter_query }}">{% endif %}
 
     <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
         <!-- Preset Buttons -->

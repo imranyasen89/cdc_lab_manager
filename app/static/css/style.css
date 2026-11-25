@@ -120,3 +120,7 @@ input:focus, select:focus, textarea:focus {
     border-color: var(--color-brand-500) !important;
     box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.15) !important;
 }
+
+/* Extra-small text sizes used across templates (not part of Tailwind's default scale) */
+.text-2xs { font-size: 0.6875rem; line-height: 1rem; }
+.text-3xs { font-size: 0.625rem; line-height: 0.875rem; }
