@@ -50,6 +50,21 @@ def run_data_migrations(db):
             if db.engine.dialect.name == 'postgresql':
                 session.execute(text('SELECT pg_advisory_xact_lock(:k)'), {'k': LOCK_KEY})
 
+        # One-time: staff first created by the old import_staff.py had passwords based on
+        # their email-derived username; align everyone on the list to username + "123".
+        reset_marker = "AUTO_STAFF_PASSWORD_RESET:v1"
+        if not marked(reset_marker):
+            from app.services.staff_import import import_cdc_staff
+            from app.services.staff_import import remove_unused_duplicate_branches
+            result = import_cdc_staff(reset_passwords=True)  # commits
+            removed = remove_unused_duplicate_branches()
+            session.add(AuditLog(action=reset_marker, location=f"{len(result['accounts'])} accounts"))
+            session.commit()
+            done.append(f"password reset to username+123 for {len(result['accounts'])} staff accounts; "
+                        f"duplicate branches removed: {', '.join(removed) or 'none'}")
+            if db.engine.dialect.name == 'postgresql':
+                session.execute(text('SELECT pg_advisory_xact_lock(:k)'), {'k': LOCK_KEY})
+
         demo_marker = "AUTO_DEMO_CLEANUP:v1"
         real_riders = session.query(User.id).filter(User.role == 'RIDER', User.status.is_(True),
                                                     User.employee_id.notlike('EMP-200_')).count()

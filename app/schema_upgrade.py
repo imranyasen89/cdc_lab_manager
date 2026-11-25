@@ -7,7 +7,7 @@ never drops or alters existing columns, so it is safe to run on every cold start
 """
 import logging
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, literal, text
 from sqlalchemy.schema import CreateIndex
 
 log = logging.getLogger(__name__)
@@ -44,13 +44,20 @@ def upgrade_schema(db):
             for column in table.columns:
                 if column.name in existing[table.name]:
                     continue
-                if not column.nullable and column.server_default is None:
-                    log.warning("Not adding NOT NULL column %s.%s automatically", table.name, column.name)
-                    continue
                 col_type = column.type.compile(dialect=conn.dialect)
+                suffix = ''
+                if not column.nullable:
+                    default = column.default
+                    if default is None or not getattr(default, 'is_scalar', False):
+                        log.warning("Not adding NOT NULL column %s.%s automatically (no simple default)",
+                                    table.name, column.name)
+                        continue
+                    value = literal(default.arg, type_=column.type).compile(
+                        dialect=conn.dialect, compile_kwargs={'literal_binds': True})
+                    suffix = f' NOT NULL DEFAULT {value}'  # existing rows get the default
                 if_not_exists = 'IF NOT EXISTS ' if pg else ''
                 conn.execute(text(
-                    f'ALTER TABLE "{table.name}" ADD COLUMN {if_not_exists}"{column.name}" {col_type}'))
+                    f'ALTER TABLE "{table.name}" ADD COLUMN {if_not_exists}"{column.name}" {col_type}{suffix}'))
                 changes.append(f"added column {table.name}.{column.name}")
                 for index in table.indexes:
                     if column.name in index.columns.keys():

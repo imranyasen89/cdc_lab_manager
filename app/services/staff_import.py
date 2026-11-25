@@ -58,6 +58,8 @@ def _find_branch(code):
         branch = Branch.query.filter(Branch.code.ilike(key)).first() or \
                  Branch.query.filter(Branch.name.ilike(key)).first()
         if branch:
+            if branch.name != spec['name']:
+                branch.name = spec['name']  # tidy names left by the old import script
             return branch, False
     # No coordinates on purpose: wrong GPS would give wrong auto distances.
     branch = Branch(name=spec['name'], code=code, address=spec['address'])
@@ -142,3 +144,25 @@ def import_cdc_staff(reset_passwords=True):
 
     db.session.commit()
     return summary
+
+
+def remove_unused_duplicate_branches():
+    """Delete branches that are only aliases of a canonical branch and are unused
+    (e.g. CDCMARDAN left over from the old import script). Returns removed names."""
+    from app.models import CenterDistance, SampleRequest
+    removed = []
+    for code, spec in BRANCHES.items():
+        canonical, _ = _find_branch(code)
+        for alias in spec['aliases'] + [spec['name']]:
+            for b in Branch.query.filter(Branch.code.ilike(alias) | Branch.name.ilike(alias)).all():
+                if b.id == canonical.id:
+                    continue
+                if User.query.filter_by(branch_id=b.id).first() or \
+                        SampleRequest.query.filter_by(branch_id=b.id).first():
+                    continue
+                CenterDistance.query.filter((CenterDistance.from_branch_id == b.id) |
+                                            (CenterDistance.to_branch_id == b.id)).delete(synchronize_session=False)
+                removed.append(f"{b.name} ({b.code})")
+                db.session.execute(Branch.__table__.delete().where(Branch.__table__.c.id == b.id))
+    db.session.commit()
+    return removed
