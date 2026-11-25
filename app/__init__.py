@@ -24,8 +24,12 @@ def create_app(config_class=None):
         app.config.from_object(config_class)
     else:
         from config import config
-        env = os.environ.get('FLASK_ENV', 'development')
+        env = (os.environ.get('FLASK_ENV') or 'development').strip().lower()
+        # Vercel sets VERCEL_ENV=production on the live deployment.
+        if os.environ.get('VERCEL_ENV') == 'production':
+            env = 'production'
         app.config.from_object(config.get(env, config['default']))
+        app.logger.info("Config: %s", env)
         
     db.init_app(app)
     login_manager.init_app(app)

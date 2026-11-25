@@ -27,6 +27,7 @@ def run_data_migrations(db):
     from app.models import AuditLog, User
 
     if not inspect(db.engine).has_table('audit_logs'):
+        log.warning("data migration: skipped (empty database)")
         return []  # empty database
     done = []
     session = db.session
@@ -66,6 +67,6 @@ def run_data_migrations(db):
         raise
     finally:
         session.remove()
-    for item in done:
+    for item in done or ['nothing to do']:
         log.warning("data migration: %s", item)
     return done

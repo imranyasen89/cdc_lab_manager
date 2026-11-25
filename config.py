@@ -54,7 +54,9 @@ class ProductionConfig(Config):
     """Production configuration."""
     DEBUG = False
     # Import staff from app/data/cdc_staff.json and remove seed demo data at start-up.
-    AUTO_DATA_MIGRATIONS = os.environ.get('AUTO_DATA_MIGRATIONS', '1') == '1'
+    # Only on the live deployment (preview builds share the same database).
+    AUTO_DATA_MIGRATIONS = (os.environ.get('AUTO_DATA_MIGRATIONS', '1') == '1'
+                            and os.environ.get('VERCEL_ENV', 'production') == 'production')
 
     @classmethod
     def init_app(cls, app):
